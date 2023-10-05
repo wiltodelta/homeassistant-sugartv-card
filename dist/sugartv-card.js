@@ -101,13 +101,13 @@ class SugarTvCard extends LitElement {
                 margin: 0;
                 height: 100%;
                 font-family: 'Roboto', sans-serif;
-                font-size: 15vw;
+                font-size: 35vw;
             }
             
             .wrapper {
                 display: flex;
                 flex-direction: column;
-                width: 100%;
+                width: 90%;
                 height: 100%;
                 align-items: center;
                 justify-content: center;
