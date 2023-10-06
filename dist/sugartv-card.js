@@ -32,7 +32,7 @@ class SugarTvCard extends LitElement {
         const trend = this.hass.states[this.config.trend_entity].state;
         const value_last_changed = this.hass.states[this.config.value_entity].last_changed;
 
-        const delta = 0;
+        let delta = 0;
 
         if (value && history_value) {
             delta = value - history_value;
@@ -47,7 +47,7 @@ class SugarTvCard extends LitElement {
 
         const timeString = `${formattedHours}:${formattedMinutes}`;
 
-        const trend_symbol = "?";
+        let trend_symbol = "?";
 
         switch (trend) {
             case "rising quickly":
@@ -73,7 +73,7 @@ class SugarTvCard extends LitElement {
                 break;
         }
 
-        const delta_str = "";
+        let delta_str = "";
 
         if (delta != 0) {
             if (delta > 0) {
