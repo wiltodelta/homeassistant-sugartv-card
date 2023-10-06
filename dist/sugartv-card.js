@@ -22,30 +22,22 @@ class SugarTvCard extends LitElement {
         return {
             hass: {},
             config: {},
-            history: {}
+            storage: {}
         };
     }
 
     render() {
         const value = this.hass.states[this.config.value_entity].state;
-        const history_value = this.history.value;
-        const history_value_last_changed = this.history.last_changed;
+        const last_changed = this.hass.states[this.config.value_entity].last_changed;
+
+        const storage_value = this.storage.value;
+        const storage_last_changed = this.storage.last_changed;
+        const storage_history_value = this.storage.history_value;
+        const storage_history_last_changed = this.storage.history_last_changed;
+
         const trend = this.hass.states[this.config.trend_entity].state;
-        const value_last_changed = this.hass.states[this.config.value_entity].last_changed;
 
-        console.debug(`value = ${value}`);
-        console.debug(`value_last_changed = ${value_last_changed}`);
-        console.debug(`trend = ${trend}`);
-        console.debug(`history_value = ${history_value}`);
-        console.debug(`history_value_last_changed = ${history_value_last_changed}`);
-
-        let delta = 0;
-
-        if (value && history_value) {
-            delta = value - history_value;
-        }
-
-        const date = new Date(value_last_changed);
+        const date = new Date(last_changed);
         const hours = date.getHours();
         const minutes = date.getMinutes();
 
@@ -80,6 +72,12 @@ class SugarTvCard extends LitElement {
                 break;
         }
 
+        let delta = 0;
+
+        if (value && storage_history_value) {
+            delta = value - storage_history_value;
+        }
+
         let delta_str = "?";
 
         if (delta != 0) {
@@ -91,9 +89,12 @@ class SugarTvCard extends LitElement {
             }
         }
 
-        if (new Date(value_last_changed) > new Date(this.history.last_changed)) {
-            this.history.value = value;
-            this.history.last_changed = value_last_changed;
+        if (last_changed != storage_last_changed) {
+            this.storage.history_value = storage_value;
+            this.storage.history_last_changed = storage_last_changed;
+
+            this.storage.value = value;
+            this.storage.last_changed = last_changed;
         }
 
         return html`
@@ -120,12 +121,14 @@ class SugarTvCard extends LitElement {
 
         this.config = config;
 
-        const historyObj = {
-            value: 0,
-            last_changed: ""
+        const dataObj = {
+            value: null,
+            last_changed: null,
+            history_value: null,
+            history_last_changed: null
         };
 
-        this.history = historyObj;
+        this.data = dataObj;
     }
 
     getCardSize() {
