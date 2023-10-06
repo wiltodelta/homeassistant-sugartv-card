@@ -37,6 +37,14 @@ class SugarTvCard extends LitElement {
 
         const trend = this.hass.states[this.config.trend_entity].state;
 
+        console.debug(`value = ${value}`);
+        console.debug(`last_changed = ${last_changed}`);
+        console.debug(`storage_value = ${storage_value}`);
+        console.debug(`storage_last_changed = ${storage_last_changed}`);
+        console.debug(`storage_history_value = ${storage_history_value}`);
+        console.debug(`storage_history_last_changed = ${storage_history_last_changed}`);
+        console.debug(`trend = ${trend}`);
+
         const date = new Date(last_changed);
         const hours = date.getHours();
         const minutes = date.getMinutes();
