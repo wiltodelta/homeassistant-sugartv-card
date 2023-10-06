@@ -22,13 +22,23 @@ class SugarTvCard extends LitElement {
         return {
             hass: {},
             config: {},
+            history: {}
         };
     }
 
     render() {
-        const last_changed = this.hass.states[this.config.value_entity].last_changed;
+        const value = this.hass.states[this.config.value_entity].state;
+        const history_value = this.history.value;
+        const trend = this.hass.states[this.config.trend_entity].state;
+        const value_last_changed = this.hass.states[this.config.value_entity].last_changed;
 
-        const date = new Date(last_changed);
+        let delta = 0;
+
+        if (value && history_value) {
+            delta = history_value - value;
+        }
+
+        const date = new Date(value_last_changed);
         const hours = date.getHours();
         const minutes = date.getMinutes();
 
@@ -37,43 +47,41 @@ class SugarTvCard extends LitElement {
 
         const timeString = `${formattedHours}:${formattedMinutes}`;
 
-        const value = this.hass.states[this.config.value_entity].state;
-        const trend = this.hass.states[this.config.trend_entity].state;
-
-        let trent_symbol = "?";
+        let trend_symbol = "?";
 
         switch (trend) {
             case "rising quickly":
-                trent_symbol = "↑↑"
+                trend_symbol = "↑↑"
                 break;
             case "rising":
-                trent_symbol = "↑"
+                trend_symbol = "↑"
                 break;
             case "rising slightly":
-                trent_symbol = "↗"
+                trend_symbol = "↗"
                 break;
             case "steady":
-                trent_symbol = "→"
+                trend_symbol = "→"
                 break;
             case "falling slightly":
-                trent_symbol = "↘"
+                trend_symbol = "↘"
                 break;
             case "falling":
-                trent_symbol = "↓"
+                trend_symbol = "↓"
                 break;
             case "falling quickly":
-                trent_symbol = "↓↓"
+                trend_symbol = "↓↓"
                 break;
         }
+
+        this.history.value = value;
+
         return html`
-            <!--<div class="update-fail">There was a problem during the update, will try again soon.</div>-->
             <div class="wrapper">
                 <div class="container">
-                    <!--<div class="loading">Loading…</div>-->
                     <div class="time">${timeString}</div>
                     <div class="value">${value}</div>
-                    <div class="trend">${trent_symbol}</div>
-                    <div class="delta">+5</div>
+                    <div class="trend">${trend_symbol}</div>
+                    <div class="delta">${delta}</div>
                 </div>
             </div>
         `;
@@ -87,6 +95,7 @@ class SugarTvCard extends LitElement {
             throw new Error("You need to define 'trend_entity' in your configuration.")
         }
         this.config = config;
+        this.config.last_value = 0;
     }
 
     // The height of your card. Home Assistant uses this to automatically
@@ -107,7 +116,7 @@ class SugarTvCard extends LitElement {
             .wrapper {
                 display: flex;
                 flex-direction: column;
-                width: 90%;
+                width: 80%;
                 height: 100%;
                 align-items: center;
                 justify-content: center;
@@ -117,23 +126,6 @@ class SugarTvCard extends LitElement {
                 display: flex;
                 align-items: center;
                 line-height: 1;
-            }
-            
-            .update-fail {
-                display: none;
-                position: absolute;
-                left: 0;
-                right: 0;
-                text-align: center;
-                padding: 2%;
-                font-size: 5%;
-                color: white;
-                background-color: #CD113B;
-            }
-            
-            .loading {
-                font-size: 20%;
-                font-weight: bold;
             }
 
             .time {
