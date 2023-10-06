@@ -91,8 +91,7 @@ class SugarTvCard extends LitElement {
             }
         }
 
-        if (this.history.last_changed != value_last_changed)
-        {
+        if (new Date(value_last_changed) > new Date(this.history.last_changed)) {
             this.history.value = value;
             this.history.last_changed = value_last_changed;
         }
