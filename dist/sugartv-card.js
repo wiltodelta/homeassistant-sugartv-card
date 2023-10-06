@@ -104,7 +104,7 @@ class SugarTvCard extends LitElement {
     }
 
     setConfig(config) {
-        console.info("%c SUGARTV-CARD %c ".concat(Id, " "), "color: white; background: red; font-weight: 700;", "color: red; background: white; font-weight: 700;");
+        console.info("%c SUGARTV-CARD ", "color: white; background: red; font-weight: 700;");
 
         if (!config.value_entity) {
             throw new Error("You need to define 'value_entity' in your configuration.")
@@ -122,8 +122,6 @@ class SugarTvCard extends LitElement {
         this.history = historyObj;
     }
 
-    // The height of your card. Home Assistant uses this to automatically
-    // distribute all cards over the available columns.
     getCardSize() {
         return 1;
     }
