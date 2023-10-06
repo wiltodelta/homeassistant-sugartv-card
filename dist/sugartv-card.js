@@ -32,10 +32,10 @@ class SugarTvCard extends LitElement {
         const trend = this.hass.states[this.config.trend_entity].state;
         const value_last_changed = this.hass.states[this.config.value_entity].last_changed;
 
-        console.log(value);
-        console.log(history_value);
-        console.log(trend);
-        console.log(value_last_changed);
+        console.debug(value);
+        console.debug(history_value);
+        console.debug(trend);
+        console.debug(value_last_changed);
 
         let delta = 0;
 
@@ -104,6 +104,8 @@ class SugarTvCard extends LitElement {
     }
 
     setConfig(config) {
+        console.info("%c SUGARTV-CARD %c ".concat(Id, " "), "color: white; background: red; font-weight: 700;", "color: red; background: white; font-weight: 700;");
+
         if (!config.value_entity) {
             throw new Error("You need to define 'value_entity' in your configuration.")
         }
