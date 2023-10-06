@@ -29,13 +29,15 @@ class SugarTvCard extends LitElement {
     render() {
         const value = this.hass.states[this.config.value_entity].state;
         const history_value = this.history.value;
+        const history_value_last_changed = this.history.last_changed;
         const trend = this.hass.states[this.config.trend_entity].state;
         const value_last_changed = this.hass.states[this.config.value_entity].last_changed;
 
-        console.debug(value);
-        console.debug(history_value);
-        console.debug(trend);
-        console.debug(value_last_changed);
+        console.debug(`value = ${value}`);
+        console.debug(`value_last_changed = ${value_last_changed}`);
+        console.debug(`trend = ${trend}`);
+        console.debug(`history_value = ${history_value}`);
+        console.debug(`history_value_last_changed = ${history_value_last_changed}`);
 
         let delta = 0;
 
@@ -78,7 +80,7 @@ class SugarTvCard extends LitElement {
                 break;
         }
 
-        let delta_str = "";
+        let delta_str = "?";
 
         if (delta != 0) {
             if (delta > 0) {
@@ -89,7 +91,11 @@ class SugarTvCard extends LitElement {
             }
         }
 
-        this.history.value = value;
+        if (this.history.last_changed != value_last_changed)
+        {
+            this.history.value = value;
+            this.history.last_changed = value_last_changed;
+        }
 
         return html`
             <div class="wrapper">
@@ -116,7 +122,8 @@ class SugarTvCard extends LitElement {
         this.config = config;
 
         const historyObj = {
-            value: 0
+            value: 0,
+            last_changed: ""
         };
 
         this.history = historyObj;
