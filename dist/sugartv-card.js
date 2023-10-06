@@ -121,14 +121,14 @@ class SugarTvCard extends LitElement {
 
         this.config = config;
 
-        const dataObj = {
+        const storageObj = {
             value: null,
             last_changed: null,
             history_value: null,
             history_last_changed: null
         };
 
-        this.data = dataObj;
+        this.storage = storageObj;
     }
 
     getCardSize() {
