@@ -94,11 +94,14 @@ class SugarTvCard extends LitElement {
         if (!config.trend_entity) {
             throw new Error("You need to define 'trend_entity' in your configuration.")
         }
+
         this.config = config;
 
-        this.history = new {
+        const historyObj = {
             value: 0
         };
+
+        this.history = historyObj;
     }
 
     // The height of your card. Home Assistant uses this to automatically
