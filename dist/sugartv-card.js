@@ -96,7 +96,9 @@ class SugarTvCard extends LitElement {
         }
         this.config = config;
 
-        this.history.value = 0;
+        this.history = new {
+            value: 0
+        };
     }
 
     // The height of your card. Home Assistant uses this to automatically
