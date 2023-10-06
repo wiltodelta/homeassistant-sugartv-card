@@ -22,28 +22,59 @@ class SugarTvCard extends LitElement {
         return {
             hass: {},
             config: {},
-            storage: {}
+            data: {}
         };
     }
 
+    // Whenever anything updates in Home Assistant, the hass object is updated
+    // and passed out to every card. If you want to react to state changes, this is where
+    // you do it. If not, you can just ommit this setter entirely.
+    // Note that if you do NOT have a `set hass(hass)` in your class, you can access the hass
+    // object through `this.hass`. But if you DO have it, you need to save the hass object
+    // manually, thusly:
+    set hass(hass) {
+        const previous_hass = this.hass;
+        this.hass = hass;
+
+        const value_entity = this.config.value_entity;
+        const trend_entity = this.config.trend_entity;
+
+        const value = this.hass.states[value_entity].state;
+        const last_changed = this.hass.states[value_entity].last_changed;
+        const trend = this.hass.states[trend_entity].state;
+
+        const previous_value = previous_hass.states[value_entity].state;
+        const previous_last_changed = previous_hass.states[value_entity].last_changed;
+        const previous_trend = previous_hass.states[trend_entity].state;
+
+        this.data.value = value;
+        this.data.last_changed = last_changed;
+        this.data.trend = trend;
+
+        if (last_changed != previous_last_changed) {
+            this.data.previous_value = previous_value;
+            this.data.previous_last_changed = previous_last_changed;
+            this.data.previous_trend = previous_trend;
+        }
+    }
+
+    // The render() function of a LitElement returns the HTML of your card, and any time one or the
+    // properties defined above are updated, the correct parts of the rendered html are magically
+    // replaced with the new values. Check https://lit.dev for more info.
     render() {
-        const value = this.hass.states[this.config.value_entity].state;
-        const last_changed = this.hass.states[this.config.value_entity].last_changed;
+        if (!this.hass || !this.config) {
+            return html``;
+        }
 
-        const storage_value = this.storage.value;
-        const storage_last_changed = this.storage.last_changed;
-        const storage_history_value = this.storage.history_value;
-        const storage_history_last_changed = this.storage.history_last_changed;
+        console.debug(this.data);
 
-        const trend = this.hass.states[this.config.trend_entity].state;
+        const value = this.data.value;
+        const last_changed = this.data.last_changed;
+        const trend = this.data.trend;
 
-        console.debug(`value = ${value}`);
-        console.debug(`last_changed = ${last_changed}`);
-        console.debug(`storage_value = ${storage_value}`);
-        console.debug(`storage_last_changed = ${storage_last_changed}`);
-        console.debug(`storage_history_value = ${storage_history_value}`);
-        console.debug(`storage_history_last_changed = ${storage_history_last_changed}`);
-        console.debug(`trend = ${trend}`);
+        const previous_value = this.data.value;
+        //const previous_last_changed = this.data.last_changed;
+        //const previous_trend = this.data.trend;
 
         const date = new Date(last_changed);
         const hours = date.getHours();
@@ -54,7 +85,7 @@ class SugarTvCard extends LitElement {
 
         const timeString = `${formattedHours}:${formattedMinutes}`;
 
-        let trend_symbol = "?";
+        let trend_symbol = "▢";
 
         switch (trend) {
             case "rising quickly":
@@ -80,29 +111,18 @@ class SugarTvCard extends LitElement {
                 break;
         }
 
-        let delta = 0;
+        let delta = null;
+        let delta_str = "▢";
 
-        if (value && storage_history_value) {
-            delta = value - storage_history_value;
-        }
+        if (value && previous_value) {
+            delta = value - previous_value;
 
-        let delta_str = "?";
-
-        if (delta != 0) {
-            if (delta > 0) {
-                delta_str = `+${delta}`;
+            if (delta >= 0) {
+                delta_str = `＋${delta}`;
             }
             else {
-                delta_str = delta;
-            }
-        }
-
-        if (last_changed != storage_last_changed) {
-            this.storage.history_value = storage_value;
-            this.storage.history_last_changed = storage_last_changed;
-
-            this.storage.value = value;
-            this.storage.last_changed = last_changed;
+                delta_str = `－${delta}`;
+            }   
         }
 
         return html`
@@ -117,28 +137,45 @@ class SugarTvCard extends LitElement {
         `;
     }
 
+    // The config object contains the configuration specified by the user in ui-lovelace.yaml
+    // for your card.
+    // It will minimally contain:
+    // config.type = "custom:my-custom-card"
+    // `setConfig` MUST be defined - and is in fact the only function that must be.
+    // It doesn't need to actually DO anything, though.
+
+    // Note that setConfig will ALWAYS be called at the start of the lifetime of the card
+    // BEFORE the `hass` object is first provided.
+    // It MAY be called several times during the lifetime of the card, e.g. if the configuration
+    // of the card is changed.
     setConfig(config) {
         console.info("%c SUGARTV-CARD ", "color: white; background: red; font-weight: 700;");
 
         if (!config.value_entity) {
             throw new Error("You need to define 'value_entity' in your configuration.")
         }
+
         if (!config.trend_entity) {
             throw new Error("You need to define 'trend_entity' in your configuration.")
         }
 
         this.config = config;
 
-        const storageObj = {
+        const dataObj = {
             value: null,
             last_changed: null,
-            history_value: null,
-            history_last_changed: null
+            trend: null,
+            previous_value: null,
+            previous_last_changed: null,
+            previous_trend: null
         };
 
-        this.storage = storageObj;
+        this.data = dataObj;
     }
 
+    // The height of your card. Home Assistant uses this to automatically
+    // distribute all cards over the available columns.
+    // This is actually optional. If not present, the cardHeight is assumed to be 1.
     getCardSize() {
         return 1;
     }
@@ -174,20 +211,28 @@ class SugarTvCard extends LitElement {
             .value {
                 font-size: 50%;
                 font-weight: bold;
-                margin: 0 10%;
+                margin: 0 8%;
             }
             
             .trend {
                 font-family: 'overpass';
-                font-size: 20%;
+                font-size: 30%;
                 margin: 0 5% 0 0;
             }
             
             .delta {
                 font-size: 20%;
-            }     
+            }
         `;
     }
 }
 
 customElements.define("sugartv-card", SugarTvCard);
+
+// Next we add our card to the list of custom cards
+window.customCards = window.customCards || []; // Create the list if it doesn't exist. Careful not to overwrite it
+window.customCards.push({
+    type: "sugartv-card",
+    name: "SugarTV Card",
+    description: "A custom lovelace card for Home Assistant that provides a better way to display Dexcom data."
+});
