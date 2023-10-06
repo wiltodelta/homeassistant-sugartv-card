@@ -32,6 +32,11 @@ class SugarTvCard extends LitElement {
         const trend = this.hass.states[this.config.trend_entity].state;
         const value_last_changed = this.hass.states[this.config.value_entity].last_changed;
 
+        console.log(value);
+        console.log(history_value);
+        console.log(trend);
+        console.log(value_last_changed);
+
         let delta = 0;
 
         if (value && history_value) {
@@ -95,12 +100,6 @@ class SugarTvCard extends LitElement {
                     <div class="delta">${delta_str}</div>
                 </div>
             </div>
-            <!--
-                value: ${value}
-                history_value: ${history_value}
-                trend: ${trend}
-                value_last_changed: ${value_last_changed}
-            -->
         `;
     }
 
