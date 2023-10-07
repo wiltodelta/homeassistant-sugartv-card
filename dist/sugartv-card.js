@@ -33,7 +33,8 @@ class SugarTvCard extends LitElement {
     // object through `this.hass`. But if you DO have it, you need to save the hass object
     // manually, thusly:
     set hass(hass) {
-        const previous_hass = this.hass;
+        const previous_hass = Object.create(this.hass);
+        this.hass = hass;
 
         const value_entity = this.config.value_entity;
         const trend_entity = this.config.trend_entity;
