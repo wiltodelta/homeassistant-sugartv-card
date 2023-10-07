@@ -39,9 +39,9 @@ class SugarTvCard extends LitElement {
         const value_entity = this.config.value_entity;
         const trend_entity = this.config.trend_entity;
 
-        const value = hass.states[value_entity].state;
-        const last_changed = hass.states[value_entity].last_changed;
-        const trend = hass.states[trend_entity].state;
+        const value = this.hass.states[value_entity].state;
+        const last_changed = this.hass.states[value_entity].last_changed;
+        const trend = this.hass.states[trend_entity].state;
 
         const previous_value = previous_hass.states[value_entity].state;
         const previous_last_changed = previous_hass.states[value_entity].last_changed;
@@ -74,9 +74,9 @@ class SugarTvCard extends LitElement {
         const last_changed = this.data.last_changed;
         const trend = this.data.trend;
 
-        const previous_value = this.data.value;
-        //const previous_last_changed = this.data.last_changed;
-        //const previous_trend = this.data.trend;
+        const previous_value = this.data.previous_value;
+        //const previous_last_changed = this.data.previous_last_changed;
+        //const previous_trend = this.data.previous_trend;
 
         const date = new Date(last_changed);
         const hours = date.getHours();
