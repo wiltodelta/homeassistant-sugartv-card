@@ -208,10 +208,6 @@ class SugarTvCard extends LitElement {
                 line-height: 1;
             }
 
-            .trend {
-                font-family: 'overpass';
-            }
-
             .time {
                 font-size: 24px;
             }
@@ -222,6 +218,7 @@ class SugarTvCard extends LitElement {
             }
             
             .trend {
+                font-family: 'overpass';
                 font-size: 36px;
                 margin: 0 15px 0 0;
             }
@@ -238,12 +235,12 @@ class SugarTvCard extends LitElement {
                 
                 .value {
                     font-size: 64px;
-                    margin: 0 15px;
+                    margin: 0 20px;
                 }
                 
                 .trend {
                     font-size: 48px;
-                    margin: 0 15px 0 0;
+                    margin: 0 20px 0 0;
                 }
                 
                 .delta {
@@ -259,21 +256,17 @@ class SugarTvCard extends LitElement {
                 
                 .value {
                     font-size: 96px;
-                    margin: 0 15px;
+                    margin: 0 25px;
                 }
                 
                 .trend {
                     font-size: 72px;
-                    margin: 0 15px 0 0;
+                    margin: 0 25px 0 0;
                 }
                 
                 .delta {
                     font-size: 48px;
                 }
-            }
-            
-            .trend {
-                font-family: 'overpass';
             }
         `;
     }
