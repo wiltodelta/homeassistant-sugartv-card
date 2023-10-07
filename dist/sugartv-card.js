@@ -32,29 +32,35 @@ class SugarTvCard extends LitElement {
     // Note that if you do NOT have a `set hass(hass)` in your class, you can access the hass
     // object through `this.hass`. But if you DO have it, you need to save the hass object
     // manually, thusly:
+
     set hass(hass) {
+        const previous_hass = this._hass;
+        this._hass = hass;
+
         const value_entity = this._config.value_entity;
         const trend_entity = this._config.trend_entity;
 
-        const value = hass.states[value_entity].state;
-        const last_changed = hass.states[value_entity].last_changed;
-        const trend = hass.states[trend_entity].state;
+        if (this._hass) {
+            const value = this._hass.states[value_entity].state;
+            const last_changed = this._hass.states[value_entity].last_changed;
+            const trend = this._hass.states[trend_entity].state;
 
-        const previous_value = this.hass.states[value_entity].state;
-        const previous_last_changed = this.hass.states[value_entity].last_changed;
-        const previous_trend = this.hass.states[trend_entity].state;
+            this._data.value = value;
+            this._data.last_changed = last_changed;
+            this._data.trend = trend;
 
-        this._data.value = value;
-        this._data.last_changed = last_changed;
-        this._data.trend = trend;
+            if (previous_hass) {
+                const previous_value = previous_hass.states[value_entity].state;
+                const previous_last_changed = previous_hass.states[value_entity].last_changed;
+                const previous_trend = previous_hass.states[trend_entity].state;
 
-        if (last_changed != previous_last_changed) {
-            this._data.previous_value = previous_value;
-            this._data.previous_last_changed = previous_last_changed;
-            this._data.previous_trend = previous_trend;
+                if (last_changed != previous_last_changed) {
+                    this._data.previous_value = previous_value;
+                    this._data.previous_last_changed = previous_last_changed;
+                    this._data.previous_trend = previous_trend;
+                }
+            }
         }
-
-        this._hass = hass;
     }
 
     // The render() function of a LitElement returns the HTML of your card, and any time one or the
@@ -65,7 +71,7 @@ class SugarTvCard extends LitElement {
             return html`TOO EARLY`;
         }
 
-        console.debug(this._data);
+        console.debug(JSON.stringify(this._data));
 
         const value = this._data.value;
         const last_changed = this._data.last_changed;
@@ -159,7 +165,6 @@ class SugarTvCard extends LitElement {
         }
 
         if (!this._data) {
-
             this._data = {
                 value: null,
                 last_changed: null,
