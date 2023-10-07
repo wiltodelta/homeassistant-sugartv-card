@@ -126,7 +126,7 @@ class SugarTvCard extends LitElement {
                 delta_str = `＋${delta}`;
             }
             else {
-                delta_str = `－${delta}`;
+                delta_str = `－${delta * -1}`;
             }
         }
 
