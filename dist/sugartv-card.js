@@ -117,7 +117,7 @@ class SugarTvCard extends LitElement {
         }
 
         let delta = null;
-        let delta_str = "▢";
+        let delta_str = "";
 
         if (value && previous_value) {
             delta = value - previous_value;
