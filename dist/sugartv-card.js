@@ -212,87 +212,63 @@ class SugarTvCard extends LitElement {
                 font-family: 'overpass';
             }
 
-            // Small devices (landscape phones, 576px and up)
-            @media (min-width: 576px) {
-                .time {
-                    font-size: 24px;
-                }
-                
-                .value {
-                    font-size: 48px;
-                    margin: 0 15px;
-                }
-                
-                .trend {
-                    font-size: 36px;
-                    margin: 0 15px 0 0;
-                }
-                
-                .delta {
-                    font-size: 24px;
-                }
+            .time {
+                font-size: 24px;
+            }
+            
+            .value {
+                font-size: 48px;
+                margin: 0 15px;
+            }
+            
+            .trend {
+                font-size: 36px;
+                margin: 0 15px 0 0;
+            }
+            
+            .delta {
+                font-size: 24px;
             }
             
             // Medium devices (tablets, 768px and up)
             @media (min-width: 768px) {
                 .time {
-                    font-size: 24px;
+                    font-size: 36px;
                 }
                 
                 .value {
-                    font-size: 48px;
+                    font-size: 64px;
                     margin: 0 15px;
                 }
                 
                 .trend {
-                    font-size: 36px;
+                    font-size: 48px;
                     margin: 0 15px 0 0;
                 }
                 
                 .delta {
-                    font-size: 24px;
+                    font-size: 36px;
                 }
             }
             
             // Large devices (desktops, 992px and up)
             @media (min-width: 992px) {
                 .time {
-                    font-size: 24px;
+                    font-size: 48px;
                 }
                 
                 .value {
-                    font-size: 48px;
+                    font-size: 96px;
                     margin: 0 15px;
                 }
                 
                 .trend {
-                    font-size: 36px;
+                    font-size: 72px;
                     margin: 0 15px 0 0;
                 }
                 
                 .delta {
-                    font-size: 24px;
-                }
-            }
-            
-            // Extra large devices (large desktops, 1200px and up)
-            @media (min-width: 1200px) {
-                .time {
-                    font-size: 24px;
-                }
-                
-                .value {
                     font-size: 48px;
-                    margin: 0 15px;
-                }
-                
-                .trend {
-                    font-size: 36px;
-                    margin: 0 15px 0 0;
-                }
-                
-                .delta {
-                    font-size: 24px;
                 }
             }
             
