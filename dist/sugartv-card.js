@@ -68,7 +68,7 @@ class SugarTvCard extends LitElement {
     // replaced with the new values. Check https://lit.dev for more info.
     render() {
         if (!this._hass || !this._config) {
-            return html`TOO EARLY`;
+            return html``;
         }
 
         console.debug(JSON.stringify(this._data));
@@ -90,7 +90,7 @@ class SugarTvCard extends LitElement {
 
         const timeString = `${formattedHours}:${formattedMinutes}`;
 
-        let trend_symbol = "▢";
+        let trend_symbol = "⧖";
 
         switch (trend) {
             case "rising quickly":
@@ -191,7 +191,7 @@ class SugarTvCard extends LitElement {
                 margin: 0;
                 height: 100%;
                 font-family: 'Roboto', sans-serif;
-                font-size: 35vw;
+                font-size: 33vw;
             }
             
             .wrapper {
@@ -214,15 +214,15 @@ class SugarTvCard extends LitElement {
             }
             
             .value {
-                font-size: 50%;
-                font-weight: bold;
+                font-size: 60%;
+                /*font-weight: bold;*/
                 margin: 0 8%;
             }
             
             .trend {
                 font-family: 'overpass';
                 font-size: 30%;
-                margin: 0 5% 0 0;
+                margin: 0 8% 0 0;
             }
             
             .delta {
