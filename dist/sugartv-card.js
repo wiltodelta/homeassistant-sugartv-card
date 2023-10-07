@@ -207,66 +207,24 @@ class SugarTvCard extends LitElement {
                 align-items: center;
                 line-height: 1;
             }
-
+            
             .time {
-                font-size: 24px;
+                font-size: 96px;
             }
             
             .value {
-                font-size: 48px;
-                margin: 0 15px;
+                font-size: 192px;
+                margin: 0 36px;
             }
             
             .trend {
                 font-family: 'overpass';
-                font-size: 36px;
-                margin: 0 15px 0 0;
+                font-size: 144px;
+                margin: 0 36px 0 0;
             }
             
             .delta {
-                font-size: 24px;
-            }
-            
-            // Medium devices (tablets, 768px and up)
-            @media (min-width: 768px) {
-                .time {
-                    font-size: 36px;
-                }
-                
-                .value {
-                    font-size: 64px;
-                    margin: 0 20px;
-                }
-                
-                .trend {
-                    font-size: 48px;
-                    margin: 0 20px 0 0;
-                }
-                
-                .delta {
-                    font-size: 36px;
-                }
-            }
-            
-            // Large devices (desktops, 992px and up)
-            @media (min-width: 992px) {
-                .time {
-                    font-size: 48px;
-                }
-                
-                .value {
-                    font-size: 96px;
-                    margin: 0 25px;
-                }
-                
-                .trend {
-                    font-size: 72px;
-                    margin: 0 25px 0 0;
-                }
-                
-                .delta {
-                    font-size: 48px;
-                }
+                font-size: 96px;
             }
         `;
     }
