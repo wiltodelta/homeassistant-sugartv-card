@@ -20,9 +20,9 @@ loadCSS("https://overpass-30e2.kxcdn.com/overpass-mono.css");
 class SugarTvCard extends LitElement {
     static get properties() {
         return {
-            hass: {},
-            config: {},
-            data: {}
+            _hass: {},
+            _config: {},
+            _data: {}
         };
     }
 
@@ -33,50 +33,47 @@ class SugarTvCard extends LitElement {
     // object through `this.hass`. But if you DO have it, you need to save the hass object
     // manually, thusly:
     set hass(hass) {
-        const previous_hass = Object.create(this.hass);
-        this.hass = hass;
+        const value_entity = this._config.value_entity;
+        const trend_entity = this._config.trend_entity;
 
-        const value_entity = this.config.value_entity;
-        const trend_entity = this.config.trend_entity;
+        const value = hass.states[value_entity].state;
+        const last_changed = hass.states[value_entity].last_changed;
+        const trend = hass.states[trend_entity].state;
 
-        const value = this.hass.states[value_entity].state;
-        const last_changed = this.hass.states[value_entity].last_changed;
-        const trend = this.hass.states[trend_entity].state;
+        const previous_value = this.hass.states[value_entity].state;
+        const previous_last_changed = this.hass.states[value_entity].last_changed;
+        const previous_trend = this.hass.states[trend_entity].state;
 
-        const previous_value = previous_hass.states[value_entity].state;
-        const previous_last_changed = previous_hass.states[value_entity].last_changed;
-        const previous_trend = previous_hass.states[trend_entity].state;
-
-        this.data.value = value;
-        this.data.last_changed = last_changed;
-        this.data.trend = trend;
+        this._data.value = value;
+        this._data.last_changed = last_changed;
+        this._data.trend = trend;
 
         if (last_changed != previous_last_changed) {
-            this.data.previous_value = previous_value;
-            this.data.previous_last_changed = previous_last_changed;
-            this.data.previous_trend = previous_trend;
+            this._data.previous_value = previous_value;
+            this._data.previous_last_changed = previous_last_changed;
+            this._data.previous_trend = previous_trend;
         }
 
-        this.hass = hass;
+        this._hass = hass;
     }
 
     // The render() function of a LitElement returns the HTML of your card, and any time one or the
     // properties defined above are updated, the correct parts of the rendered html are magically
     // replaced with the new values. Check https://lit.dev for more info.
     render() {
-        //if (!this.hass || !this.config) {
-        //    return html``;
-        //}
+        if (!this._hass || !this._config) {
+            return html`TOO EARLY`;
+        }
 
-        console.debug(this.data);
+        console.debug(this._data);
 
-        const value = this.data.value;
-        const last_changed = this.data.last_changed;
-        const trend = this.data.trend;
+        const value = this._data.value;
+        const last_changed = this._data.last_changed;
+        const trend = this._data.trend;
 
-        const previous_value = this.data.previous_value;
-        //const previous_last_changed = this.data.previous_last_changed;
-        //const previous_trend = this.data.previous_trend;
+        const previous_value = this._data.previous_value;
+        //const previous_last_changed = this._data.previous_last_changed;
+        //const previous_trend = this._data.previous_trend;
 
         const date = new Date(last_changed);
         const hours = date.getHours();
@@ -161,18 +158,19 @@ class SugarTvCard extends LitElement {
             throw new Error("You need to define 'trend_entity' in your configuration.")
         }
 
-        this.config = config;
+        if (!this._data) {
 
-        const dataObj = {
-            value: null,
-            last_changed: null,
-            trend: null,
-            previous_value: null,
-            previous_last_changed: null,
-            previous_trend: null
-        };
+            this._data = {
+                value: null,
+                last_changed: null,
+                trend: null,
+                previous_value: null,
+                previous_last_changed: null,
+                previous_trend: null
+            };
+        }
 
-        this.data = dataObj;
+        this._config = config;
     }
 
     // The height of your card. Home Assistant uses this to automatically
