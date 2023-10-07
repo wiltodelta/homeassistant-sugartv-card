@@ -34,14 +34,13 @@ class SugarTvCard extends LitElement {
     // manually, thusly:
     set hass(hass) {
         const previous_hass = this.hass;
-        this.hass = hass;
 
         const value_entity = this.config.value_entity;
         const trend_entity = this.config.trend_entity;
 
-        const value = this.hass.states[value_entity].state;
-        const last_changed = this.hass.states[value_entity].last_changed;
-        const trend = this.hass.states[trend_entity].state;
+        const value = hass.states[value_entity].state;
+        const last_changed = hass.states[value_entity].last_changed;
+        const trend = hass.states[trend_entity].state;
 
         const previous_value = previous_hass.states[value_entity].state;
         const previous_last_changed = previous_hass.states[value_entity].last_changed;
@@ -56,15 +55,17 @@ class SugarTvCard extends LitElement {
             this.data.previous_last_changed = previous_last_changed;
             this.data.previous_trend = previous_trend;
         }
+
+        this.hass = hass;
     }
 
     // The render() function of a LitElement returns the HTML of your card, and any time one or the
     // properties defined above are updated, the correct parts of the rendered html are magically
     // replaced with the new values. Check https://lit.dev for more info.
     render() {
-        if (!this.hass || !this.config) {
-            return html``;
-        }
+        //if (!this.hass || !this.config) {
+        //    return html``;
+        //}
 
         console.debug(this.data);
 
@@ -122,7 +123,7 @@ class SugarTvCard extends LitElement {
             }
             else {
                 delta_str = `－${delta}`;
-            }   
+            }
         }
 
         return html`
