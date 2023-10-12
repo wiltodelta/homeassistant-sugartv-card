@@ -25,6 +25,14 @@ class SugarTvCard extends LitElement {
         };
     }
 
+    static getStubConfig() {
+        return {
+            type: "custom:sugartv-card",
+            value_entity: "sensor.dexcom_glucose_value",
+            trend_entity: "sensor.dexcom_glucose_trend"
+        };
+    }
+
     // Whenever anything updates in Home Assistant, the hass object is updated
     // and passed out to every card. If you want to react to state changes, this is where
     // you do it. If not, you can just ommit this setter entirely.
@@ -134,7 +142,7 @@ class SugarTvCard extends LitElement {
                 }
                 else {
                     delta_str = `－${delta * -1}`;
-                }           
+                }
             }
         }
 
@@ -208,6 +216,7 @@ class SugarTvCard extends LitElement {
                 height: 100%;
                 align-items: center;
                 justify-content: center;
+                font-size: 8vw;
             }
             
             .container {
@@ -216,23 +225,31 @@ class SugarTvCard extends LitElement {
                 line-height: 1;
             }
             
-            .time {
-                font-size: 96px;
-            }
+            .time { }
             
             .value {
-                font-size: 192px;
-                margin: 0 36px;
+                font-size: 16vw;
+                margin: 0 2vw;
             }
             
             .trend {
                 font-family: 'overpass';
-                font-size: 144px;
-                margin: 0 36px 0 0;
+                margin: 0 2vw 0 0;
             }
             
-            .delta {
-                font-size: 96px;
+            .delta { }
+
+            .element-preview .wrapper {
+                font-size: 14px !important;
+            }
+
+            .element-preview .value {
+                font-size: 24px !important;
+                margin: 0 4px !important;
+            }
+            
+            .element-preview .trend {
+                margin: 0 4px 0 0 !important;
             }
         `;
     }
