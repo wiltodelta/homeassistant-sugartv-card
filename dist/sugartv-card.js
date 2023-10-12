@@ -13,7 +13,6 @@ function loadCSS(url) {
 }
 
 loadCSS("https://fonts.googleapis.com/css?family=Roboto:400,700&amp;subset=cyrillic,cyrillic-ext,latin-ext");
-
 loadCSS("https://overpass-30e2.kxcdn.com/overpass.css");
 loadCSS("https://overpass-30e2.kxcdn.com/overpass-mono.css");
 
@@ -49,11 +48,13 @@ class SugarTvCard extends LitElement {
             this._data.last_changed = last_changed;
             this._data.trend = trend;
 
+            // Есть ли предыдущие значения?
             if (previous_hass) {
                 const previous_value = previous_hass.states[value_entity].state;
                 const previous_last_changed = previous_hass.states[value_entity].last_changed;
                 const previous_trend = previous_hass.states[trend_entity].state;
 
+                // Сохраняем, если значение изменилось
                 if (last_changed != previous_last_changed) {
                     this._data.previous_value = previous_value;
                     this._data.previous_last_changed = previous_last_changed;
@@ -117,16 +118,23 @@ class SugarTvCard extends LitElement {
         }
 
         let delta = null;
-        let delta_str = "▢";
+        let delta_str = "⧖";
 
         if (value && previous_value) {
-            delta = value - previous_value;
+            const last_changed_date = new Date(last_changed);
+            const previous_last_changed = this._data.previous_last_changed;
+            const previous_last_changed_date = new Date(previous_last_changed);
 
-            if (delta >= 0) {
-                delta_str = `＋${delta}`;
-            }
-            else {
-                delta_str = `－${delta * -1}`;
+            // Проверям, чтобы изменение было за последние 5 минут
+            if (Math.abs(last_changed_date - previous_last_changed_date) < 450000) {
+                delta = value - previous_value;
+
+                if (delta >= 0) {
+                    delta_str = `＋${delta}`;
+                }
+                else {
+                    delta_str = `－${delta * -1}`;
+                }           
             }
         }
 
