@@ -90,16 +90,20 @@ class SugarTvCard extends LitElement {
         //const previous_last_changed = this._data.previous_last_changed;
         //const previous_trend = this._data.previous_trend;
 
-        const date = new Date(last_changed);
-        const hours = date.getHours();
-        const minutes = date.getMinutes();
+        let time_str = "00:00";
 
-        const formattedHours = hours < 10 ? `0${hours}` : hours;
-        const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+        if (last_changed && last_changed != "unknown") {
+            const date = new Date(last_changed);
+            const hours = date.getHours();
+            const minutes = date.getMinutes();
+    
+            const formatted_hours = hours < 10 ? `0${hours}` : hours;
+            const formatted_minutes = minutes < 10 ? `0${minutes}` : minutes;
+    
+            time_str = `${formatted_hours}:${formatted_minutes}`;
+        }
 
-        const timeString = `${formattedHours}:${formattedMinutes}`;
-
-        let trend_symbol = "⧖";
+        let trend_symbol = "↻";
 
         switch (trend) {
             case "rising quickly":
@@ -125,17 +129,17 @@ class SugarTvCard extends LitElement {
                 break;
         }
 
-        let delta = null;
         let delta_str = "⧖";
 
-        if (value && previous_value) {
+        if (value && previous_value
+            && value != "unknown" && previous_value != "unknown") {
             const last_changed_date = new Date(last_changed);
             const previous_last_changed = this._data.previous_last_changed;
             const previous_last_changed_date = new Date(previous_last_changed);
 
             // Проверям, чтобы изменение было за последние 5 минут
             if (Math.abs(last_changed_date - previous_last_changed_date) < 450000) {
-                delta = value - previous_value;
+                let delta = value - previous_value;
 
                 if (delta >= 0) {
                     delta_str = `＋${delta}`;
@@ -146,11 +150,17 @@ class SugarTvCard extends LitElement {
             }
         }
 
+        let value_str = "000"
+
+        if (value && value != "unknown") {
+            value_str = value;
+        }
+
         return html`
             <div class="wrapper">
                 <div class="container">
-                    <div class="time">${timeString}</div>
-                    <div class="value">${value}</div>
+                    <div class="time">${time_str}</div>
+                    <div class="value">${value_str}</div>
                     <div class="trend">${trend_symbol}</div>
                     <div class="delta">${delta_str}</div>
                 </div>
