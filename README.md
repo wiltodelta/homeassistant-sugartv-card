@@ -1,7 +1,7 @@
 # SugarTV Card
 
 ![](https://badgen.net/github/release/wiltodelta/homeassistant-sugartv-card)
-![](https://badgen.net/github/assets-dl/wiltodelta/homeassistant-sugartv-card)
+![](https://badgen.net/github/last-commit/wiltodelta/homeassistant-sugartv-card)
 ![](https://badgen.net/github/stars/wiltodelta/homeassistant-sugartv-card)
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=wiltodelta&repository=homeassistant-sugartv-card&category=lovelace)
