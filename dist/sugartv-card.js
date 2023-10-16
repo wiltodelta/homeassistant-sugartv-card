@@ -238,29 +238,17 @@ class SugarTvCard extends LitElement {
             .time { }
             
             .value {
-                font-size: 16vw;
-                margin: 0 2vw;
+                font-size: 24vw;
+                margin: 0 4vw;
             }
             
             .trend {
+                font-size: 16vw;
                 font-family: 'overpass';
-                margin: 0 2vw 0 0;
+                margin: 0 4vw 0 0;
             }
             
             .delta { }
-
-            .element-preview .wrapper {
-                font-size: 14px !important;
-            }
-
-            .element-preview .value {
-                font-size: 24px !important;
-                margin: 0 4px !important;
-            }
-            
-            .element-preview .trend {
-                margin: 0 4px 0 0 !important;
-            }
         `;
     }
 }
