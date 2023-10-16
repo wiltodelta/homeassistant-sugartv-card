@@ -226,7 +226,7 @@ class SugarTvCard extends LitElement {
                 height: 100%;
                 align-items: center;
                 justify-content: center;
-                font-size: 6vw;
+                font-size: 5vw;
             }
             
             .container {
@@ -238,12 +238,12 @@ class SugarTvCard extends LitElement {
             .time { }
             
             .value {
-                font-size: 24vw;
+                font-size: 20vw;
                 margin: 0 2vw;
             }
             
             .trend {
-                font-size: 12vw;
+                font-size: 10vw;
                 font-family: 'overpass';
                 margin: 0 2vw 0 0;
             }
