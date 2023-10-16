@@ -2,7 +2,10 @@
 
 # SugarTV Card
 
-[![hacs][hacs-badge]][hacs-url] [![release][release-badge]][release-url] ![downloads][downloads-badge] ![build][build-badge]
+[![hacs][hacs-badge]][hacs-url]
+[![release][release-badge]][release-url] 
+![downloads][downloads-badge]
+![build][build-badge]
 
 A custom lovelace card for Home Assistant that provides a better way to display Dexcom data. This card aims to present the data in a visually appealing and easy-to-understand format, making it easier for users to monitor their glucose levels.
 
