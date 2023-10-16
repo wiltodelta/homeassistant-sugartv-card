@@ -2,17 +2,6 @@
 
 # SugarTV Card
 
-[![hacs][hacs-badge]][hacs-url]
-[![release][release-badge]][release-url] 
-![downloads][downloads-badge]
-![build][build-badge]
-
-[hacs-url]: https://github.com/hacs/integration
-[hacs-badge]: https://img.shields.io/badge/hacs-default-orange.svg?style=flat-square
-[release-badge]: https://img.shields.io/github/v/release/wiltodelta/homeassistant-sugartv-card?style=flat-square
-[downloads-badge]: https://img.shields.io/github/downloads/wiltodelta/homeassistant-sugartv-cardtotal?style=flat-square
-[build-badge]: https://img.shields.io/github/actions/workflow/status/wiltodelta/homeassistant-sugartv-card/build.yml?branch=main&style=flat-square
-
 A custom lovelace card for Home Assistant that provides a better way to display Dexcom data. This card aims to present the data in a visually appealing and easy-to-understand format, making it easier for users to monitor their glucose levels.
 
 ![Screenshot](screenshot.png)
