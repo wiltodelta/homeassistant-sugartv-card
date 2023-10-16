@@ -96,10 +96,10 @@ class SugarTvCard extends LitElement {
             const date = new Date(last_changed);
             const hours = date.getHours();
             const minutes = date.getMinutes();
-
+    
             const formatted_hours = hours < 10 ? `0${hours}` : hours;
             const formatted_minutes = minutes < 10 ? `0${minutes}` : minutes;
-
+    
             time_str = `${formatted_hours}:${formatted_minutes}`;
         }
 
@@ -226,7 +226,7 @@ class SugarTvCard extends LitElement {
                 height: 100%;
                 align-items: center;
                 justify-content: center;
-                font-size: 8vw;
+                font-size: 6vw;
             }
             
             .container {
@@ -239,13 +239,13 @@ class SugarTvCard extends LitElement {
             
             .value {
                 font-size: 24vw;
-                margin: 0 4vw;
+                margin: 0 2vw;
             }
             
             .trend {
-                font-size: 16vw;
+                font-size: 12vw;
                 font-family: 'overpass';
-                margin: 0 4vw 0 0;
+                margin: 0 2vw 0 0;
             }
             
             .delta { }
