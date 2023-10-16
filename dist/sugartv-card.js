@@ -96,10 +96,10 @@ class SugarTvCard extends LitElement {
             const date = new Date(last_changed);
             const hours = date.getHours();
             const minutes = date.getMinutes();
-    
+
             const formatted_hours = hours < 10 ? `0${hours}` : hours;
             const formatted_minutes = minutes < 10 ? `0${minutes}` : minutes;
-    
+
             time_str = `${formatted_hours}:${formatted_minutes}`;
         }
 
