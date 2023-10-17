@@ -4,7 +4,7 @@
 ![](https://badgen.net/github/last-commit/wiltodelta/homeassistant-sugartv-card)
 ![](https://badgen.net/github/stars/wiltodelta/homeassistant-sugartv-card)
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=https://github.com/wiltodelta&repository=homeassistant-sugartv-card&category=lovelace)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=wiltodelta&repository=homeassistant-sugartv-card&category=lovelace)
 
 
 A custom lovelace card for Home Assistant that provides a better way to display Dexcom data. This card aims to present the data in a visually appealing and easy-to-understand format, making it easier for users to monitor their glucose levels.
@@ -14,7 +14,7 @@ A custom lovelace card for Home Assistant that provides a better way to display 
 ## Features
 
 - Using default Dexcom integration for Home Assistant
-- Displays current glucose value, trend and last updated time
+- Displays current glucose value, trend, and last updated time
 - Supports View type "Panel (1 card)"
 
 ## Installation
