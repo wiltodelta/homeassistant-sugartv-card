@@ -150,7 +150,7 @@ class SugarTvCard extends LitElement {
             }
         }
 
-        let value_str = "000"
+        let value_str = "N/A"
 
         if (value && value != "unknown") {
             value_str = value;
