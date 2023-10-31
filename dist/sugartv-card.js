@@ -56,13 +56,13 @@ class SugarTvCard extends LitElement {
             this._data.last_changed = last_changed;
             this._data.trend = trend;
 
-            // Есть ли предыдущие значения?
+            // Are there previous values?
             if (previous_hass) {
                 const previous_value = previous_hass.states[value_entity].state;
                 const previous_last_changed = previous_hass.states[value_entity].last_changed;
                 const previous_trend = previous_hass.states[trend_entity].state;
 
-                // Сохраняем, если значение изменилось
+                // Save only if the value has changed
                 if (last_changed != previous_last_changed) {
                     this._data.previous_value = previous_value;
                     this._data.previous_last_changed = previous_last_changed;
@@ -92,7 +92,7 @@ class SugarTvCard extends LitElement {
 
         let time_str = "00:00";
 
-        if (last_changed && last_changed != "unknown") {
+        if (last_changed && last_changed != "unknown" && last_changed != "unavailable") {
             const date = new Date(last_changed);
             const hours = date.getHours();
             const minutes = date.getMinutes();
@@ -132,12 +132,13 @@ class SugarTvCard extends LitElement {
         let delta_str = "⧖";
 
         if (value && previous_value
-            && value != "unknown" && previous_value != "unknown") {
+            && value != "unknown" && previous_value != "unknown"
+            && value != "unavailable" && previous_value != "unavailable") {
             const last_changed_date = new Date(last_changed);
             const previous_last_changed = this._data.previous_last_changed;
             const previous_last_changed_date = new Date(previous_last_changed);
 
-            // Проверям, чтобы изменение было за последние 5 минут
+            // Let's make sure the change is in the last 5 minutes
             if (Math.abs(last_changed_date - previous_last_changed_date) < 450000) {
                 let delta = value - previous_value;
 
@@ -152,7 +153,7 @@ class SugarTvCard extends LitElement {
 
         let value_str = "N/A"
 
-        if (value && value != "unknown") {
+        if (value && value != "unknown" && value != "unavailable") {
             value_str = value;
         }
 
