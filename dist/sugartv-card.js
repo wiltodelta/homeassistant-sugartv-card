@@ -143,10 +143,10 @@ class SugarTvCard extends LitElement {
                 let delta = value - previous_value;
 
                 if (delta >= 0) {
-                    delta_str = `＋${(Math.round(delta * 10) / 10).toFixed(1)}`;
+                    delta_str = `＋${(Math.round(delta * 10) / 10)}`;
                 }
                 else {
-                    delta_str = `－${(Math.round(delta * -1 * 10) / 10).toFixed(1)}`;
+                    delta_str = `－${(Math.round(delta * -1 * 10) / 10)}`;
                 }
             }
         }
