@@ -22,11 +22,13 @@ A custom lovelace card for Home Assistant that provides a better way to display 
 
 ### Installing via HACS
 
-1. Go to the HACS section in your Home Assistant instance.
-2. Click on the three dots in the top right corner and select "Custom repositories."
-3. Add the URL to this repository and select the "Lovelace" category.
-4. Click the "ADD" button.
-5. Install the card from the HACS store.
+SugarTV Card is available in HACS (Home Assistant Community Store).
+
+1. Install HACS if you don't have it already
+2. Open HACS in Home Assistant
+3. Go to "Frontend" section
+4. Click button with "+" icon
+5. Search for "SugarTV Card"
 
 ## Example
 
