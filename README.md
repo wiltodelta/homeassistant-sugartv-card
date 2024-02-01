@@ -12,8 +12,9 @@ A custom lovelace card for Home Assistant that provides a better way to display 
 ## Features
 
 - Using default Dexcom integration for Home Assistant
-- Displays current glucose value, trend, and last updated time
-- Supports View type "Panel (1 card)"
+- Displays current glucose value, *difference*, trend, and last updated time
+- Supports local time format
+- Supports measurement in mmol/L and mg/dL mmol/L
 
 ## Installation
 
@@ -28,8 +29,8 @@ SugarTV Card is available in HACS (Home Assistant Community Store).
 
 1. Install HACS if you don't have it already
 2. Open HACS in Home Assistant
-3. Go to "Frontend" section
-4. Click button with "+" icon
+3. Go to the "Frontend" section
+4. Click the button with the "+" icon
 5. Search for "SugarTV Card"
 
 ## Example
@@ -39,6 +40,8 @@ type: custom:sugartv-card
 value_entity: sensor.dexcom_glucose_value
 trend_entity: sensor.dexcom_glucose_trend
 ```
+
+It's recommended to use View type "Panel (1 card)".
 
 ## License
 
