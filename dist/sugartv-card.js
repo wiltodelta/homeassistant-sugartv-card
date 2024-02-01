@@ -94,12 +94,10 @@ class SugarTvCard extends LitElement {
 
         if (last_changed && last_changed != "unknown" && last_changed != "unavailable") {
             const date = new Date(last_changed);
-            const formatted = date.toLocaleTimeString([], {
+            time_str = date.toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit'
             });
-
-            return formatted;
         }
 
         let trend_symbol = "↻";
