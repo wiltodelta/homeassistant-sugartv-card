@@ -4,9 +4,6 @@ import {
     css,
 } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 
-import SugarTvCardEditor from './sugartv-card-editor.js'
-customElements.define('sugartv-card-editor', SugarTvCardEditor)
-
 function loadCSS(url) {
     const link = document.createElement("link");
     link.type = "text/css";
