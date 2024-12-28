@@ -213,9 +213,12 @@ class SugarTvCard extends LitElement {
     static get styles() {
         return css`            
             :host {
-                margin: 0;
+                display: flex;
                 height: 100%;
+                width: 100%;
                 font-family: 'Roboto', sans-serif;
+                --min-dimension: min(100vh, 100vw);
+                --base-size: calc(var(--min-dimension) / 20);
             }
             
             .wrapper {
@@ -225,29 +228,35 @@ class SugarTvCard extends LitElement {
                 height: 100%;
                 align-items: center;
                 justify-content: center;
-                font-size: 5vw;
             }
             
             .container {
                 display: flex;
                 align-items: center;
+                justify-content: center;
                 line-height: 1;
+                padding: var(--base-size);
+                box-sizing: border-box;
             }
             
-            .time { }
+            .time {
+                font-size: calc(var(--base-size) * 1.2);
+            }
             
             .value {
-                font-size: 20vw;
-                margin: 0 2vw;
+                font-size: calc(var(--base-size) * 4);
+                margin: 0 calc(var(--base-size) * 0.5);
             }
             
             .trend {
-                font-size: 10vw;
+                font-size: calc(var(--base-size) * 2);
                 font-family: 'overpass';
-                margin: 0 2vw 0 0;
+                margin: 0 calc(var(--base-size) * 0.5) 0 0;
             }
             
-            .delta { }
+            .delta {
+                font-size: calc(var(--base-size) * 1.2);
+            }
         `;
     }
 
