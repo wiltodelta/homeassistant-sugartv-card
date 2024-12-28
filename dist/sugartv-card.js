@@ -5,8 +5,6 @@ import {
 } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import "./sugartv-card-editor.js";
 
-export const VERSION = "0.3.5";
-
 function loadCSS(url) {
     const link = document.createElement("link");
     link.type = "text/css";
@@ -24,14 +22,12 @@ class SugarTvCard extends LitElement {
         return {
             _hass: {},
             _config: {},
-            _data: {},
-            version: { type: String }
+            _data: {}
         };
     }
 
     constructor() {
         super();
-        this.version = VERSION;
     }
 
     static getStubConfig() {
@@ -278,6 +274,5 @@ window.customCards = window.customCards || []; // Create the list if it doesn't 
 window.customCards.push({
     type: "sugartv-card",
     name: "SugarTV Card",
-    description: "A custom lovelace card for Home Assistant that provides a better way to display Dexcom data.",
-    version: VERSION
+    description: "A custom lovelace card for Home Assistant that provides a better way to display Dexcom data."
 });

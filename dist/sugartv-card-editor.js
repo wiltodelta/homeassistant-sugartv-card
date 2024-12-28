@@ -3,20 +3,17 @@ import {
     html,
     css,
 } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
-import { VERSION } from "./sugartv-card.js";
 
 class SugarTvCardEditor extends LitElement {
     static get properties() {
         return {
             hass: {},
-            config: {},
-            version: { type: String }
+            config: {}
         };
     }
 
     constructor() {
         super();
-        this.version = VERSION;
     }
 
     setConfig(config) {
@@ -37,7 +34,6 @@ class SugarTvCardEditor extends LitElement {
 
         return html`
             <div class="card-config">
-                <div class="version">Version: ${this.version}</div>
                 ${!this.config.value_entity ? html`
                     <div class="preview">
                         <div class="card">
@@ -119,11 +115,6 @@ class SugarTvCardEditor extends LitElement {
 
     static get styles() {
         return css`
-            .version {
-                padding: 8px 16px;
-                color: var(--secondary-text-color);
-                font-size: 0.9em;
-            }
             ha-select {
                 width: 100%;
                 margin-bottom: 8px;

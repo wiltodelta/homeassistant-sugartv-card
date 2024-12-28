@@ -1,7 +1,6 @@
 {
   "name": "SugarTV Card",
   "filename": "sugartv-card.js",
-  "version": "0.3.5",
   "render_readme": true,
   "country": [
     "AD",
