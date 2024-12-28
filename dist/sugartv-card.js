@@ -179,8 +179,6 @@ class SugarTvCard extends LitElement {
     // It MAY be called several times during the lifetime of the card, e.g. if the configuration
     // of the card is changed.
     setConfig(config) {
-        console.info("%c SUGARTV-CARD ", "color: white; background: red; font-weight: 700;");
-
         if (!config.value_entity) {
             throw new Error("You need to define 'value_entity' in your configuration.")
         }
