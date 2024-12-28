@@ -3,6 +3,7 @@ import {
     html,
     css,
 } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
+import "./sugartv-card-editor.js";
 
 function loadCSS(url) {
     const link = document.createElement("link");
@@ -248,6 +249,10 @@ class SugarTvCard extends LitElement {
             
             .delta { }
         `;
+    }
+
+    static async getConfigElement() {
+        return document.createElement("sugartv-card-editor");
     }
 }
 
