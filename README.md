@@ -15,8 +15,7 @@ A custom lovelace card for Home Assistant that provides a better way to display 
 - Displays current glucose value, *difference*, trend, and last updated time
 - Supports local time format
 - Supports measurement in mmol/L and mg/dL
-- Visual configuration editor support
-- Flexible card sizing - can be embedded in cards of any size
+- Flexible card sizing
 
 ## Installation
 
