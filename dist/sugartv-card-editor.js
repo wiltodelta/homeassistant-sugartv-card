@@ -2,6 +2,14 @@ import { LitElement, html, css } from "https://unpkg.com/lit-element@3.3.3/lit-e
 import { cardStyles } from "./sugartv-card-styles.js";
 
 class SugarTvCardEditor extends LitElement {
+    static getStubConfig() {
+        return {
+            type: "custom:sugartv-card",
+            value_entity: "",
+            trend_entity: ""
+        };
+    }
+
     static get properties() {
         return {
             hass: { type: Object },
