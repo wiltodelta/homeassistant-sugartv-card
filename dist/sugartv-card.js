@@ -48,18 +48,6 @@ class SugarTvCard extends LitElement {
     }
 
     /**
-     * Returns default configuration for the card
-     * @returns {Object} Default configuration object
-     */
-    static getStubConfig() {
-        return {
-            type: "custom:sugartv-card",
-            value_entity: "sensor.dexcom_glucose_value",
-            trend_entity: "sensor.dexcom_glucose_trend"
-        };
-    }
-
-    /**
      * Updates the card's data when Home Assistant state changes
      * @param {Object} hass - Home Assistant state object
      */
@@ -231,10 +219,6 @@ class SugarTvCard extends LitElement {
 
     static get styles() {
         return cardStyles;
-    }
-
-    static async getConfigElement() {
-        return document.createElement("sugartv-card-editor");
     }
 }
 
