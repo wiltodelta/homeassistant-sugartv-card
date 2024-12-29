@@ -33,7 +33,7 @@ class SugarTvCardEditor extends LitElement {
             <div class="card-config">
                 <div class="values">
                     <ha-entity-picker
-                        label=${"Value (required)"}
+                        label="Value (required)"
                         .hass=${this.hass}
                         .value=${this._value_entity}
                         .configValue=${"value_entity"}
@@ -42,7 +42,7 @@ class SugarTvCardEditor extends LitElement {
                         allow-custom-entity
                     ></ha-entity-picker>
                     <ha-entity-picker
-                        label=${"Trend (required)"}
+                        label="Trend (required)"
                         .hass=${this.hass}
                         .value=${this._trend_entity}
                         .configValue=${"trend_entity"}
