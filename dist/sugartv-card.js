@@ -182,6 +182,8 @@ class SugarTvCard extends LitElement {
      * @throws {Error} If configuration is invalid
      */
     setConfig(config) {
+        console.info("%c SUGARTV-CARD", "color: white; background: red; font-weight: 700;");
+
         if (!config.value_entity) {
             throw new Error('Please define value_entity');
         }
@@ -222,7 +224,11 @@ class SugarTvCard extends LitElement {
     }
 
     static getStubConfig() {
-        return {};
+        return {
+            type: "custom:sugartv-card",
+            value_entity: "sensor.dexcom_glucose_value",
+            trend_entity: "sensor.dexcom_glucose_trend"
+        };
     }
 
     static getConfigElement() {

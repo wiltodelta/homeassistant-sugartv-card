@@ -16,18 +16,8 @@ class SugarTvCardEditor extends LitElement {
         this.config = config;
     }
 
-    get _value_entity() {
-        if (!this.config) return "";
-        return this.config.value_entity || "";
-    }
-
-    get _trend_entity() {
-        if (!this.config) return "";
-        return this.config.trend_entity || "";
-    }
-
     render() {
-        if (!this.hass) {
+        if (!this._hass || !this._config) {
             return html``;
         }
 
@@ -37,7 +27,7 @@ class SugarTvCardEditor extends LitElement {
                     <ha-entity-picker
                         label="Value (required)"
                         .hass=${this.hass}
-                        .value=${this._value_entity}
+                        .value=${this.config.value_entity}
                         .configValue=${"value_entity"}
                         .includeDomains=${["sensor"]}
                         @value-changed=${this._valueChanged}
@@ -46,7 +36,7 @@ class SugarTvCardEditor extends LitElement {
                     <ha-entity-picker
                         label="Trend (required)"
                         .hass=${this.hass}
-                        .value=${this._trend_entity}
+                        .value=${this.config.trend_entity}
                         .configValue=${"trend_entity"}
                         .includeDomains=${["sensor"]}
                         @value-changed=${this._valueChanged}
