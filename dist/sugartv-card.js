@@ -220,6 +220,14 @@ class SugarTvCard extends LitElement {
     static get styles() {
         return cardStyles;
     }
+
+    static getStubConfig() {
+        return {
+            type: "custom:sugartv-card",
+            value_entity: "",
+            trend_entity: ""
+        };
+    }
 }
 
 customElements.define("sugartv-card", SugarTvCard);
