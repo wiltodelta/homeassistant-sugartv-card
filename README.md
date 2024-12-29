@@ -14,7 +14,9 @@ A custom lovelace card for Home Assistant that provides a better way to display 
 - Using default Dexcom integration for Home Assistant
 - Displays current glucose value, *difference*, trend, and last updated time
 - Supports local time format
-- Supports measurement in mmol/L and mg/dL mmol/L
+- Supports measurement in mmol/L and mg/dL
+- Visual configuration editor support
+- Flexible card sizing - can be embedded in cards of any size
 
 ## Installation
 
@@ -40,8 +42,6 @@ type: custom:sugartv-card
 value_entity: sensor.dexcom_glucose_value
 trend_entity: sensor.dexcom_glucose_trend
 ```
-
-It's recommended to use View type "Panel (1 card)".
 
 ## License
 
