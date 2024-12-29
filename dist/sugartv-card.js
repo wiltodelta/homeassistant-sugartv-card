@@ -17,13 +17,13 @@ const FONTS = [
 ];
 
 const TREND_SYMBOLS = {
-    'rising quickly': '↑↑',
+    'rising_quickly': '↑↑',
     'rising': '↑',
-    'rising slightly': '↗',
+    'rising_slightly': '↗',
     'steady': '→',
-    'falling slightly': '↘',
+    'falling_slightly': '↘',
     'falling': '↓',
-    'falling quickly': '↓↓',
+    'falling_quickly': '↓↓',
     'unknown': '↻'
 };
 
