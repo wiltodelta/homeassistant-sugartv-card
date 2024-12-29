@@ -28,8 +28,8 @@ class SugarTvCard extends LitElement {
     static getStubConfig() {
         return {
             type: "custom:sugartv-card",
-            value_entity: "sensor.dexcom_glucose_value",
-            trend_entity: "sensor.dexcom_glucose_trend"
+            glucose_value: "sensor.dexcom_glucose_value",
+            glucose_trend: "sensor.dexcom_glucose_trend"
         };
     }
 
@@ -44,13 +44,13 @@ class SugarTvCard extends LitElement {
         const previous_hass = this._hass;
         this._hass = hass;
 
-        const value_entity = this._config.value_entity;
-        const trend_entity = this._config.trend_entity;
+        const glucose_value = this._config.glucose_value;
+        const glucose_trend = this._config.glucose_trend;
 
         if (this._hass) {
-            const value = this._hass.states[value_entity].state;
-            const last_changed = this._hass.states[value_entity].last_changed;
-            const trend = this._hass.states[trend_entity].state;
+            const value = this._hass.states[glucose_value].state;
+            const last_changed = this._hass.states[glucose_value].last_changed;
+            const trend = this._hass.states[glucose_trend].state;
 
             this._data.value = value;
             this._data.last_changed = last_changed;
@@ -58,9 +58,9 @@ class SugarTvCard extends LitElement {
 
             // Are there previous values?
             if (previous_hass) {
-                const previous_value = previous_hass.states[value_entity].state;
-                const previous_last_changed = previous_hass.states[value_entity].last_changed;
-                const previous_trend = previous_hass.states[trend_entity].state;
+                const previous_value = previous_hass.states[glucose_value].state;
+                const previous_last_changed = previous_hass.states[glucose_value].last_changed;
+                const previous_trend = previous_hass.states[glucose_trend].state;
 
                 // Save only if the value has changed
                 if (last_changed != previous_last_changed) {
@@ -180,12 +180,12 @@ class SugarTvCard extends LitElement {
     setConfig(config) {
         console.info("%c SUGARTV-CARD ", "color: white; background: red; font-weight: 700;");
 
-        if (!config.value_entity) {
-            throw new Error("You need to define 'value_entity' in your configuration.")
+        if (!config.glucose_value) {
+            throw new Error("You need to define 'glucose_value' in your configuration.")
         }
 
-        if (!config.trend_entity) {
-            throw new Error("You need to define 'trend_entity' in your configuration.")
+        if (!config.glucose_trend) {
+            throw new Error("You need to define 'glucose_trend' in your configuration.")
         }
 
         if (!this._data) {
@@ -211,10 +211,12 @@ class SugarTvCard extends LitElement {
 
     static get styles() {
         return css`            
-            :host {
-                margin: 0;
+            :host, .card {
+                display: flex;
                 height: 100%;
+                width: 100%;
                 font-family: 'Roboto', sans-serif;
+                container-type: inline-size;
             }
             
             .wrapper {
@@ -224,29 +226,35 @@ class SugarTvCard extends LitElement {
                 height: 100%;
                 align-items: center;
                 justify-content: center;
-                font-size: 5vw;
             }
             
             .container {
                 display: flex;
                 align-items: center;
+                justify-content: center;
                 line-height: 1;
+                padding: 5cqi;
+                box-sizing: border-box;
             }
             
-            .time { }
+            .time {
+                font-size: 6cqi;
+            }
             
             .value {
-                font-size: 20vw;
-                margin: 0 2vw;
+                font-size: 20cqi;
+                margin: 0 2.5cqi;
             }
             
             .trend {
-                font-size: 10vw;
+                font-size: 10cqi;
                 font-family: 'overpass';
-                margin: 0 2vw 0 0;
+                margin: 0 2.5cqi 0 0;
             }
             
-            .delta { }
+            .delta {
+                font-size: 6cqi;
+            }
         `;
     }
 }
