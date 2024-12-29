@@ -63,7 +63,7 @@ class SugarTvCardEditor extends LitElement {
                     <ha-select
                         naturalMenuWidth
                         fixedMenuPosition
-                        label="Glucose Value Entity"
+                        label="Glucose value (required)"
                         .configValue=${'glucose_value'}
                         .value=${this._glucose_value}
                         @selected=${this._valueChanged}
@@ -81,7 +81,7 @@ class SugarTvCardEditor extends LitElement {
                     <ha-select
                         naturalMenuWidth
                         fixedMenuPosition
-                        label="Glucose Trend Entity"
+                        label="Glucose trend (required)"
                         .configValue=${'glucose_trend'}
                         .value=${this._glucose_trend}
                         @selected=${this._valueChanged}

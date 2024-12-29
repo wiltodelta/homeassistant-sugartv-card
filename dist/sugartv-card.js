@@ -10,11 +10,11 @@ import "./sugartv-card-editor.js";
 const VERSION = "0.5.0";
 
 // Constants
-const FONTS = {
-    ROBOTO: "https://fonts.googleapis.com/css?family=Roboto:400,700&amp;subset=cyrillic,cyrillic-ext,latin-ext",
-    OVERPASS: "https://overpass-30e2.kxcdn.com/overpass.css",
-    OVERPASS_MONO: "https://overpass-30e2.kxcdn.com/overpass-mono.css"
-};
+const FONTS = [
+    "https://fonts.googleapis.com/css?family=Roboto:400,700&amp;subset=cyrillic,cyrillic-ext,latin-ext",
+    "https://overpass-30e2.kxcdn.com/overpass.css",
+    "https://overpass-30e2.kxcdn.com/overpass-mono.css"
+];
 
 const TREND_SYMBOLS = {
     'rising quickly': '↑↑',
@@ -43,7 +43,7 @@ function loadCSS(url) {
 }
 
 // Load required fonts
-Object.values(FONTS).forEach(loadCSS);
+FONTS.forEach(loadCSS);
 
 class SugarTvCard extends LitElement {
     static get properties() {
