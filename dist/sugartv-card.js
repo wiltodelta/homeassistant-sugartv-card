@@ -222,11 +222,7 @@ class SugarTvCard extends LitElement {
     }
 
     static getStubConfig() {
-        return {
-            type: "custom:sugartv-card",
-            value_entity: "",
-            trend_entity: ""
-        };
+        return {};
     }
 
     static getConfigElement() {

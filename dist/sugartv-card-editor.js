@@ -17,10 +17,12 @@ class SugarTvCardEditor extends LitElement {
     }
 
     get _value_entity() {
+        if (!this.config) return "";
         return this.config.value_entity || "";
     }
 
     get _trend_entity() {
+        if (!this.config) return "";
         return this.config.trend_entity || "";
     }
 
