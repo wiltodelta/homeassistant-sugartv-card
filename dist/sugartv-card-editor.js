@@ -4,6 +4,9 @@ import {
     css,
 } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 
+import { fireEvent, createEntityRow } from "https://unpkg.com/custom-card-helpers@1.9.0/dist/index.m.js?module";
+import "@ha/components/ha-entity-picker";
+
 class SugarTvCardEditor extends LitElement {
     static get properties() {
         return {
