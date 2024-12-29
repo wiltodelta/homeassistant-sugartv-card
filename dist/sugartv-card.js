@@ -219,8 +219,7 @@ class SugarTvCard extends LitElement {
                 height: 100%;
                 width: 100%;
                 font-family: 'Roboto', sans-serif;
-                --min-dimension: min(100vh, 100vw);
-                --base-size: calc(var(--min-dimension) / 20);
+                container-type: inline-size;
             }
             
             .wrapper {
@@ -237,27 +236,27 @@ class SugarTvCard extends LitElement {
                 align-items: center;
                 justify-content: center;
                 line-height: 1;
-                padding: var(--base-size);
+                padding: 5cqi;
                 box-sizing: border-box;
             }
             
             .time {
-                font-size: calc(var(--base-size) * 1.2);
+                font-size: 6cqi;
             }
             
             .value {
-                font-size: calc(var(--base-size) * 4);
-                margin: 0 calc(var(--base-size) * 0.5);
+                font-size: 20cqi;
+                margin: 0 2.5cqi;
             }
             
             .trend {
-                font-size: calc(var(--base-size) * 2);
+                font-size: 10cqi;
                 font-family: 'overpass';
-                margin: 0 calc(var(--base-size) * 0.5) 0 0;
+                margin: 0 2.5cqi 0 0;
             }
             
             .delta {
-                font-size: calc(var(--base-size) * 1.2);
+                font-size: 6cqi;
             }
         `;
     }
