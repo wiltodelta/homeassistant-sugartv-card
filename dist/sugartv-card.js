@@ -4,6 +4,7 @@ import {
     css,
 } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 import { cardStyles } from "./sugartv-card-styles.js";
+import "./sugartv-card-editor.js";
 
 // External resources configuration
 const EXTERNAL_RESOURCES = [
@@ -226,6 +227,10 @@ class SugarTvCard extends LitElement {
             value_entity: "",
             trend_entity: ""
         };
+    }
+
+    static getConfigElement() {
+        return document.createElement("sugartv-card-editor");
     }
 }
 
