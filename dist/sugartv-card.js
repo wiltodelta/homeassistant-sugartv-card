@@ -4,8 +4,6 @@ import {
     css,
 } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 
-import "./sugartv-card-editor.js";
-
 function loadCSS(url) {
     const link = document.createElement("link");
     link.type = "text/css";
@@ -19,10 +17,6 @@ loadCSS("https://overpass-30e2.kxcdn.com/overpass.css");
 loadCSS("https://overpass-30e2.kxcdn.com/overpass-mono.css");
 
 class SugarTvCard extends LitElement {
-    static getConfigElement() {
-        return document.createElement("sugartv-card-editor");
-    }
-
     static get properties() {
         return {
             _hass: {},
