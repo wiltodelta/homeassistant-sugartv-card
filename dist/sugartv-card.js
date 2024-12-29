@@ -4,6 +4,8 @@ import {
     css,
 } from "https://unpkg.com/lit-element@3.3.3/lit-element.js?module";
 
+import "./sugartv-card-editor.js";
+
 function loadCSS(url) {
     const link = document.createElement("link");
     link.type = "text/css";
@@ -17,6 +19,10 @@ loadCSS("https://overpass-30e2.kxcdn.com/overpass.css");
 loadCSS("https://overpass-30e2.kxcdn.com/overpass-mono.css");
 
 class SugarTvCard extends LitElement {
+    static getConfigElement() {
+        return document.createElement("sugartv-card-editor");
+    }
+
     static get properties() {
         return {
             _hass: {},
@@ -48,6 +54,19 @@ class SugarTvCard extends LitElement {
         const glucose_trend = this._config.glucose_trend;
 
         if (this._hass) {
+            if (!this._hass.states[glucose_value] || !this._hass.states[glucose_trend]) {
+                console.error("SugarTV Card: One or both entities not found:", glucose_value, glucose_trend);
+                this._data = {
+                    value: "error",
+                    last_changed: null,
+                    trend: "error",
+                    previous_value: null,
+                    previous_last_changed: null,
+                    previous_trend: null
+                };
+                return;
+            }
+
             const value = this._hass.states[glucose_value].state;
             const last_changed = this._hass.states[glucose_value].last_changed;
             const trend = this._hass.states[glucose_trend].state;
@@ -262,7 +281,7 @@ class SugarTvCard extends LitElement {
 customElements.define("sugartv-card", SugarTvCard);
 
 // Next we add our card to the list of custom cards
-window.customCards = window.customCards || []; // Create the list if it doesn't exist. Careful not to overwrite it
+window.customCards = window.customCards || [];
 window.customCards.push({
     type: "sugartv-card",
     name: "SugarTV Card",
