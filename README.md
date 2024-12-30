@@ -1,4 +1,4 @@
-# SugarTV Card
+# 📺 SugarTV Card
 
 ![](https://badgen.net/static/HACS/default)
 ![](https://badgen.net/github/release/wiltodelta/homeassistant-sugartv-card)
