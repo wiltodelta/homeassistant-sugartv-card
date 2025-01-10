@@ -111,8 +111,9 @@ class SugarTvCard extends LitElement {
             console.error("SugarTV Card: One or both entities not found:", glucose_value, glucose_trend);
             this._data = {
                 ...this._getInitialDataState(),
-                value: "error",
-                trend: "error"
+                value: 0,
+                last_changed: 0,
+                trend: "unknown"
             };
             return false;
         }
