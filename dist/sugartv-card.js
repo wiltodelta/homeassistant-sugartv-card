@@ -7,31 +7,76 @@ import { cardStyles } from "./sugartv-card-styles.js";
 import "./sugartv-card-editor.js";
 
 // Version
-const VERSION = "0.5.0";
+const VERSION = "0.6.0";
 
 // Constants
 const FONTS = [
-    "https://fonts.googleapis.com/css?family=Roboto:400,700&amp;subset=cyrillic,cyrillic-ext,latin-ext",
-    "https://overpass-30e2.kxcdn.com/overpass.css",
-    "https://overpass-30e2.kxcdn.com/overpass-mono.css"
+    'https://fonts.googleapis.com/css?family=Roboto:400,700&amp;subset=cyrillic,cyrillic-ext,latin-ext',
+    'https://overpass-30e2.kxcdn.com/overpass.css',
+    'https://overpass-30e2.kxcdn.com/overpass-mono.css'
 ];
-
-const TREND_SYMBOLS = {
-    'rising_quickly': '↑↑',
-    'rising': '↑',
-    'rising_slightly': '↗',
-    'steady': '→',
-    'falling_slightly': '↘',
-    'falling': '↓',
-    'falling_quickly': '↓↓',
-    'unknown': '↻'
-};
 
 const DEFAULT_VALUES = {
     VALUE: 'N/A',
     DELTA: '⧖',
     TIME: '00:00'
 };
+
+// Glucose measurement units (for fallback)
+const UNITS = {
+    MGDL: 'mg/dL',
+    MMOLL: 'mmol/L'
+};
+
+// Function to get trend descriptions based on units
+function getTrendDescriptions(unit) {
+    const isMgdl = unit === UNITS.MGDL;
+    return {
+        rising_quickly: {
+            symbol: '↑↑',
+            description: `Glucose rising rapidly over ${isMgdl ? '3 mg/dL' : '0.17 mmol/L'} in 1 minute`,
+            prediction: `Expected to rise over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
+        },
+        rising: {
+            symbol: '↑',
+            description: `Glucose rising ${isMgdl ? '2-3 mg/dL' : '0.11-0.17 mmol/L'} in 1 minute`,
+            prediction: `Expected to rise ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
+        },
+        rising_slightly: {
+            symbol: '↗',
+            description: `Glucose rising ${isMgdl ? '1-2 mg/dL' : '0.06-0.11 mmol/L'} in 1 minute`,
+            prediction: `Expected to rise ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
+        },
+        steady: {
+            symbol: '→',
+            description: `Glucose steady at ${isMgdl ? '1 mg/dL' : '0.06 mmol/L'} in 1 minute or less`,
+            prediction: `Expected change of ${isMgdl ? '15 mg/dL' : '0.8 mmol/L'} or less in 15 minutes`
+        },
+        falling_slightly: {
+            symbol: '↘',
+            description: `Glucose falling ${isMgdl ? '1-2 mg/dL' : '0.06-0.11 mmol/L'} in 1 minute`,
+            prediction: `Expected to fall ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
+        },
+        falling: {
+            symbol: '↓',
+            description: `Glucose falling ${isMgdl ? '2-3 mg/dL' : '0.11-0.17 mmol/L'} in 1 minute`,
+            prediction: `Expected to fall ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
+        },
+        falling_quickly: {
+            symbol: '↓↓',
+            description: `Glucose falling rapidly over ${isMgdl ? '3 mg/dL' : '0.17 mmol/L'} in 1 minute`,
+            prediction: `Expected to fall over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
+        },
+        unknown: {
+            symbol: '↻',
+            description: 'Glucose trend information unavailable',
+            prediction: 'Unable to predict glucose changes'
+        }
+    };
+}
+
+// Initialize TREND_SYMBOLS with default mg/dL values
+let TREND_SYMBOLS = getTrendDescriptions(UNITS.MGDL);
 
 // Helper Functions
 function loadCSS(url) {
@@ -58,7 +103,8 @@ class SugarTvCard extends LitElement {
         return {
             type: "custom:sugartv-card",
             glucose_value: "sensor.dexcom_glucose_value",
-            glucose_trend: "sensor.dexcom_glucose_trend"
+            glucose_trend: "sensor.dexcom_glucose_trend",
+            show_prediction: true
         };
     }
 
@@ -76,6 +122,7 @@ class SugarTvCard extends LitElement {
             value: null,
             last_changed: null,
             trend: null,
+            unit: UNITS.MGDL,
             previous_value: null,
             previous_last_changed: null,
             previous_trend: null
@@ -113,7 +160,8 @@ class SugarTvCard extends LitElement {
                 ...this._getInitialDataState(),
                 value: 0,
                 last_changed: 0,
-                trend: "unknown"
+                trend: "unknown",
+                unit: UNITS.MGDL
             };
             return false;
         }
@@ -121,14 +169,22 @@ class SugarTvCard extends LitElement {
     }
 
     _getCurrentState(glucose_value, glucose_trend) {
+        const glucoseState = this._hass.states[glucose_value];
+        const trendState = this._hass.states[glucose_trend];
+        
         return {
-            value: this._hass.states[glucose_value].state,
-            last_changed: this._hass.states[glucose_value].last_changed,
-            trend: this._hass.states[glucose_trend].state
+            value: glucoseState.state,
+            unit: glucoseState.attributes.unit_of_measurement,
+            last_changed: glucoseState.last_changed,
+            trend: trendState.state
         };
     }
 
     _updateCurrentData(currentState) {
+        if (this._data.unit !== currentState.unit) {
+            TREND_SYMBOLS = getTrendDescriptions(currentState.unit || UNITS.MGDL);
+            this._data.unit = currentState.unit;
+        }
         Object.assign(this._data, currentState);
     }
 
@@ -177,7 +233,16 @@ class SugarTvCard extends LitElement {
     }
 
     _formatValue(value) {
-        return this._isValidValue(value) ? value : DEFAULT_VALUES.VALUE;
+        if (!this._isValidValue(value)) {
+            return DEFAULT_VALUES.VALUE;
+        }
+        
+        const numValue = parseFloat(value);
+        if (isNaN(numValue)) {
+            return DEFAULT_VALUES.VALUE;
+        }
+
+        return numValue;
     }
 
     render() {
@@ -186,30 +251,36 @@ class SugarTvCard extends LitElement {
         }
 
         const { value, last_changed, trend } = this._data;
+        const showPrediction = this._config.show_prediction !== false;
 
         return html`
             <div class="wrapper">
                 <div class="container">
-                    <div class="time">${this._formatTime(last_changed)}</div>
-                    <div class="value">${this._formatValue(value)}</div>
-                    <div class="trend">${TREND_SYMBOLS[trend] || TREND_SYMBOLS.unknown}</div>
-                    <div class="delta">${this._calculateDelta()}</div>
+                    <div class="main-row">
+                        <div class="time">${this._formatTime(last_changed)}</div>
+                        <div class="value">${this._formatValue(value)}</div>
+                        <div class="trend">${TREND_SYMBOLS[trend]?.symbol || TREND_SYMBOLS.unknown.symbol}</div>
+                        <div class="delta">${this._calculateDelta()}</div>
+                    </div>
+                    ${showPrediction ? html`
+                        <div class="prediction">${TREND_SYMBOLS[trend]?.prediction || TREND_SYMBOLS.unknown.prediction}</div>
+                    ` : ''}
                 </div>
             </div>
         `;
     }
 
     setConfig(config) {
-        console.info("%c SUGARTV-CARD %c v" + VERSION, 
-            "color: white; background: red; font-weight: 700;",
-            "color: red; background: white; font-weight: 700;");
+        console.info('%c SUGARTV-CARD %c v' + VERSION, 
+            'color: white; background: red; font-weight: 700;',
+            'color: red; background: white; font-weight: 700;');
 
         if (!config.glucose_value) {
-            throw new Error("You need to define 'glucose_value' in your configuration.");
+            throw new Error('You need to define glucose_value in your configuration.');
         }
 
         if (!config.glucose_trend) {
-            throw new Error("You need to define 'glucose_trend' in your configuration.");
+            throw new Error('You need to define glucose_trend in your configuration.');
         }
 
         this._config = config;

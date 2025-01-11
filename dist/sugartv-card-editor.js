@@ -31,13 +31,15 @@ class SugarTvCardEditor extends LitElement {
         }
         
         const target = ev.target;
-        if (this[`_${target.configValue}`] === target.value) {
+        const value = target.configValue === 'show_prediction' ? target.checked : target.value;
+        
+        if (this[`_${target.configValue}`] === value) {
             return;
         }
 
         const newConfig = {
             ...this._config,
-            [target.configValue]: target.value,
+            [target.configValue]: value,
         };
         
         const event = new CustomEvent('config-changed', {
@@ -76,7 +78,7 @@ class SugarTvCardEditor extends LitElement {
                         `)}
                     </ha-select>
                 </div>
-                
+
                 <div class="values">
                     <ha-select
                         naturalMenuWidth
@@ -93,6 +95,16 @@ class SugarTvCardEditor extends LitElement {
                             </ha-list-item>
                         `)}
                     </ha-select>
+                </div>
+
+                <div class="values">
+                    <ha-formfield label="Show prediction">
+                        <ha-switch
+                            .checked=${this._config.show_prediction !== false}
+                            .configValue=${'show_prediction'}
+                            @change=${this._valueChanged}
+                        ></ha-switch>
+                    </ha-formfield>
                 </div>
             </div>
         `;
