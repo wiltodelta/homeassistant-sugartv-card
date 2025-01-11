@@ -16,6 +16,18 @@ const FONTS = [
     'https://overpass-30e2.kxcdn.com/overpass-mono.css'
 ];
 
+const DEFAULT_VALUES = {
+    VALUE: 'N/A',
+    DELTA: '⧖',
+    TIME: '00:00'
+};
+
+// Glucose measurement units (for fallback)
+const UNITS = {
+    MGDL: 'mg/dL',
+    MMOLL: 'mmol/L'
+};
+
 // Function to get trend descriptions based on units
 function getTrendDescriptions(unit) {
     const isMgdl = unit === UNITS.MGDL;
@@ -65,18 +77,6 @@ function getTrendDescriptions(unit) {
 
 // Initialize TREND_SYMBOLS with default mg/dL values
 let TREND_SYMBOLS = getTrendDescriptions(UNITS.MGDL);
-
-const DEFAULT_VALUES = {
-    VALUE: 'N/A',
-    DELTA: '⧖',
-    TIME: '00:00'
-};
-
-// Glucose measurement units (for fallback)
-const UNITS = {
-    MGDL: 'mg/dL',
-    MMOLL: 'mmol/L'
-};
 
 // Helper Functions
 function loadCSS(url) {
