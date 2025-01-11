@@ -31,13 +31,15 @@ class SugarTvCardEditor extends LitElement {
         }
         
         const target = ev.target;
-        if (this[`_${target.configValue}`] === target.value) {
+        const value = target.configValue === 'show_prediction' ? target.checked : target.value;
+        
+        if (this[`_${target.configValue}`] === value) {
             return;
         }
 
         const newConfig = {
             ...this._config,
-            [target.configValue]: target.value,
+            [target.configValue]: value,
         };
         
         const event = new CustomEvent('config-changed', {
