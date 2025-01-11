@@ -4,6 +4,7 @@ import {
 } from "https://unpkg.com/lit-element@2.5.1/lit-element.js?module";
 
 import { cardStyles } from "./sugartv-card-styles.js";
+import { translations } from "./sugartv-card-translations.js";
 import "./sugartv-card-editor.js";
 
 // Version
@@ -16,67 +17,75 @@ const FONTS = [
     'https://overpass-30e2.kxcdn.com/overpass-mono.css'
 ];
 
-const DEFAULT_VALUES = {
-    VALUE: 'N/A',
-    DELTA: '⧖',
-    TIME: '00:00'
-};
-
-// Glucose measurement units (for fallback)
-const UNITS = {
-    MGDL: 'mg/dL',
-    MMOLL: 'mmol/L'
-};
-
-// Function to get trend descriptions based on units
-function getTrendDescriptions(unit) {
-    const isMgdl = unit === UNITS.MGDL;
+function getDefaultValues(language = 'en') {
+    const trans = translations[language]?.defaults || translations.en.defaults;
     return {
-        rising_quickly: {
-            symbol: '↑↑',
-            description: `Glucose rising rapidly over ${isMgdl ? '3 mg/dL' : '0.17 mmol/L'} in 1 minute`,
-            prediction: `Expected to rise over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
-        },
-        rising: {
-            symbol: '↑',
-            description: `Glucose rising ${isMgdl ? '2-3 mg/dL' : '0.11-0.17 mmol/L'} in 1 minute`,
-            prediction: `Expected to rise ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
-        },
-        rising_slightly: {
-            symbol: '↗',
-            description: `Glucose rising ${isMgdl ? '1-2 mg/dL' : '0.06-0.11 mmol/L'} in 1 minute`,
-            prediction: `Expected to rise ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
-        },
-        steady: {
-            symbol: '→',
-            description: `Glucose steady at ${isMgdl ? '1 mg/dL' : '0.06 mmol/L'} in 1 minute or less`,
-            prediction: `Expected change of ${isMgdl ? '15 mg/dL' : '0.8 mmol/L'} or less in 15 minutes`
-        },
-        falling_slightly: {
-            symbol: '↘',
-            description: `Glucose falling ${isMgdl ? '1-2 mg/dL' : '0.06-0.11 mmol/L'} in 1 minute`,
-            prediction: `Expected to fall ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
-        },
-        falling: {
-            symbol: '↓',
-            description: `Glucose falling ${isMgdl ? '2-3 mg/dL' : '0.11-0.17 mmol/L'} in 1 minute`,
-            prediction: `Expected to fall ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
-        },
-        falling_quickly: {
-            symbol: '↓↓',
-            description: `Glucose falling rapidly over ${isMgdl ? '3 mg/dL' : '0.17 mmol/L'} in 1 minute`,
-            prediction: `Expected to fall over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
-        },
-        unknown: {
-            symbol: '↻',
-            description: 'Glucose trend information unavailable',
-            prediction: 'Unable to predict glucose changes'
-        }
+        value: trans.value,
+        delta: trans.delta,
+        time: trans.time
     };
 }
 
-// Initialize TREND_SYMBOLS with default mg/dL values
-let TREND_SYMBOLS = getTrendDescriptions(UNITS.MGDL);
+function getUnits(language = 'en') {
+    const trans = translations[language]?.units || translations.en.units;
+    return {
+        mgdl: trans.mgdl,
+        mmol: trans.mmol
+    };
+}
+
+const DEFAULT_VALUES = getDefaultValues();
+const UNITS = getUnits();
+
+// Function to get trend descriptions based on units and language
+function getTrendDescriptions(unit = 'mgdl', language = 'en') {
+    const languageExists = translations[language];
+    const trans = (languageExists ? translations[language] : translations.en).trends;
+    const unitType = unit === 'mgdl' ? 'mgdl' : 'mmol';
+
+    return {
+        rising_quickly: {
+            symbol: trans.rising_quickly.symbol,
+            description: trans.rising_quickly[unitType].description,
+            prediction: trans.rising_quickly[unitType].prediction
+        },
+        rising: {
+            symbol: trans.rising.symbol,
+            description: trans.rising[unitType].description,
+            prediction: trans.rising[unitType].prediction
+        },
+        rising_slightly: {
+            symbol: trans.rising_slightly.symbol,
+            description: trans.rising_slightly[unitType].description,
+            prediction: trans.rising_slightly[unitType].prediction
+        },
+        steady: {
+            symbol: trans.steady.symbol,
+            description: trans.steady[unitType].description,
+            prediction: trans.steady[unitType].prediction
+        },
+        falling_slightly: {
+            symbol: trans.falling_slightly.symbol,
+            description: trans.falling_slightly[unitType].description,
+            prediction: trans.falling_slightly[unitType].prediction
+        },
+        falling: {
+            symbol: trans.falling.symbol,
+            description: trans.falling[unitType].description,
+            prediction: trans.falling[unitType].prediction
+        },
+        falling_quickly: {
+            symbol: trans.falling_quickly.symbol,
+            description: trans.falling_quickly[unitType].description,
+            prediction: trans.falling_quickly[unitType].prediction
+        },
+        unknown: {
+            symbol: trans.unknown.symbol,
+            description: trans.unknown.description,
+            prediction: trans.unknown.prediction
+        }
+    };
+}
 
 // Helper Functions
 function loadCSS(url) {
@@ -90,12 +99,16 @@ function loadCSS(url) {
 // Load required fonts
 FONTS.forEach(loadCSS);
 
+// Initialize TREND_SYMBOLS with default mg/dL values and English language
+let TREND_SYMBOLS = getTrendDescriptions(UNITS.mgdl, 'en');
+
 class SugarTvCard extends LitElement {
     static get properties() {
         return {
-            _hass: {},
-            _config: {},
-            _data: {}
+            _hass: { type: Object },
+            _config: { type: Object },
+            _data: { type: Object },
+            _language: { type: String }
         };
     }
 
@@ -115,17 +128,18 @@ class SugarTvCard extends LitElement {
     constructor() {
         super();
         this._data = this._getInitialDataState();
+        this._language = 'en';
     }
 
     _getInitialDataState() {
         return {
-            value: null,
-            last_changed: null,
-            trend: null,
-            unit: UNITS.MGDL,
-            previous_value: null,
-            previous_last_changed: null,
-            previous_trend: null
+            value: 0,
+            previous_value: 0,
+            last_changed: 0,
+            previous_last_changed: 0,
+            trend: "unknown",
+            previous_trend: "unknown",
+            unit: UNITS.mgdl
         };
     }
 
@@ -133,14 +147,17 @@ class SugarTvCard extends LitElement {
         const previous_hass = this._hass;
         this._hass = hass;
 
-        if (this._hass) {
-            this._updateData(previous_hass);
+        // Update language if changed
+        const newLanguage = hass.language || 'en';
+        if (this._language !== newLanguage) {
+            this._language = newLanguage;
+            TREND_SYMBOLS = getTrendDescriptions(this._data.unit, this._language);
+            DEFAULT_VALUES = getDefaultValues(this._language);
+            UNITS = getUnits(this._language);
         }
-    }
 
-    _updateData(previous_hass) {
         const { glucose_value, glucose_trend } = this._config;
-
+        
         if (!this._validateEntities(glucose_value, glucose_trend)) {
             return;
         }
@@ -161,7 +178,7 @@ class SugarTvCard extends LitElement {
                 value: 0,
                 last_changed: 0,
                 trend: "unknown",
-                unit: UNITS.MGDL
+                unit: UNITS.mgdl
             };
             return false;
         }
@@ -182,7 +199,7 @@ class SugarTvCard extends LitElement {
 
     _updateCurrentData(currentState) {
         if (this._data.unit !== currentState.unit) {
-            TREND_SYMBOLS = getTrendDescriptions(currentState.unit || UNITS.MGDL);
+            TREND_SYMBOLS = getTrendDescriptions(currentState.unit || UNITS.mgdl);
             this._data.unit = currentState.unit;
         }
         Object.assign(this._data, currentState);
@@ -202,12 +219,33 @@ class SugarTvCard extends LitElement {
 
     _formatTime(timestamp) {
         if (!timestamp || timestamp === "unknown" || timestamp === "unavailable") {
-            return DEFAULT_VALUES.TIME;
+            return DEFAULT_VALUES.time;
         }
 
-        return new Date(timestamp).toLocaleTimeString([], {
+        return new Date(timestamp).toLocaleTimeString(this._hass.language, {
             hour: '2-digit',
             minute: '2-digit'
+        });
+    }
+
+    _formatNumber(value, options = {}) {
+        if (!this._hass) return value;
+        return new Intl.NumberFormat(this._hass.language, options).format(value);
+    }
+
+    _formatValue(value) {
+        if (!this._isValidValue(value)) {
+            return DEFAULT_VALUES.value;
+        }
+        
+        const numValue = parseFloat(value);
+        if (isNaN(numValue)) {
+            return DEFAULT_VALUES.value;
+        }
+
+        return this._formatNumber(numValue, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 1
         });
     }
 
@@ -215,34 +253,25 @@ class SugarTvCard extends LitElement {
         const { value, previous_value, last_changed, previous_last_changed } = this._data;
 
         if (!this._isValidValue(value) || !this._isValidValue(previous_value)) {
-            return DEFAULT_VALUES.DELTA;
+            return DEFAULT_VALUES.delta;
         }
 
         const timeDiff = Math.abs(new Date(last_changed) - new Date(previous_last_changed));
         if (timeDiff >= 450000) { // 7.5 minutes
-            return DEFAULT_VALUES.DELTA;
+            return DEFAULT_VALUES.delta;
         }
 
         const delta = value - previous_value;
         const roundedDelta = Math.round(Math.abs(delta) * 10) / 10;
-        return delta >= 0 ? `＋${roundedDelta}` : `－${roundedDelta}`;
+        const formattedDelta = this._formatNumber(roundedDelta, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 1
+        });
+        return delta >= 0 ? `＋${formattedDelta}` : `－${formattedDelta}`;
     }
 
     _isValidValue(value) {
         return value && value !== "unknown" && value !== "unavailable";
-    }
-
-    _formatValue(value) {
-        if (!this._isValidValue(value)) {
-            return DEFAULT_VALUES.VALUE;
-        }
-        
-        const numValue = parseFloat(value);
-        if (isNaN(numValue)) {
-            return DEFAULT_VALUES.VALUE;
-        }
-
-        return numValue;
     }
 
     render() {

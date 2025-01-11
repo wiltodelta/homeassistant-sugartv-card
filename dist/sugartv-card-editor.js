@@ -4,13 +4,20 @@ import {
 } from "https://unpkg.com/lit-element@2.5.1/lit-element.js?module";
 
 import { editorStyles } from "./sugartv-card-styles.js";
+import { translations } from "./sugartv-card-translations.js";
 
 class SugarTvCardEditor extends LitElement {
     static get properties() {
         return {
             hass: { type: Object },
-            _config: { type: Object }
+            _config: { type: Object },
+            _language: { type: String }
         };
+    }
+
+    constructor() {
+        super();
+        this._language = 'en';
     }
 
     setConfig(config) {
@@ -50,6 +57,12 @@ class SugarTvCardEditor extends LitElement {
         this.dispatchEvent(event);
     }
 
+    updated(changedProps) {
+        if (changedProps.has('hass') && this.hass) {
+            this._language = this.hass.language || 'en';
+        }
+    }
+
     render() {
         if (!this.hass || !this._config) {
             return html``;
@@ -59,13 +72,15 @@ class SugarTvCardEditor extends LitElement {
             eid => eid.indexOf('sensor.') === 0
         );
 
+        const trans = translations[this._language]?.editor || translations.en.editor;
+
         return html`
             <div class="card-config">
                 <div class="values">
                     <ha-select
                         naturalMenuWidth
                         fixedMenuPosition
-                        label="Glucose value (required)"
+                        label="${trans.glucose_value_label}"
                         .configValue=${'glucose_value'}
                         .value=${this._glucose_value}
                         @selected=${this._valueChanged}
@@ -83,7 +98,7 @@ class SugarTvCardEditor extends LitElement {
                     <ha-select
                         naturalMenuWidth
                         fixedMenuPosition
-                        label="Glucose trend (required)"
+                        label="${trans.glucose_trend_label}"
                         .configValue=${'glucose_trend'}
                         .value=${this._glucose_trend}
                         @selected=${this._valueChanged}
@@ -98,7 +113,7 @@ class SugarTvCardEditor extends LitElement {
                 </div>
 
                 <div class="values">
-                    <ha-formfield label="Show prediction">
+                    <ha-formfield label="${trans.show_prediction_label}">
                         <ha-switch
                             .checked=${this._config.show_prediction !== false}
                             .configValue=${'show_prediction'}
