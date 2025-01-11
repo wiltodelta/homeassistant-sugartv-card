@@ -20,7 +20,6 @@ A custom Lovelace card for Home Assistant that provides an enhanced way to displ
 - 📱 Responsive card sizing
 - ⚙️ Visual configuration editor
 - 🔮 Configurable prediction display
-- 🌐 Multiple languages support (English, Russian)
 
 ## Installation
 

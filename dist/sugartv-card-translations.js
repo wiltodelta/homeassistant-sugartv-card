@@ -8,7 +8,7 @@ export const translations = {
         defaults: {
             value: "N/A",
             delta: "⧖",
-            time: "12:00 AM"
+            time: "00:00"
         },
         units: {
             mgdl: "mg/dL",
