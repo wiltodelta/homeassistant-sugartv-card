@@ -103,7 +103,8 @@ class SugarTvCard extends LitElement {
         return {
             type: "custom:sugartv-card",
             glucose_value: "sensor.dexcom_glucose_value",
-            glucose_trend: "sensor.dexcom_glucose_trend"
+            glucose_trend: "sensor.dexcom_glucose_trend",
+            show_prediction: true
         };
     }
 
@@ -250,14 +251,20 @@ class SugarTvCard extends LitElement {
         }
 
         const { value, last_changed, trend } = this._data;
+        const showPrediction = this._config.show_prediction !== false;
 
         return html`
             <div class="wrapper">
                 <div class="container">
-                    <div class="time">${this._formatTime(last_changed)}</div>
-                    <div class="value">${this._formatValue(value)}</div>
-                    <div class="trend">${TREND_SYMBOLS[trend]?.symbol || TREND_SYMBOLS.unknown.symbol}</div>
-                    <div class="delta">${this._calculateDelta()}</div>
+                    <div class="main-row">
+                        <div class="time">${this._formatTime(last_changed)}</div>
+                        <div class="value">${this._formatValue(value)}</div>
+                        <div class="trend">${TREND_SYMBOLS[trend]?.symbol || TREND_SYMBOLS.unknown.symbol}</div>
+                        <div class="delta">${this._calculateDelta()}</div>
+                    </div>
+                    ${showPrediction ? html`
+                        <div class="prediction">${TREND_SYMBOLS[trend]?.prediction || TREND_SYMBOLS.unknown.prediction}</div>
+                    ` : ''}
                 </div>
             </div>
         `;

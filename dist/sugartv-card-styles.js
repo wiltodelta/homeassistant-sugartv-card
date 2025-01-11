@@ -20,11 +20,18 @@ export const cardStyles = css`
     
     .container {
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         line-height: 1;
         padding: 5cqi;
         box-sizing: border-box;
+    }
+
+    .main-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .time {
@@ -44,6 +51,13 @@ export const cardStyles = css`
     
     .delta {
         font-size: 6cqi;
+    }
+
+    .prediction {
+        font-size: 2.7cqi;
+        margin-top: 2cqi;
+        opacity: 0.7;
+        text-align: center;
     }
 `;
 

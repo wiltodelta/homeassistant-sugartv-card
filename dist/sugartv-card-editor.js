@@ -76,7 +76,7 @@ class SugarTvCardEditor extends LitElement {
                         `)}
                     </ha-select>
                 </div>
-                
+
                 <div class="values">
                     <ha-select
                         naturalMenuWidth
@@ -93,6 +93,16 @@ class SugarTvCardEditor extends LitElement {
                             </ha-list-item>
                         `)}
                     </ha-select>
+                </div>
+
+                <div class="values">
+                    <ha-formfield label="Show prediction">
+                        <ha-switch
+                            .checked=${this._config.show_prediction !== false}
+                            .configValue=${'show_prediction'}
+                            @change=${this._valueChanged}
+                        ></ha-switch>
+                    </ha-formfield>
                 </div>
             </div>
         `;
