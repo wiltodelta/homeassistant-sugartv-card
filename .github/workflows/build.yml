@@ -12,14 +12,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: |
+          npm install --save-dev rollup @rollup/plugin-node-resolve
+          
       - name: Create version file
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           echo "export const VERSION = '${VERSION}';" > dist/version.js
           
-      - name: Create release archive
+      - name: Create rollup config
         run: |
-          zip -r release.zip dist/ LICENSE README.md hacs.json img.png
+          echo 'import { nodeResolve } from "@rollup/plugin-node-resolve";
+          export default {
+            input: "dist/sugartv-card.js",
+            output: {
+              file: "sugartv-card-bundle.js",
+              format: "es"
+            },
+            plugins: [nodeResolve()]
+          };' > rollup.config.js
+          
+      - name: Bundle JS files
+        run: npx rollup -c
           
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
@@ -27,6 +47,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./release.zip
-          asset_name: release.zip
-          asset_content_type: application/zip 
+          asset_path: ./sugartv-card-bundle.js
+          asset_name: sugartv-card-bundle.js
+          asset_content_type: application/javascript 
