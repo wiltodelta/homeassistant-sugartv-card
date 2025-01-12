@@ -5,9 +5,7 @@ import {
 
 import { cardStyles } from "./sugartv-card-styles.js";
 import "./sugartv-card-editor.js";
-
-// Version
-const VERSION = '0.6.0';
+import { VERSION } from "./version.js";
 
 // Constants
 const FONTS = [
