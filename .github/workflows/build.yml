@@ -41,7 +41,7 @@ jobs:
           export default {
             input: "dist/sugartv-card.js",
             output: {
-              file: "sugartv-card.js",
+              file: "sugartv-card-bundle.js",
               format: "es"
             },
             plugins: [nodeResolve()]
@@ -50,12 +50,12 @@ jobs:
       - name: Bundle JS files
         run: npx rollup -c rollup.config.mjs
           
-      - name: Upload Release Asset
+      - name: Upload release asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: ./sugartv-card-bundle.js
-          asset_name: sugartv-card-bundle.js
+          asset_name: sugartv-card.js
           asset_content_type: application/javascript 
