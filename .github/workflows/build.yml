@@ -8,10 +8,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       
       - name: Create version file
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
-          echo "export const VERSION = '${VERSION}';" > dist/version.js 
+          echo "export const VERSION = '${VERSION}';" > dist/version.js
+          
+      - name: Commit version file
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add dist/version.js
+          git commit -m "Update version to ${GITHUB_REF#refs/tags/}"
+          git push 
