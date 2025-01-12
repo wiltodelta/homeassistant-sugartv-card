@@ -7,7 +7,7 @@ import { cardStyles } from "./sugartv-card-styles.js";
 import "./sugartv-card-editor.js";
 
 // Version
-const VERSION = "0.6.0";
+const VERSION = '0.6.0';
 
 // Constants
 const FONTS = [
@@ -34,43 +34,33 @@ function getTrendDescriptions(unit) {
     return {
         rising_quickly: {
             symbol: '↑↑',
-            description: `Glucose rising rapidly over ${isMgdl ? '3 mg/dL' : '0.17 mmol/L'} in 1 minute`,
             prediction: `Expected to rise over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
         },
         rising: {
             symbol: '↑',
-            description: `Glucose rising ${isMgdl ? '2-3 mg/dL' : '0.11-0.17 mmol/L'} in 1 minute`,
             prediction: `Expected to rise ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
         },
         rising_slightly: {
             symbol: '↗',
-            description: `Glucose rising ${isMgdl ? '1-2 mg/dL' : '0.06-0.11 mmol/L'} in 1 minute`,
             prediction: `Expected to rise ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
         },
         steady: {
-            symbol: '→',
-            description: `Glucose steady at ${isMgdl ? '1 mg/dL' : '0.06 mmol/L'} in 1 minute or less`,
-            prediction: `Expected change of ${isMgdl ? '15 mg/dL' : '0.8 mmol/L'} or less in 15 minutes`
+            symbol: '→'
         },
         falling_slightly: {
             symbol: '↘',
-            description: `Glucose falling ${isMgdl ? '1-2 mg/dL' : '0.06-0.11 mmol/L'} in 1 minute`,
             prediction: `Expected to fall ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
         },
         falling: {
             symbol: '↓',
-            description: `Glucose falling ${isMgdl ? '2-3 mg/dL' : '0.11-0.17 mmol/L'} in 1 minute`,
             prediction: `Expected to fall ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
         },
         falling_quickly: {
             symbol: '↓↓',
-            description: `Glucose falling rapidly over ${isMgdl ? '3 mg/dL' : '0.17 mmol/L'} in 1 minute`,
             prediction: `Expected to fall over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
         },
         unknown: {
-            symbol: '↻',
-            description: 'Glucose trend information unavailable',
-            prediction: 'Unable to predict glucose changes'
+            symbol: '↻'
         }
     };
 }
@@ -80,9 +70,9 @@ let TREND_SYMBOLS = getTrendDescriptions(UNITS.MGDL);
 
 // Helper Functions
 function loadCSS(url) {
-    const link = document.createElement("link");
-    link.type = "text/css";
-    link.rel = "stylesheet";
+    const link = document.createElement('link');
+    link.type = 'text/css';
+    link.rel = 'stylesheet';
     link.href = url;
     document.head.appendChild(link);
 }
@@ -101,9 +91,9 @@ class SugarTvCard extends LitElement {
 
     static getStubConfig() {
         return {
-            type: "custom:sugartv-card",
-            glucose_value: "sensor.dexcom_glucose_value",
-            glucose_trend: "sensor.dexcom_glucose_trend",
+            type: 'custom:sugartv-card',
+            glucose_value: 'sensor.dexcom_glucose_value',
+            glucose_trend: 'sensor.dexcom_glucose_trend',
             show_prediction: true
         };
     }
@@ -155,12 +145,12 @@ class SugarTvCard extends LitElement {
 
     _validateEntities(glucose_value, glucose_trend) {
         if (!this._hass.states[glucose_value] || !this._hass.states[glucose_trend]) {
-            console.error("SugarTV Card: One or both entities not found:", glucose_value, glucose_trend);
+            console.error('SugarTV Card: One or both entities not found:', glucose_value, glucose_trend);
             this._data = {
                 ...this._getInitialDataState(),
                 value: 0,
                 last_changed: 0,
-                trend: "unknown",
+                trend: 'unknown',
                 unit: UNITS.MGDL
             };
             return false;
@@ -171,7 +161,7 @@ class SugarTvCard extends LitElement {
     _getCurrentState(glucose_value, glucose_trend) {
         const glucoseState = this._hass.states[glucose_value];
         const trendState = this._hass.states[glucose_trend];
-        
+
         return {
             value: glucoseState.state,
             unit: glucoseState.attributes.unit_of_measurement,
@@ -201,7 +191,7 @@ class SugarTvCard extends LitElement {
     }
 
     _formatTime(timestamp) {
-        if (!timestamp || timestamp === "unknown" || timestamp === "unavailable") {
+        if (!timestamp || timestamp === 'unknown' || timestamp === 'unavailable') {
             return DEFAULT_VALUES.TIME;
         }
 
@@ -229,14 +219,14 @@ class SugarTvCard extends LitElement {
     }
 
     _isValidValue(value) {
-        return value && value !== "unknown" && value !== "unavailable";
+        return value && value !== 'unknown' && value !== 'unavailable';
     }
 
     _formatValue(value) {
         if (!this._isValidValue(value)) {
             return DEFAULT_VALUES.VALUE;
         }
-        
+
         const numValue = parseFloat(value);
         if (isNaN(numValue)) {
             return DEFAULT_VALUES.VALUE;
@@ -252,6 +242,7 @@ class SugarTvCard extends LitElement {
 
         const { value, last_changed, trend } = this._data;
         const showPrediction = this._config.show_prediction !== false;
+        const prediction = TREND_SYMBOLS[trend]?.prediction || TREND_SYMBOLS.unknown.prediction;
 
         return html`
             <div class="wrapper">
@@ -262,8 +253,8 @@ class SugarTvCard extends LitElement {
                         <div class="trend">${TREND_SYMBOLS[trend]?.symbol || TREND_SYMBOLS.unknown.symbol}</div>
                         <div class="delta">${this._calculateDelta()}</div>
                     </div>
-                    ${showPrediction ? html`
-                        <div class="prediction">${TREND_SYMBOLS[trend]?.prediction || TREND_SYMBOLS.unknown.prediction}</div>
+                    ${showPrediction && prediction ? html`
+                        <div class="prediction">${prediction}</div>
                     ` : ''}
                 </div>
             </div>
@@ -271,7 +262,7 @@ class SugarTvCard extends LitElement {
     }
 
     setConfig(config) {
-        console.info('%c SUGARTV-CARD %c v' + VERSION, 
+        console.info('%c SUGARTV-CARD %c v' + VERSION,
             'color: white; background: red; font-weight: 700;',
             'color: red; background: white; font-weight: 700;');
 
@@ -300,7 +291,7 @@ customElements.define("sugartv-card", SugarTvCard);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-    type: "sugartv-card",
-    name: "SugarTV Card",
-    description: "A custom lovelace card for Home Assistant that provides a better way to display Dexcom data."
+    type: 'sugartv-card',
+    name: 'SugarTV Card',
+    description: 'A custom lovelace card for Home Assistant that provides a better way to display Dexcom data.'
 });
