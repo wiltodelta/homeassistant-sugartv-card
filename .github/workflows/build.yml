@@ -41,7 +41,7 @@ jobs:
           export default {
             input: "dist/sugartv-card.js",
             output: {
-              file: "sugartv-card-bundle.js",
+              file: "sugartv-card.js",
               format: "es"
             },
             plugins: [nodeResolve()]
