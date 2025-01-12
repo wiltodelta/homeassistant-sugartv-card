@@ -260,7 +260,7 @@ class SugarTvCard extends LitElement {
     }
 
     setConfig(config) {
-        console.info('%c SUGARTV-CARD %c v' + VERSION,
+        console.info('%c SUGARTV-CARD %c ' + VERSION,
             'color: white; background: red; font-weight: 700;',
             'color: red; background: white; font-weight: 700;');
 
