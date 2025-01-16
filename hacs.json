@@ -1,6 +1,5 @@
 {
   "name": "📺 SugarTV Card",
   "filename": "sugartv-card.js",
-  "render_readme": true,
-  "country": ["AD", "AR", "AU", "BH", "BE", "CA", "DK", "DE", "EE", "ES", "FI", "FR", "HK", "HR", "IS", "IN", "IE", "IL", "IT", "JO", "KW", "LV", "LB", "LT", "LU", "MO", "HU", "MT", "NL", "NZ", "NO", "OM", "PL", "PT", "QA", "RO", "SA", "SH", "SG", "SI", "SK", "ZA", "CH", "SE", "TR", "AE", "GB", "US", "AT", "CZ", "GR", "BG", "JP", "KR"]
+  "render_readme": true
 }

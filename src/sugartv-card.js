@@ -5,7 +5,8 @@ import {
 
 import { cardStyles } from "./sugartv-card-styles.js";
 import "./sugartv-card-editor.js";
-import { VERSION } from "./version.js";
+
+const VERSION = process.env.VERSION;
 
 // Constants
 const FONTS = [

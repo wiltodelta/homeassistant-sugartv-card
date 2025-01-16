@@ -1,0 +1,35 @@
+{
+  "name": "homeassistant-sugartv-card",
+  "version": "1.0.0",
+  "description": "SugarTV Card for Home Assistant",
+  "type": "module",
+  "main": "dist/sugartv-card.js",
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -c --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vkuznetsov/homeassistant-sugartv-card.git"
+  },
+  "keywords": [
+    "home-assistant",
+    "homeassistant",
+    "hass",
+    "automation",
+    "lovelace",
+    "custom-cards"
+  ],
+  "author": "Vladimir Kuznetsov",
+  "license": "MIT",
+  "dependencies": {
+    "lit-element": "^2.5.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-replace": "^6.0.2",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.30.1"
+  }
+}
