@@ -1,283 +1,196 @@
 import {
     LitElement,
     html,
+    css
 } from "https://unpkg.com/lit-element@2.5.1/lit-element.js?module";
 
-import { cardStyles } from "./sugartv-card-styles.js";
-import "./sugartv-card-editor.js";
-import { VERSION } from "./version.js";
+// Версия
+const VERSION = "1.0.0";
 
-// Constants
-const FONTS = [
-    'https://fonts.googleapis.com/css?family=Roboto:400,700&amp;subset=cyrillic,cyrillic-ext,latin-ext',
-    'https://overpass-30e2.kxcdn.com/overpass.css',
-    'https://overpass-30e2.kxcdn.com/overpass-mono.css'
-];
+// Стили для редактора
+const editorStyles = css`
+    .card-config {
+        padding: 16px;
+    }
+    .values {
+        padding-left: 16px;
+        margin: 8px 0;
+    }
+    ha-select {
+        width: 100%;
+    }
+`;
 
-const DEFAULT_VALUES = {
-    VALUE: 'N/A',
-    DELTA: '⧖',
-    TIME: '00:00'
-};
+// Стили для карточки
+const cardStyles = css`
+    .card-content {
+        padding: 16px;
+    }
+    .glucose-value {
+        font-size: 24px;
+        font-weight: bold;
+    }
+    .trend-arrow {
+        margin-left: 8px;
+    }
+`;
 
-// Glucose measurement units (for fallback)
-const UNITS = {
-    MGDL: 'mg/dL',
-    MMOLL: 'mmol/L'
-};
-
-// Function to get trend descriptions based on units
-function getTrendDescriptions(unit) {
-    const isMgdl = unit === UNITS.MGDL;
-    return {
-        rising_quickly: {
-            symbol: '↑↑',
-            prediction: `Expected to rise over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
-        },
-        rising: {
-            symbol: '↑',
-            prediction: `Expected to rise ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
-        },
-        rising_slightly: {
-            symbol: '↗',
-            prediction: `Expected to rise ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
-        },
-        steady: {
-            symbol: '→'
-        },
-        falling_slightly: {
-            symbol: '↘',
-            prediction: `Expected to fall ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
-        },
-        falling: {
-            symbol: '↓',
-            prediction: `Expected to fall ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
-        },
-        falling_quickly: {
-            symbol: '↓↓',
-            prediction: `Expected to fall over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
-        },
-        unknown: {
-            symbol: '↻'
-        }
-    };
-}
-
-// Initialize TREND_SYMBOLS with default mg/dL values
-let TREND_SYMBOLS = getTrendDescriptions(UNITS.MGDL);
-
-// Helper Functions
-function loadCSS(url) {
-    const link = document.createElement('link');
-    link.type = 'text/css';
-    link.rel = 'stylesheet';
-    link.href = url;
-    document.head.appendChild(link);
-}
-
-// Load required fonts
-FONTS.forEach(loadCSS);
-
-class SugarTvCard extends LitElement {
+// Редактор карточки
+class SugarTvCardEditor extends LitElement {
     static get properties() {
         return {
-            _hass: {},
-            _config: {},
-            _data: {}
+            hass: { type: Object },
+            _config: { type: Object }
         };
     }
 
-    static getStubConfig() {
-        return {
-            type: 'custom:sugartv-card',
-            glucose_value: 'sensor.dexcom_glucose_value',
-            glucose_trend: 'sensor.dexcom_glucose_trend',
-            show_prediction: true
-        };
+    setConfig(config) {
+        this._config = config;
     }
 
-    static async getConfigElement() {
-        return document.createElement("sugartv-card-editor");
+    get _glucose_value() {
+        return this._config.glucose_value || '';
     }
 
-    constructor() {
-        super();
-        this._data = this._getInitialDataState();
+    get _glucose_trend() {
+        return this._config.glucose_trend || '';
     }
 
-    _getInitialDataState() {
-        return {
-            value: null,
-            last_changed: null,
-            trend: null,
-            unit: UNITS.MGDL,
-            previous_value: null,
-            previous_last_changed: null,
-            previous_trend: null
-        };
-    }
-
-    set hass(hass) {
-        const previous_hass = this._hass;
-        this._hass = hass;
-
-        if (this._hass) {
-            this._updateData(previous_hass);
+    _valueChanged(ev) {
+        if (!this._config || !this.hass) {
+            return;
         }
-    }
-
-    _updateData(previous_hass) {
-        const { glucose_value, glucose_trend } = this._config;
-
-        if (!this._validateEntities(glucose_value, glucose_trend)) {
+        
+        const target = ev.target;
+        const value = target.configValue === 'show_prediction' ? target.checked : target.value;
+        
+        if (this[`_${target.configValue}`] === value) {
             return;
         }
 
-        const currentState = this._getCurrentState(glucose_value, glucose_trend);
-        this._updateCurrentData(currentState);
-
-        if (previous_hass) {
-            this._updatePreviousData(previous_hass, glucose_value, glucose_trend, currentState);
-        }
-    }
-
-    _validateEntities(glucose_value, glucose_trend) {
-        if (!this._hass.states[glucose_value] || !this._hass.states[glucose_trend]) {
-            console.error('SugarTV Card: One or both entities not found:', glucose_value, glucose_trend);
-            this._data = {
-                ...this._getInitialDataState(),
-                value: 0,
-                last_changed: 0,
-                trend: 'unknown',
-                unit: UNITS.MGDL
-            };
-            return false;
-        }
-        return true;
-    }
-
-    _getCurrentState(glucose_value, glucose_trend) {
-        const glucoseState = this._hass.states[glucose_value];
-        const trendState = this._hass.states[glucose_trend];
-
-        return {
-            value: glucoseState.state,
-            unit: glucoseState.attributes.unit_of_measurement,
-            last_changed: glucoseState.last_changed,
-            trend: trendState.state
+        const newConfig = {
+            ...this._config,
+            [target.configValue]: value,
         };
-    }
-
-    _updateCurrentData(currentState) {
-        if (this._data.unit !== currentState.unit) {
-            TREND_SYMBOLS = getTrendDescriptions(currentState.unit || UNITS.MGDL);
-            this._data.unit = currentState.unit;
-        }
-        Object.assign(this._data, currentState);
-    }
-
-    _updatePreviousData(previous_hass, glucose_value, glucose_trend, currentState) {
-        const previousState = {
-            previous_value: previous_hass.states[glucose_value].state,
-            previous_last_changed: previous_hass.states[glucose_value].last_changed,
-            previous_trend: previous_hass.states[glucose_trend].state
-        };
-
-        if (currentState.last_changed !== previousState.previous_last_changed) {
-            Object.assign(this._data, previousState);
-        }
-    }
-
-    _formatTime(timestamp) {
-        if (!timestamp || timestamp === 'unknown' || timestamp === 'unavailable') {
-            return DEFAULT_VALUES.TIME;
-        }
-
-        return new Date(timestamp).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-
-    _calculateDelta() {
-        const { value, previous_value, last_changed, previous_last_changed } = this._data;
-
-        if (!this._isValidValue(value) || !this._isValidValue(previous_value)) {
-            return DEFAULT_VALUES.DELTA;
-        }
-
-        const timeDiff = Math.abs(new Date(last_changed) - new Date(previous_last_changed));
-        if (timeDiff >= 450000) { // 7.5 minutes
-            return DEFAULT_VALUES.DELTA;
-        }
-
-        const delta = value - previous_value;
-        const roundedDelta = Math.round(Math.abs(delta) * 10) / 10;
-        return delta >= 0 ? `＋${roundedDelta}` : `－${roundedDelta}`;
-    }
-
-    _isValidValue(value) {
-        return value && value !== 'unknown' && value !== 'unavailable';
-    }
-
-    _formatValue(value) {
-        if (!this._isValidValue(value)) {
-            return DEFAULT_VALUES.VALUE;
-        }
-
-        const numValue = parseFloat(value);
-        if (isNaN(numValue)) {
-            return DEFAULT_VALUES.VALUE;
-        }
-
-        return numValue;
+        
+        this.dispatchEvent(new CustomEvent('config-changed', {
+            detail: { config: newConfig },
+            bubbles: true,
+            composed: true,
+        }));
     }
 
     render() {
-        if (!this._hass || !this._config) {
+        if (!this.hass || !this._config) {
             return html``;
         }
 
-        const { value, last_changed, trend } = this._data;
-        const showPrediction = this._config.show_prediction !== false;
-        const prediction = TREND_SYMBOLS[trend]?.prediction || TREND_SYMBOLS.unknown.prediction;
+        const entities = Object.keys(this.hass.states).filter(
+            eid => eid.indexOf('sensor.') === 0
+        );
 
         return html`
-            <div class="wrapper">
-                <div class="container">
-                    <div class="main-row">
-                        <div class="time">${this._formatTime(last_changed)}</div>
-                        <div class="value">${this._formatValue(value)}</div>
-                        <div class="trend">${TREND_SYMBOLS[trend]?.symbol || TREND_SYMBOLS.unknown.symbol}</div>
-                        <div class="delta">${this._calculateDelta()}</div>
-                    </div>
-                    ${showPrediction && prediction ? html`
-                        <div class="prediction">${prediction}</div>
-                    ` : ''}
+            <div class="card-config">
+                <div class="values">
+                    <ha-select
+                        naturalMenuWidth
+                        fixedMenuPosition
+                        label="Glucose value (required)"
+                        .configValue=${'glucose_value'}
+                        .value=${this._glucose_value}
+                        @selected=${this._valueChanged}
+                        @closed=${ev => ev.stopPropagation()}
+                    >
+                        ${entities.map(entity => html`
+                            <ha-list-item .value=${entity}>
+                                ${entity}
+                            </ha-list-item>
+                        `)}
+                    </ha-select>
+                </div>
+
+                <div class="values">
+                    <ha-select
+                        naturalMenuWidth
+                        fixedMenuPosition
+                        label="Glucose trend (required)"
+                        .configValue=${'glucose_trend'}
+                        .value=${this._glucose_trend}
+                        @selected=${this._valueChanged}
+                        @closed=${ev => ev.stopPropagation()}
+                    >
+                        ${entities.map(entity => html`
+                            <ha-list-item .value=${entity}>
+                                ${entity}
+                            </ha-list-item>
+                        `)}
+                    </ha-select>
+                </div>
+
+                <div class="values">
+                    <ha-formfield label="Show prediction">
+                        <ha-switch
+                            .checked=${this._config.show_prediction !== false}
+                            .configValue=${'show_prediction'}
+                            @change=${this._valueChanged}
+                        ></ha-switch>
+                    </ha-formfield>
                 </div>
             </div>
         `;
     }
 
-    setConfig(config) {
-        console.info('%c SUGARTV-CARD %c ' + VERSION,
-            'color: white; background: red; font-weight: 700;',
-            'color: red; background: white; font-weight: 700;');
+    static get styles() {
+        return editorStyles;
+    }
+}
 
-        if (!config.glucose_value) {
-            throw new Error('You need to define glucose_value in your configuration.');
-        }
-
-        if (!config.glucose_trend) {
-            throw new Error('You need to define glucose_trend in your configuration.');
-        }
-
-        this._config = config;
-        this._data = this._data || this._getInitialDataState();
+// Основная карточка
+class SugarTvCard extends LitElement {
+    static get properties() {
+        return {
+            hass: { type: Object },
+            config: { type: Object }
+        };
     }
 
-    getCardSize() {
-        return 1;
+    static getConfigElement() {
+        return document.createElement("sugartv-card-editor");
+    }
+
+    setConfig(config) {
+        if (!config.glucose_value || !config.glucose_trend) {
+            throw new Error('Please define glucose_value and glucose_trend entities');
+        }
+        this.config = config;
+    }
+
+    render() {
+        if (!this.hass || !this.config) {
+            return html``;
+        }
+
+        const glucoseState = this.hass.states[this.config.glucose_value];
+        const trendState = this.hass.states[this.config.glucose_trend];
+
+        if (!glucoseState || !trendState) {
+            return html`
+                <ha-card>
+                    <div class="card-content">
+                        Entity not found
+                    </div>
+                </ha-card>
+            `;
+        }
+
+        return html`
+            <ha-card>
+                <div class="card-content">
+                    <span class="glucose-value">${glucoseState.state}</span>
+                    <span class="trend-arrow">${trendState.state}</span>
+                </div>
+            </ha-card>
+        `;
     }
 
     static get styles() {
@@ -285,11 +198,9 @@ class SugarTvCard extends LitElement {
     }
 }
 
+// Регистрация компонентов
+customElements.define("sugartv-card-editor", SugarTvCardEditor);
 customElements.define("sugartv-card", SugarTvCard);
 
-window.customCards = window.customCards || [];
-window.customCards.push({
-    type: 'sugartv-card',
-    name: 'SugarTV Card',
-    description: 'A custom lovelace card for Home Assistant that provides a better way to display Dexcom data.'
-});
+// Экспорт версии и компонентов
+export { VERSION, SugarTvCard, SugarTvCardEditor }; 
