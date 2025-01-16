@@ -1,4 +1,4 @@
-name: Validate
+name: HACS Validate
 
 on:
   workflow_run:
@@ -10,6 +10,9 @@ jobs:
   validate-hacs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v4
       
