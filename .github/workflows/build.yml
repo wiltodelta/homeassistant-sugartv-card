@@ -11,7 +11,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-
+    permissions:
+      contents: read
+      packages: write
+      
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,12 +32,13 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Upload artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
-          
+          retention-days: 5
+
   release:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
@@ -46,17 +50,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
+          name: dist
+          path: dist
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
