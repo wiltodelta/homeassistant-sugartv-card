@@ -1,18 +1,26 @@
 name: HACS Action
 
 on:
-  push:
-  pull_request:
-  schedule:
-    - cron: "0 0 * * *"
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - completed
 
 jobs:
   hacs:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: HACS Action
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
       
       - name: HACS Action
         uses: hacs/action@main
