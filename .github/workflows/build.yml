@@ -28,11 +28,29 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Upload artifacts
+      - name: Upload repository
         uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist/
+          name: repository
+          path: .
+          
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          draft: false
+          prerelease: false
+
+  validate:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repository
+          path: .
 
       - name: HACS Action
         uses: hacs/action@main
@@ -42,12 +60,4 @@ jobs:
       - name: HACS Validate
         uses: hacs/action@main
         with:
-          category: "plugin"
-          
-      - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: dist/*
-          draft: false
-          prerelease: false 
+          category: "plugin" 
