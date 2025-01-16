@@ -11,10 +11,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-    outputs:
-      build_success: ${{ steps.build_status.id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,15 +28,21 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Set build status
-        id: build_status
-        run: echo "::set-output name=status::success"
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
+
+      - name: HACS Action
+        uses: hacs/action@main
+        with:
+          category: "plugin"
+
+      - name: HACS Validate
+        uses: hacs/action@main
+        with:
+          category: "plugin"
           
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/v')
