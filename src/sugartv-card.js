@@ -212,7 +212,14 @@ class SugarTvCard extends LitElement {
             return DEFAULT_VALUES.DELTA;
         }
 
-        const delta = value - previous_value;
+        const currentValue = parseFloat(String(value).replace(',', '.'));
+        const previousValue = parseFloat(String(previous_value).replace(',', '.'));
+
+        if (isNaN(currentValue) || isNaN(previousValue)) {
+            return DEFAULT_VALUES.DELTA;
+        }
+
+        const delta = currentValue - previousValue;
         const roundedDelta = Math.round(Math.abs(delta) * 10) / 10;
         return delta >= 0 ? `＋${roundedDelta}` : `－${roundedDelta}`;
     }
@@ -226,12 +233,18 @@ class SugarTvCard extends LitElement {
             return DEFAULT_VALUES.VALUE;
         }
 
-        const numValue = parseFloat(value);
+        const sanitizedValue = String(value).replace(',', '.');
+        const numValue = parseFloat(sanitizedValue);
+
         if (isNaN(numValue)) {
             return DEFAULT_VALUES.VALUE;
         }
 
-        return numValue;
+        if (this._data.unit === UNITS.MMOLL) {
+            return numValue.toFixed(1);
+        }
+        
+        return Math.round(numValue);
     }
 
     render() {
