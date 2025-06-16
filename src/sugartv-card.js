@@ -1,7 +1,8 @@
 import {
     LitElement,
     html,
-} from "https://unpkg.com/lit-element@2.5.1/lit-element.js?module";
+    css
+} from 'lit';
 
 import { cardStyles } from "./sugartv-card-styles.js";
 import "./sugartv-card-editor.js";
