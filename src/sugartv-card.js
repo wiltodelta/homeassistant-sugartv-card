@@ -5,17 +5,12 @@ import {
 } from 'lit';
 
 import { cardStyles } from "./sugartv-card-styles.js";
+import { fontStyles } from "./sugartv-card-fonts.js";
 import "./sugartv-card-editor.js";
 
 const VERSION = process.env.VERSION;
 
 // Constants
-const FONTS = [
-    'https://fonts.googleapis.com/css?family=Roboto:400,700&amp;subset=cyrillic,cyrillic-ext,latin-ext',
-    'https://overpass-30e2.kxcdn.com/overpass.css',
-    'https://overpass-30e2.kxcdn.com/overpass-mono.css'
-];
-
 const DEFAULT_VALUES = {
     VALUE: 'N/A',
     DELTA: '⧖',
@@ -67,18 +62,6 @@ function getTrendDescriptions(unit) {
 
 // Initialize TREND_SYMBOLS with default mg/dL values
 let TREND_SYMBOLS = getTrendDescriptions(UNITS.MGDL);
-
-// Helper Functions
-function loadCSS(url) {
-    const link = document.createElement('link');
-    link.type = 'text/css';
-    link.rel = 'stylesheet';
-    link.href = url;
-    document.head.appendChild(link);
-}
-
-// Load required fonts
-FONTS.forEach(loadCSS);
 
 class SugarTvCard extends LitElement {
     static get properties() {
@@ -296,7 +279,7 @@ class SugarTvCard extends LitElement {
     }
 
     static get styles() {
-        return cardStyles;
+        return [fontStyles, cardStyles];
     }
 }
 

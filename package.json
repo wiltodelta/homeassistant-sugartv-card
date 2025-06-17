@@ -5,8 +5,9 @@
   "type": "module",
   "main": "dist/sugartv-card.js",
   "scripts": {
-    "build": "rollup -c",
-    "watch": "rollup -c --watch"
+    "build": "npm run bundle-fonts && rollup -c",
+    "watch": "rollup -c --watch",
+    "bundle-fonts": "node scripts/bundle-fonts.cjs"
   },
   "repository": {
     "type": "git",
