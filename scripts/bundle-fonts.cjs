@@ -1,86 +1,115 @@
-const fs = require('fs');
+const fs = require('fs/promises');
 const path = require('path');
 const https = require('https');
 const { URL } = require('url');
 
-const FONT_SOURCES = [
-    'https://fonts.googleapis.com/css?family=Roboto:400,700&subset=cyrillic,cyrillic-ext,latin-ext',
-    'https://overpass-30e2.kxcdn.com/overpass.css',
-    'https://overpass-30e2.kxcdn.com/overpass-mono.css'
+const fontUrls = [
+  'https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap',
+  'https://fonts.googleapis.com/css?family=Overpass&display=swap',
 ];
 
-const OUTPUT_FILE = path.join(__dirname, '..', 'src', 'sugartv-card-fonts.js');
+const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36';
 
-// Function to download a file
-function download(url, userAgent = 'node.js') {
+function downloadFile(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, { headers: { 'User-Agent': userAgent } }, (response) => {
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return reject(new Error(`Failed to download ${url}, status code: ${response.statusCode}`));
+      }
+      let data = '';
+      response.on('data', (chunk) => {
+        data += chunk;
+      });
+      response.on('end', () => {
+        resolve(data);
+      });
+    }).on('error', (err) => {
+      reject(err);
+    });
+  });
+}
+
+function downloadBinaryFile(url) {
     return new Promise((resolve, reject) => {
-        const options = {
-            headers: {
-                'User-Agent': userAgent
-            }
-        };
-        https.get(url, options, (res) => {
-            if (res.statusCode !== 200) {
-                return reject(new Error(`Failed to get '${url}' (${res.statusCode})`));
+        https.get(url, { headers: { 'User-Agent': userAgent } }, (response) => {
+            if (response.statusCode < 200 || response.statusCode >= 300) {
+                return reject(new Error(`Failed to download ${url}, status code: ${response.statusCode}`));
             }
             const data = [];
-            res.on('data', chunk => data.push(chunk));
-            res.on('end', () => resolve(Buffer.concat(data)));
-        }).on('error', reject);
+            response.on('data', (chunk) => {
+                data.push(chunk);
+            });
+            response.on('end', () => {
+                resolve(Buffer.concat(data));
+            });
+        }).on('error', (err) => {
+            reject(err);
+        });
     });
 }
 
-// Function to convert font to base64 data URI
-async function processCss(cssContent, baseUrl) {
-    const fontUrlRegex = /url\((['"]?)(.*?)\1\)/g;
+
+async function processCss(cssContent) {
+    const fontFaceRegex = /@font-face\s*{[^}]+}/g;
+    const urlRegex = /url\(([^)]+)\)/g;
     let newCss = cssContent;
     let match;
 
-    // Use a while loop to handle multiple matches
-    while ((match = fontUrlRegex.exec(cssContent)) !== null) {
-        const originalUrl = match[2];
-        // Only process woff2 files as they are the most modern and widely supported
-        if (!originalUrl.includes('.woff2')) {
-            continue;
-        }
+    while ((match = fontFaceRegex.exec(cssContent)) !== null) {
+        const fontFaceBlock = match[0];
+        let urlMatch;
+        while ((urlMatch = urlRegex.exec(fontFaceBlock)) !== null) {
+            const fullUrl = urlMatch[1].replace(/['"]/g, '');
+            if (fullUrl.endsWith('.woff2')) {
+                try {
+                    console.log(`Downloading font: ${fullUrl}`);
+                    const fontBuffer = await downloadBinaryFile(fullUrl);
+                    const base64Font = fontBuffer.toString('base64');
+                    const dataUri = `url(data:font/woff2;base64,${base64Font})`;
+                    newCss = newCss.replace(urlMatch[0], dataUri);
+                    
+                    // Remove other font formats from the src property to keep only woff2
+                     newCss = newCss.replace(/,\s*url\([^)]+\.(eot|woff|ttf|svg)[^)]*\) format\('[^']+'\)/g, '');
+                     newCss = newCss.replace(/url\([^)]+\.(eot|woff|ttf|svg)[^)]*\);/g, ';');
 
-        const absoluteUrl = new URL(originalUrl, baseUrl).href;
-        console.log(`  Downloading font: ${absoluteUrl}`);
-        try {
-            const fontBuffer = await download(absoluteUrl);
-            const mimeType = 'font/woff2';
-            const base64Font = fontBuffer.toString('base64');
-            const dataUri = `url(data:${mimeType};base64,${base64Font})`;
-            newCss = newCss.replace(originalUrl, dataUri);
-        } catch (error) {
-            console.error(`  Failed to process ${absoluteUrl}: ${error.message}`);
+
+                } catch (error) {
+                    console.error(`Failed to process font URL ${fullUrl}:`, error);
+                }
+            }
         }
     }
-    
-    // Remove other font formats from src to avoid trying to fetch them
-    newCss = newCss.replace(/,\s*url\([^)]+\.(eot|woff|ttf|svg)[^)]*\)/g, '');
 
-    return newCss;
+    // A bit more aggressive cleanup for other formats that might be on separate lines or formats
+    newCss = newCss.replace(/src:\s*local\([^)]*\),\s*url\([^)]+\.woff2[^)]*\) format\('woff2'\);/g, (match) => {
+         const woff2Url = /url\([^)]+\.woff2[^)]*\)/.exec(match)[0];
+         return `src: ${woff2Url} format('woff2');`;
+    });
+
+    // Remove entire @font-face blocks if they don't contain a woff2 data URI
+    const finalCssBlocks = newCss.match(fontFaceRegex);
+    if (!finalCssBlocks) return '';
+
+    return finalCssBlocks.filter(block => block.includes('data:font/woff2;base64')).join('\n\n');
 }
 
-
 async function main() {
-    console.log('Starting font bundling process...');
+  try {
     let allCss = '';
-
-    for (const sourceUrl of FONT_SOURCES) {
-        console.log(`Processing ${sourceUrl}...`);
-        try {
-            const userAgent = sourceUrl.includes('googleapis') ? 'Mozilla/5.0' : 'node.js';
-            const cssBuffer = await download(sourceUrl, userAgent);
-            const cssContent = cssBuffer.toString('utf-8');
-            const processedCss = await processCss(cssContent, sourceUrl);
-            allCss += processedCss + '\n';
-        } catch (error) {
-            console.error(`Could not process ${sourceUrl}: ${error.message}`);
-        }
+    for (const url of fontUrls) {
+      console.log(`Fetching CSS from ${url}...`);
+      const css = await downloadFile(url);
+      const processedCss = await processCss(css);
+      allCss += processedCss + '\n\n';
     }
+    
+    // Clean up css
+    allCss = allCss.replace(/;\s*}/g, ' }'); // remove trailing semicolon
+    allCss = allCss.replace(/\/\*[^]*?\*\//g, ""); // remove comments
+    allCss = allCss.replace(/\n\s*\n/g, '\n'); // remove empty lines
 
+
+    const outputFile = path.join(__dirname, '..', 'src', 'sugartv-card-fonts.js');
     const outputContent = `/* This file is auto-generated. Do not edit. */
 import { css } from 'lit';
 
@@ -88,9 +117,12 @@ export const fontStyles = css\`
 ${allCss}
 \`;
 `;
-
-    fs.writeFileSync(OUTPUT_FILE, outputContent);
-    console.log(`\nSuccessfully created ${OUTPUT_FILE}`);
+    await fs.writeFile(outputFile, outputContent);
+    console.log(`Successfully created ${outputFile}`);
+  } catch (error) {
+    console.error('Error bundling fonts:', error);
+    process.exit(1);
+  }
 }
 
-main(); 
+main();
