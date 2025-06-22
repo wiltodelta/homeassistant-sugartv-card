@@ -8,9 +8,7 @@ const fontUrls = [
   'https://fonts.googleapis.com/css?family=Overpass&display=swap',
 ];
 
-const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36';
-
-function downloadFile(url) {
+function downloadFile(url, userAgent) {
   return new Promise((resolve, reject) => {
     https.get(url, { headers: { 'User-Agent': userAgent } }, (response) => {
       if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -31,7 +29,7 @@ function downloadFile(url) {
 
 function downloadBinaryFile(url) {
     return new Promise((resolve, reject) => {
-        https.get(url, { headers: { 'User-Agent': userAgent } }, (response) => {
+        https.get(url, (response) => {
             if (response.statusCode < 200 || response.statusCode >= 300) {
                 return reject(new Error(`Failed to download ${url}, status code: ${response.statusCode}`));
             }
@@ -48,57 +46,71 @@ function downloadBinaryFile(url) {
     });
 }
 
-
 async function processCss(cssContent) {
-    const fontFaceRegex = /@font-face\s*{[^}]+}/g;
     const urlRegex = /url\(([^)]+)\)/g;
     let newCss = cssContent;
-    let match;
+    
+    const replacements = [];
 
-    while ((match = fontFaceRegex.exec(cssContent)) !== null) {
-        const fontFaceBlock = match[0];
-        let urlMatch;
-        while ((urlMatch = urlRegex.exec(fontFaceBlock)) !== null) {
-            const fullUrl = urlMatch[1].replace(/['"]/g, '');
-            if (fullUrl.endsWith('.woff2')) {
-                try {
-                    console.log(`Downloading font: ${fullUrl}`);
-                    const fontBuffer = await downloadBinaryFile(fullUrl);
-                    const base64Font = fontBuffer.toString('base64');
-                    const dataUri = `url(data:font/woff2;base64,${base64Font})`;
-                    newCss = newCss.replace(urlMatch[0], dataUri);
-                    
-                    // Remove other font formats from the src property to keep only woff2
-                     newCss = newCss.replace(/,\s*url\([^)]+\.(eot|woff|ttf|svg)[^)]*\) format\('[^']+'\)/g, '');
-                     newCss = newCss.replace(/url\([^)]+\.(eot|woff|ttf|svg)[^)]*\);/g, ';');
+    // Use a new regex exec loop to avoid infinite loops with string replacement
+    let urlMatch;
+    // Create a copy for iteration because we are modifying newCss
+    const cssContentForRegex = cssContent;
+    while ((urlMatch = urlRegex.exec(cssContentForRegex)) !== null) {
+        const originalUrlDeclaration = urlMatch[0];
+        const fullUrl = urlMatch[1].replace(/['"]/g, '');
 
-
-                } catch (error) {
-                    console.error(`Failed to process font URL ${fullUrl}:`, error);
-                }
+        if (fullUrl.endsWith('.woff2') || fullUrl.endsWith('.woff')) {
+            try {
+                console.log(`Downloading font: ${fullUrl}`);
+                const fontBuffer = await downloadBinaryFile(fullUrl);
+                const base64Font = fontBuffer.toString('base64');
+                const extension = path.extname(new URL(fullUrl).pathname).substring(1);
+                const mimeType = `font/${extension}`;
+                const dataUri = `url(data:${mimeType};base64,${base64Font})`;
+                
+                replacements.push({
+                    original: originalUrlDeclaration,
+                    replacement: dataUri,
+                });
+            } catch (error) {
+                console.error(`Failed to process font URL ${fullUrl}:`, error);
             }
         }
     }
 
-    // A bit more aggressive cleanup for other formats that might be on separate lines or formats
-    newCss = newCss.replace(/src:\s*local\([^)]*\),\s*url\([^)]+\.woff2[^)]*\) format\('woff2'\);/g, (match) => {
-         const woff2Url = /url\([^)]+\.woff2[^)]*\)/.exec(match)[0];
-         return `src: ${woff2Url} format('woff2');`;
-    });
+    for (const { original, replacement } of replacements) {
+        newCss = newCss.split(original).join(replacement);
+    }
+    
+    // Remove comments
+    newCss = newCss.replace(/\/\*[^]*?\*\//g, "");
 
-    // Remove entire @font-face blocks if they don't contain a woff2 data URI
+    // Remove any @font-face rules that don't contain a data URI, as they are useless without a downloadable font.
+    const fontFaceRegex = /@font-face\s*{[^}]+}/g;
     const finalCssBlocks = newCss.match(fontFaceRegex);
     if (!finalCssBlocks) return '';
 
-    return finalCssBlocks.filter(block => block.includes('data:font/woff2;base64')).join('\n\n');
+    const uniqueBlocks = [...new Set(finalCssBlocks)];
+    return uniqueBlocks.filter(block => block.includes('data:font/')).join('\n\n');
 }
 
 async function main() {
   try {
     let allCss = '';
+    const userAgents = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
+        'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko'
+    ];
+
     for (const url of fontUrls) {
       console.log(`Fetching CSS from ${url}...`);
-      const css = await downloadFile(url);
+      let css = '';
+      for (const agent of userAgents) {
+          console.log(`  using user agent: ${agent}`);
+          css += await downloadFile(url, agent);
+      }
+      
       const processedCss = await processCss(css);
       allCss += processedCss + '\n\n';
     }
