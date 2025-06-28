@@ -36,4 +36,4 @@ jobs:
         with:
           files: dist/*
           draft: false
-          prerelease: ${{ contains(github.ref, '-') }} 
+          prerelease: false 
