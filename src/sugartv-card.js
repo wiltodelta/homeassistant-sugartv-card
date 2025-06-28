@@ -5,10 +5,22 @@ import {
 } from 'lit';
 
 import { cardStyles } from "./sugartv-card-styles.js";
-import { fontStyles } from "./sugartv-card-fonts.js";
 import "./sugartv-card-editor.js";
 
 const VERSION = process.env.VERSION;
+
+const fontUrl = 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap';
+
+// Helper function to load CSS
+function loadCss(url) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = url;
+    document.head.appendChild(link);
+}
+
+// Load the fonts
+loadCss(fontUrl);
 
 // Constants
 const DEFAULT_VALUES = {
@@ -286,7 +298,7 @@ class SugarTvCard extends LitElement {
     }
 
     static get styles() {
-        return [fontStyles, cardStyles];
+        return cardStyles;
     }
 }
 
