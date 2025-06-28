@@ -24,6 +24,10 @@ class SugarTvCardEditor extends LitElement {
         };
     }
 
+    setConfig(config) {
+        this.config = config;
+    }
+
     get _glucose_value() {
         return this.config.glucose_value || '';
     }
