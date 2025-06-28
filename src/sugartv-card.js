@@ -9,19 +9,18 @@ import "./sugartv-card-editor.js";
 
 const VERSION = process.env.VERSION;
 
-// Helper function to load CSS only if it's not already loaded
+const fontUrl = 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap';
+
+// Helper function to load CSS
 function loadCss(url) {
-    if (!document.querySelector(`link[href="${url}"]`)) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = url;
-        document.head.appendChild(link);
-    }
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = url;
+    document.head.appendChild(link);
 }
 
-// Load the required fonts
-loadCss('https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap');
-loadCss('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css');
+// Load the fonts
+loadCss(fontUrl);
 
 // Constants
 const DEFAULT_VALUES = {
@@ -41,34 +40,34 @@ function getTrendDescriptions(unit) {
     const isMgdl = unit === UNITS.MGDL;
     return {
         rising_quickly: {
-            icon: 'angles-up',
+            symbol: '↑↑',
             prediction: `Expected to rise over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
         },
         rising: {
-            icon: 'angle-up',
+            symbol: '↑',
             prediction: `Expected to rise ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
         },
         rising_slightly: {
-            icon: 'arrow-up',
+            symbol: '↗',
             prediction: `Expected to rise ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
         },
         steady: {
-            icon: 'arrow-right',
+            symbol: '→'
         },
         falling_slightly: {
-            icon: 'arrow-down',
+            symbol: '↘',
             prediction: `Expected to fall ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
         },
         falling: {
-            icon: 'angle-down',
+            symbol: '↓',
             prediction: `Expected to fall ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
         },
         falling_quickly: {
-            icon: 'angles-down',
+            symbol: '↓↓',
             prediction: `Expected to fall over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
         },
         unknown: {
-            icon: 'arrows-rotate',
+            symbol: '↻'
         }
     };
 }
@@ -254,7 +253,7 @@ class SugarTvCard extends LitElement {
         if (!this.hass || !this.config) {
             return html``;
         }
-        
+
         this._updateData();
 
         const { glucose_value, glucose_trend } = this.config;
@@ -275,16 +274,15 @@ class SugarTvCard extends LitElement {
 
         const { value, last_changed, trend } = this._data;
         const showPrediction = this.config.show_prediction !== false;
-        const trendInfo = TREND_SYMBOLS[trend] || TREND_SYMBOLS.unknown;
-        const prediction = trendInfo.prediction;
-        
+        const prediction = TREND_SYMBOLS[trend]?.prediction || TREND_SYMBOLS.unknown.prediction;
+
         return html`
             <div class="wrapper">
                 <div class="container">
                     <div class="main-row">
                         <div class="time">${this._formatTime(last_changed)}</div>
                         <div class="value">${this._formatValue(value)}</div>
-                        <i class="trend fas fa-${trendInfo.icon}"></i>
+                        <div class="trend">${TREND_SYMBOLS[trend]?.symbol || TREND_SYMBOLS.unknown.symbol}</div>
                         <div class="delta">${this._calculateDelta()}</div>
                     </div>
                     ${showPrediction && prediction ? html`
