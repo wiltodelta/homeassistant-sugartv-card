@@ -9,20 +9,6 @@ import "./sugartv-card-editor.js";
 
 const VERSION = process.env.VERSION;
 
-// Helper function to load CSS only if it's not already loaded
-function loadCss(url) {
-    if (!document.querySelector(`link[href="${url}"]`)) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = url;
-        document.head.appendChild(link);
-    }
-}
-
-// Load the required fonts
-loadCss('https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap');
-loadCss('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css');
-
 // Constants
 const DEFAULT_VALUES = {
     VALUE: 'N/A',
