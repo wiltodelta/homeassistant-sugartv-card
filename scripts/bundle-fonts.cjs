@@ -5,7 +5,6 @@ const { URL } = require('url');
 
 const fontUrls = [
   'https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap',
-  'https://fonts.googleapis.com/css?family=Overpass&display=swap',
 ];
 
 function downloadFile(url, userAgent) {

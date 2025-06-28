@@ -45,7 +45,6 @@ export const cardStyles = css`
     
     .trend {
         font-size: 10cqi;
-        font-family: 'overpass';
         margin: 0 2.5cqi 0 0;
     }
     
