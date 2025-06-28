@@ -106,7 +106,7 @@ class SugarTvCard extends LitElement {
         const previous_hass = this._hass;
         this._hass = hass;
 
-        if (this._hass) {
+        if (this._hass && this._config) {
             this._updateData(previous_hass);
         }
     }
@@ -162,6 +162,10 @@ class SugarTvCard extends LitElement {
     }
 
     _updatePreviousData(previous_hass, glucose_value, glucose_trend, currentState) {
+        if (!previous_hass.states[glucose_value] || !previous_hass.states[glucose_trend]) {
+            return;
+        }
+
         const previousState = {
             previous_value: previous_hass.states[glucose_value].state,
             previous_last_changed: previous_hass.states[glucose_value].last_changed,
