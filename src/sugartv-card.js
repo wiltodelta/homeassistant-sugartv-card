@@ -40,34 +40,34 @@ function getTrendDescriptions(unit) {
     const isMgdl = unit === UNITS.MGDL;
     return {
         rising_quickly: {
-            symbol: '↑↑',
+            icon: 'mdi:trending-up',
             prediction: `Expected to rise over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
         },
         rising: {
-            symbol: '↑',
+            icon: 'mdi:arrow-up',
             prediction: `Expected to rise ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
         },
         rising_slightly: {
-            symbol: '↗',
+            icon: 'mdi:arrow-top-right',
             prediction: `Expected to rise ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
         },
         steady: {
-            symbol: '→'
+            icon: 'mdi:arrow-right'
         },
         falling_slightly: {
-            symbol: '↘',
+            icon: 'mdi:arrow-bottom-right',
             prediction: `Expected to fall ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
         },
         falling: {
-            symbol: '↓',
+            icon: 'mdi:arrow-down',
             prediction: `Expected to fall ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
         },
         falling_quickly: {
-            symbol: '↓↓',
+            icon: 'mdi:trending-down',
             prediction: `Expected to fall over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
         },
         unknown: {
-            symbol: '↻'
+            icon: 'mdi:help-circle-outline'
         }
     };
 }
@@ -282,7 +282,9 @@ class SugarTvCard extends LitElement {
                     <div class="main-row">
                         <div class="time">${this._formatTime(last_changed)}</div>
                         <div class="value">${this._formatValue(value)}</div>
-                        <div class="trend">${TREND_SYMBOLS[trend]?.symbol || TREND_SYMBOLS.unknown.symbol}</div>
+                        <div class="trend">
+                            <ha-icon icon="${TREND_SYMBOLS[trend]?.icon || TREND_SYMBOLS.unknown.icon}"></ha-icon>
+                        </div>
                         <div class="delta">${this._calculateDelta()}</div>
                     </div>
                     ${showPrediction && prediction ? html`

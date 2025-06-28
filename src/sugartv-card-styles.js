@@ -46,6 +46,15 @@ export const cardStyles = css`
     .trend {
         font-size: 10cqi;
         margin: 0 2.5cqi 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .trend ha-icon {
+        --mdc-icon-size: 10cqi;
+        width: 10cqi;
+        height: 10cqi;
     }
     
     .delta {
