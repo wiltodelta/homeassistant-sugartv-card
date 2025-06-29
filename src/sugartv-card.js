@@ -5,10 +5,22 @@ import {
 } from 'lit';
 
 import { cardStyles } from "./sugartv-card-styles.js";
-import { fontStyles } from "./sugartv-card-fonts.js";
 import "./sugartv-card-editor.js";
 
 const VERSION = process.env.VERSION;
+
+const fontUrl = 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap';
+
+// Helper function to load CSS
+function loadCss(url) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = url;
+    document.head.appendChild(link);
+}
+
+// Load the fonts
+loadCss(fontUrl);
 
 // Constants
 const DEFAULT_VALUES = {
@@ -28,34 +40,34 @@ function getTrendDescriptions(unit) {
     const isMgdl = unit === UNITS.MGDL;
     return {
         rising_quickly: {
-            symbol: '↑↑',
+            icon: 'mdi:mdi-chevron-double-up',
             prediction: `Expected to rise over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
         },
         rising: {
-            symbol: '↑',
+            icon: 'mdi:arrow-up',
             prediction: `Expected to rise ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
         },
         rising_slightly: {
-            symbol: '↗',
+            icon: 'mdi:arrow-top-right',
             prediction: `Expected to rise ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
         },
         steady: {
-            symbol: '→'
+            icon: 'mdi:arrow-right'
         },
         falling_slightly: {
-            symbol: '↘',
+            icon: 'mdi:arrow-bottom-right',
             prediction: `Expected to fall ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
         },
         falling: {
-            symbol: '↓',
+            icon: 'mdi:arrow-down',
             prediction: `Expected to fall ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
         },
         falling_quickly: {
-            symbol: '↓↓',
+            icon: 'mdi:mdi-chevron-double-down',
             prediction: `Expected to fall over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
         },
         unknown: {
-            symbol: '↻'
+            icon: 'mdi:help-circle-outline'
         }
     };
 }
@@ -66,9 +78,8 @@ let TREND_SYMBOLS = getTrendDescriptions(UNITS.MGDL);
 class SugarTvCard extends LitElement {
     static get properties() {
         return {
-            _hass: {},
-            _config: {},
-            _data: {}
+            hass: { type: Object },
+            config: { type: Object },
         };
     }
 
@@ -102,33 +113,52 @@ class SugarTvCard extends LitElement {
         };
     }
 
-    set hass(hass) {
-        const previous_hass = this._hass;
-        this._hass = hass;
+    setConfig(config) {
+        console.info('%c SUGARTV-CARD %c ' + VERSION,
+            'color: white; background: red; font-weight: 700;',
+            'color: red; background: white; font-weight: 700;');
 
-        if (this._hass && this._config) {
-            this._updateData(previous_hass);
+        if (!config.glucose_value) {
+            throw new Error('You need to define glucose_value in your configuration.');
         }
+
+        if (!config.glucose_trend) {
+            throw new Error('You need to define glucose_trend in your configuration.');
+        }
+
+        this.config = config;
+        this._data = this._data || this._getInitialDataState();
     }
 
-    _updateData(previous_hass) {
-        const { glucose_value, glucose_trend } = this._config;
+    _updateData() {
+        if (!this.hass || !this.config) {
+            return;
+        }
+
+        const { glucose_value, glucose_trend } = this.config;
 
         if (!this._validateEntities(glucose_value, glucose_trend)) {
+            // Data will be reset in _validateEntities, no need to return error html from here
             return;
         }
 
         const currentState = this._getCurrentState(glucose_value, glucose_trend);
+        const previousState = this._data.value !== null ? {
+            previous_value: this._data.value,
+            previous_last_changed: this._data.last_changed,
+            previous_trend: this._data.trend
+        } : null;
+
         this._updateCurrentData(currentState);
 
-        if (previous_hass) {
-            this._updatePreviousData(previous_hass, glucose_value, glucose_trend, currentState);
+        if (previousState && currentState.last_changed !== previousState.previous_last_changed) {
+            Object.assign(this._data, previousState);
         }
     }
 
     _validateEntities(glucose_value, glucose_trend) {
-        if (!this._hass.states[glucose_value] || !this._hass.states[glucose_trend]) {
-            console.error('SugarTV Card: One or both entities not found:', glucose_value, glucose_trend);
+        if (!this.hass.states[glucose_value] || !this.hass.states[glucose_trend]) {
+            // Don't log error here, it will spam the console during startup
             this._data = {
                 ...this._getInitialDataState(),
                 value: 0,
@@ -142,8 +172,8 @@ class SugarTvCard extends LitElement {
     }
 
     _getCurrentState(glucose_value, glucose_trend) {
-        const glucoseState = this._hass.states[glucose_value];
-        const trendState = this._hass.states[glucose_trend];
+        const glucoseState = this.hass.states[glucose_value];
+        const trendState = this.hass.states[glucose_trend];
 
         return {
             value: glucoseState.state,
@@ -159,22 +189,6 @@ class SugarTvCard extends LitElement {
             this._data.unit = currentState.unit;
         }
         Object.assign(this._data, currentState);
-    }
-
-    _updatePreviousData(previous_hass, glucose_value, glucose_trend, currentState) {
-        if (!previous_hass.states[glucose_value] || !previous_hass.states[glucose_trend]) {
-            return;
-        }
-
-        const previousState = {
-            previous_value: previous_hass.states[glucose_value].state,
-            previous_last_changed: previous_hass.states[glucose_value].last_changed,
-            previous_trend: previous_hass.states[glucose_trend].state
-        };
-
-        if (currentState.last_changed !== previousState.previous_last_changed) {
-            Object.assign(this._data, previousState);
-        }
     }
 
     _formatTime(timestamp) {
@@ -236,12 +250,30 @@ class SugarTvCard extends LitElement {
     }
 
     render() {
-        if (!this._hass || !this._config) {
+        if (!this.hass || !this.config) {
             return html``;
         }
 
+        this._updateData();
+
+        const { glucose_value, glucose_trend } = this.config;
+        if (!this.hass.states[glucose_value] || !this.hass.states[glucose_trend]) {
+            return html`
+        <ha-card>
+          <div class="card-content">
+            <p>
+              <strong>Configuration Error!</strong><br />
+              One or both entities not found: <br />
+              - ${glucose_value} <br />
+              - ${glucose_trend}
+            </p>
+          </div>
+        </ha-card>
+      `;
+        }
+
         const { value, last_changed, trend } = this._data;
-        const showPrediction = this._config.show_prediction !== false;
+        const showPrediction = this.config.show_prediction !== false;
         const prediction = TREND_SYMBOLS[trend]?.prediction || TREND_SYMBOLS.unknown.prediction;
 
         return html`
@@ -250,7 +282,9 @@ class SugarTvCard extends LitElement {
                     <div class="main-row">
                         <div class="time">${this._formatTime(last_changed)}</div>
                         <div class="value">${this._formatValue(value)}</div>
-                        <div class="trend">${TREND_SYMBOLS[trend]?.symbol || TREND_SYMBOLS.unknown.symbol}</div>
+                        <div class="trend">
+                            <ha-icon icon="${TREND_SYMBOLS[trend]?.icon || TREND_SYMBOLS.unknown.icon}"></ha-icon>
+                        </div>
                         <div class="delta">${this._calculateDelta()}</div>
                     </div>
                     ${showPrediction && prediction ? html`
@@ -261,29 +295,12 @@ class SugarTvCard extends LitElement {
         `;
     }
 
-    setConfig(config) {
-        console.info('%c SUGARTV-CARD %c ' + VERSION,
-            'color: white; background: red; font-weight: 700;',
-            'color: red; background: white; font-weight: 700;');
-
-        if (!config.glucose_value) {
-            throw new Error('You need to define glucose_value in your configuration.');
-        }
-
-        if (!config.glucose_trend) {
-            throw new Error('You need to define glucose_trend in your configuration.');
-        }
-
-        this._config = config;
-        this._data = this._data || this._getInitialDataState();
-    }
-
     getCardSize() {
         return 1;
     }
 
     static get styles() {
-        return [fontStyles, cardStyles];
+        return cardStyles;
     }
 }
 
