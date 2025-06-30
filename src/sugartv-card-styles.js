@@ -65,9 +65,9 @@ export const cardStyles = css`
     }
     
     .delta ha-icon {
-        --mdc-icon-size: 10cqi;
-        width: 10cqi;
-        height: 10cqi;
+        --mdc-icon-size: 6cqi;
+        width: 6cqi;
+        height: 6cqi;
     }
 
     .prediction {
