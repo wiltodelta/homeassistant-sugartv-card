@@ -51,7 +51,7 @@ function getTrendDescriptions(unit) {
             prediction: `Expected to rise ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
         },
         steady: {
-            icon: 'mdi:chevron-double-right'
+            icon: 'mdi:arrow-right'
         },
         falling_slightly: {
             icon: 'mdi:arrow-bottom-right',

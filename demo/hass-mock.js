@@ -1,27 +1,3 @@
-import {
-    mdiChevronDoubleUp,
-    mdiArrowUp,
-    mdiArrowTopRight,
-    mdiChevronDoubleRight,
-    mdiArrowBottomRight,
-    mdiArrowDown,
-    mdiChevronDoubleDown,
-    mdiHelpCircleOutline,
-    mdiProgressClock
-} from 'https://unpkg.com/@mdi/js@7.4.47/mdi.js';
-
-const MDI_ICONS = {
-    'chevron-double-up': mdiChevronDoubleUp,
-    'arrow-up': mdiArrowUp,
-    'arrow-top-right': mdiArrowTopRight,
-    'chevron-double-right': mdiChevronDoubleRight,
-    'arrow-bottom-right': mdiArrowBottomRight,
-    'arrow-down': mdiArrowDown,
-    'chevron-double-down': mdiChevronDoubleDown,
-    'help-circle-outline': mdiHelpCircleOutline,
-    'progress-clock': mdiProgressClock,
-};
-
 class HaIcon extends HTMLElement {
     constructor() {
         super();
@@ -42,10 +18,30 @@ class HaIcon extends HTMLElement {
         }
     }
 
-    _render() {
+    async _render() {
         const iconName = this.getAttribute('icon') || '';
         const icon = iconName.startsWith('mdi:') ? iconName.substring(4) : iconName;
-        const path = MDI_ICONS[icon];
+
+        if (!icon) {
+            this.shadowRoot.innerHTML = '';
+            return;
+        }
+
+        const toCamelCase = (s) => s.replace(/-./g, (x) => x[1].toUpperCase());
+        const camelCaseIcon = toCamelCase(icon);
+        const exportName = `mdi${camelCaseIcon.charAt(0).toUpperCase()}${camelCaseIcon.slice(1)}`;
+        let path = '';
+
+        try {
+            const module = await import(`https://unpkg.com/@mdi/js@7.4.47/mdi.js`);
+            path = module[exportName];
+
+            if (!path) {
+                console.error(`Icon ${icon} not found in @mdi/js`);
+            }
+        } catch (error) {
+            console.error(`Could not load icon ${icon}:`, error);
+        }
 
         this.shadowRoot.innerHTML = `
       <style>
