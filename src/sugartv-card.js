@@ -39,7 +39,7 @@ function getTrendDescriptions(unit) {
     const isMgdl = unit === UNITS.MGDL;
     return {
         rising_quickly: {
-            icon: 'mdi:mdi-chevron-double-up',
+            icon: 'mdi:chevron-double-up',
             prediction: `Expected to rise over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
         },
         rising: {
@@ -51,7 +51,7 @@ function getTrendDescriptions(unit) {
             prediction: `Expected to rise ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`
         },
         steady: {
-            icon: 'mdi:arrow-right'
+            icon: 'mdi:chevron-double-right'
         },
         falling_slightly: {
             icon: 'mdi:arrow-bottom-right',
@@ -62,7 +62,7 @@ function getTrendDescriptions(unit) {
             prediction: `Expected to fall ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`
         },
         falling_quickly: {
-            icon: 'mdi:mdi-chevron-double-down',
+            icon: 'mdi:chevron-double-down',
             prediction: `Expected to fall over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`
         },
         unknown: {
