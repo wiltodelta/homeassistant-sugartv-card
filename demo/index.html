@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SugarTV Card Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #fafafa;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2196F3;
+            margin-bottom: 30px;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .demo-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            min-height: 120px;
+        }
+        
+        .demo-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        sugartv-card {
+            width: 100%;
+            height: 100px;
+            display: block;
+        }
+        
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .info h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            background: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SugarTV Card Demo</h1>
+        
+        <div class="controls">
+            <h3>Test Scenarios</h3>
+            <button onclick="setNormalValues()">Normal Reading</button>
+            <button onclick="setHighValues()">High Reading</button>
+            <button onclick="setLowValues()">Low Reading</button>
+            <button onclick="setNoData()">No Data</button>
+            <button onclick="setRisingTrend()">Rising Trend</button>
+            <button onclick="setFallingTrend()">Falling Trend</button>
+        </div>
+        
+        <div class="demo-grid">
+            <div class="demo-card">
+                <div class="demo-title">Normal State</div>
+                <sugartv-card id="card1"></sugartv-card>
+            </div>
+            
+            <div class="demo-card">
+                <div class="demo-title">With Prediction</div>
+                <sugartv-card id="card2"></sugartv-card>
+            </div>
+            
+            <div class="demo-card">
+                <div class="demo-title">mmol/L Units</div>
+                <sugartv-card id="card3"></sugartv-card>
+            </div>
+            
+            <div class="demo-card">
+                <div class="demo-title">No Delta Data</div>
+                <sugartv-card id="card4"></sugartv-card>
+            </div>
+        </div>
+        
+        <div class="info">
+            <h3>About SugarTV Card</h3>
+            <p>This is a custom Home Assistant card for displaying glucose data from Dexcom sensors.</p>
+            <p><strong>Features:</strong></p>
+            <ul>
+                <li>Real-time glucose readings</li>
+                <li>Trend indicators with HA icons</li>
+                <li>Delta calculations</li>
+                <li>Prediction display</li>
+                <li>Support for both mg/dL and mmol/L</li>
+                <li>Responsive design</li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module" src="/demo/hass-mock.js"></script>
+    <script type="module" src="/dist/sugartv-card.js"></script>
+    <script>
+        // Mock Home Assistant object
+        const mockHass = {
+            states: {
+                'sensor.dexcom_glucose_value': {
+                    state: '120',
+                    attributes: {
+                        unit_of_measurement: 'mg/dL'
+                    },
+                    last_changed: new Date().toISOString()
+                },
+                'sensor.dexcom_glucose_trend': {
+                    state: 'steady'
+                }
+            }
+        };
+
+        // Wait for the component to be defined
+        customElements.whenDefined('sugartv-card').then(() => {
+            setupCards();
+        });
+
+        function setupCards() {
+            const card1 = document.getElementById('card1');
+            const card2 = document.getElementById('card2');
+            const card3 = document.getElementById('card3');
+            const card4 = document.getElementById('card4');
+
+            // Card 1 - Normal
+            card1.hass = mockHass;
+            card1.setConfig({
+                glucose_value: 'sensor.dexcom_glucose_value',
+                glucose_trend: 'sensor.dexcom_glucose_trend',
+                show_prediction: false
+            });
+
+            // Card 2 - With prediction
+            card2.hass = mockHass;
+            card2.setConfig({
+                glucose_value: 'sensor.dexcom_glucose_value',
+                glucose_trend: 'sensor.dexcom_glucose_trend',
+                show_prediction: true
+            });
+
+            // Card 3 - mmol/L
+            const mmolHass = JSON.parse(JSON.stringify(mockHass));
+            mmolHass.states['sensor.dexcom_glucose_value'].state = '6.7';
+            mmolHass.states['sensor.dexcom_glucose_value'].attributes.unit_of_measurement = 'mmol/L';
+            card3.hass = mmolHass;
+            card3.setConfig({
+                glucose_value: 'sensor.dexcom_glucose_value',
+                glucose_trend: 'sensor.dexcom_glucose_trend',
+                show_prediction: true
+            });
+
+            // Card 4 - No delta (no previous data)
+            card4.hass = mockHass;
+            card4.setConfig({
+                glucose_value: 'sensor.dexcom_glucose_value',
+                glucose_trend: 'sensor.dexcom_glucose_trend',
+                show_prediction: false
+            });
+        }
+
+        function updateAllCards(glucoseValue, trend, unit = 'mg/dL') {
+            const newHass = {
+                states: {
+                    'sensor.dexcom_glucose_value': {
+                        state: glucoseValue,
+                        attributes: {
+                            unit_of_measurement: unit
+                        },
+                        last_changed: new Date().toISOString()
+                    },
+                    'sensor.dexcom_glucose_trend': {
+                        state: trend
+                    }
+                }
+            };
+
+            ['card1', 'card2', 'card3', 'card4'].forEach(id => {
+                const card = document.getElementById(id);
+                if (card) {
+                    card.hass = newHass;
+                    card.requestUpdate();
+                }
+            });
+        }
+
+        function setNormalValues() {
+            updateAllCards('120', 'steady');
+        }
+
+        function setHighValues() {
+            updateAllCards('250', 'rising');
+        }
+
+        function setLowValues() {
+            updateAllCards('70', 'falling');
+        }
+
+        function setNoData() {
+            const noDataHass = {
+                states: {
+                    'sensor.dexcom_glucose_value': {
+                        state: 'unknown',
+                        attributes: {
+                            unit_of_measurement: 'mg/dL'
+                        },
+                        last_changed: new Date().toISOString()
+                    },
+                    'sensor.dexcom_glucose_trend': {
+                        state: 'unknown'
+                    }
+                }
+            };
+            
+            ['card1', 'card2', 'card3', 'card4'].forEach(id => {
+                const card = document.getElementById(id);
+                if (card) {
+                    card.hass = noDataHass;
+                    card.requestUpdate();
+                }
+            });
+        }
+
+        function setRisingTrend() {
+            updateAllCards('140', 'rising_quickly');
+        }
+
+        function setFallingTrend() {
+            updateAllCards('95', 'falling_quickly');
+        }
+    </script>
+</body>
+</html> 

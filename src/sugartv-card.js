@@ -25,7 +25,6 @@ loadCss(fontUrl);
 // Constants
 const DEFAULT_VALUES = {
     VALUE: 'N/A',
-    DELTA: '⧖',
     TIME: '00:00'
 };
 
@@ -206,19 +205,19 @@ class SugarTvCard extends LitElement {
         const { value, previous_value, last_changed, previous_last_changed } = this._data;
 
         if (!this._isValidValue(value) || !this._isValidValue(previous_value)) {
-            return DEFAULT_VALUES.DELTA;
+            return null;
         }
 
         const timeDiff = Math.abs(new Date(last_changed) - new Date(previous_last_changed));
         if (timeDiff >= 450000) { // 7.5 minutes
-            return DEFAULT_VALUES.DELTA;
+            return null;
         }
 
         const currentValue = parseFloat(String(value).replace(',', '.'));
         const previousValue = parseFloat(String(previous_value).replace(',', '.'));
 
         if (isNaN(currentValue) || isNaN(previousValue)) {
-            return DEFAULT_VALUES.DELTA;
+            return null;
         }
 
         const delta = currentValue - previousValue;
@@ -285,7 +284,7 @@ class SugarTvCard extends LitElement {
                         <div class="trend">
                             <ha-icon icon="${TREND_SYMBOLS[trend]?.icon || TREND_SYMBOLS.unknown.icon}"></ha-icon>
                         </div>
-                        <div class="delta">${this._calculateDelta()}</div>
+                        <div class="delta">${this._calculateDelta() || html`<ha-icon icon="mdi:progress-clock"></ha-icon>`}</div>
                     </div>
                     ${showPrediction && prediction ? html`
                         <div class="prediction">${prediction}</div>

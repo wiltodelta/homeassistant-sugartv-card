@@ -59,6 +59,15 @@ export const cardStyles = css`
     
     .delta {
         font-size: 6cqi;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .delta ha-icon {
+        --mdc-icon-size: 10cqi;
+        width: 10cqi;
+        height: 10cqi;
     }
 
     .prediction {

@@ -6,7 +6,9 @@
   "main": "dist/sugartv-card.js",
   "scripts": {
     "build": "rollup -c",
-    "watch": "rollup -c --watch"
+    "watch": "rollup -c --watch",
+    "demo": "npm run build && node demo/server.js",
+    "demo:build": "npm run build && echo 'Demo ready! Run npm run demo to start server'"
   },
   "repository": {
     "type": "git",
