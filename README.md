@@ -6,6 +6,7 @@ A custom Lovelace card for Home Assistant that provides an enhanced way to displ
 
 ![Full-screen view of the SugarTV Card](sugartv-card-fullscreen.png)
 ![Embedded SugarTV Card on a dashboard](sugartv-card-embedded.png)
+![SugarTV Card in a room](sugartv-card-room.png)
 
 ## Features
 
