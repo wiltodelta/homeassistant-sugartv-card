@@ -20,7 +20,9 @@ class HaIcon extends HTMLElement {
 
     async _render() {
         const iconName = this.getAttribute('icon') || '';
-        const icon = iconName.startsWith('mdi:') ? iconName.substring(4) : iconName;
+        const icon = iconName.startsWith('mdi:')
+            ? iconName.substring(4)
+            : iconName;
 
         if (!icon) {
             this.shadowRoot.innerHTML = '';
@@ -33,7 +35,9 @@ class HaIcon extends HTMLElement {
         let path = '';
 
         try {
-            const module = await import(`https://unpkg.com/@mdi/js@7.4.47/mdi.js`);
+            const module = await import(
+                `https://unpkg.com/@mdi/js@7.4.47/mdi.js`
+            );
             path = module[exportName];
 
             if (!path) {
@@ -65,4 +69,4 @@ class HaIcon extends HTMLElement {
     }
 }
 
-customElements.define('ha-icon', HaIcon); 
+customElements.define('ha-icon', HaIcon);

@@ -1,37 +1,39 @@
 {
-  "name": "homeassistant-sugartv-card",
-  "version": "1.0.0",
-  "description": "SugarTV Card for Home Assistant",
-  "type": "module",
-  "main": "dist/sugartv-card.js",
-  "scripts": {
-    "build": "rollup -c",
-    "watch": "rollup -c --watch",
-    "demo": "npm run build && node demo/server.js",
-    "demo:build": "npm run build && echo 'Demo ready! Run npm run demo to start server'"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/vkuznetsov/homeassistant-sugartv-card.git"
-  },
-  "keywords": [
-    "home-assistant",
-    "homeassistant",
-    "hass",
-    "automation",
-    "lovelace",
-    "custom-cards"
-  ],
-  "author": "Victor Kuznetsov",
-  "license": "MIT",
-  "devDependencies": {
-    "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-replace": "^6.0.2",
-    "@rollup/plugin-terser": "^0.4.4",
-    "rollup": "^4.44.1"
-  },
-  "dependencies": {
-    "lit": "^3.3.0"
-  }
+    "name": "homeassistant-sugartv-card",
+    "version": "1.0.0",
+    "description": "SugarTV Card for Home Assistant",
+    "type": "module",
+    "main": "dist/sugartv-card.js",
+    "scripts": {
+        "build": "rollup -c",
+        "watch": "rollup -c --watch",
+        "demo": "npm run build && node demo/server.js",
+        "demo:build": "npm run build && echo 'Demo ready! Run npm run demo to start server'",
+        "format": "prettier --write ."
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/vkuznetsov/homeassistant-sugartv-card.git"
+    },
+    "keywords": [
+        "home-assistant",
+        "homeassistant",
+        "hass",
+        "automation",
+        "lovelace",
+        "custom-cards"
+    ],
+    "author": "wiltodelta",
+    "license": "MIT",
+    "devDependencies": {
+        "@rollup/plugin-json": "^6.1.0",
+        "@rollup/plugin-node-resolve": "^16.0.1",
+        "@rollup/plugin-replace": "^6.0.2",
+        "@rollup/plugin-terser": "^0.4.4",
+        "prettier": "^3.6.2",
+        "rollup": "^4.44.1"
+    },
+    "dependencies": {
+        "lit": "^3.3.0"
+    }
 }

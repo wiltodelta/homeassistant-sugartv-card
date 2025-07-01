@@ -1,9 +1,6 @@
-import {
-    LitElement,
-    html,
-} from 'lit';
+import { LitElement, html } from 'lit';
 
-import { editorStyles } from "./sugartv-card-styles.js";
+import { editorStyles } from './sugartv-card-styles.js';
 
 const fireEvent = (node, type, detail = {}, options = {}) => {
     const event = new CustomEvent(type, {
@@ -35,7 +32,7 @@ class SugarTvCardEditor extends LitElement {
     get _glucose_trend() {
         return this.config.glucose_trend || '';
     }
-    
+
     get _show_prediction() {
         return this.config.show_prediction !== false;
     }
@@ -45,8 +42,8 @@ class SugarTvCardEditor extends LitElement {
             return html``;
         }
 
-        const entities = Object.keys(this.hass.states).filter(
-            (eid) => eid.startsWith('sensor.')
+        const entities = Object.keys(this.hass.states).filter((eid) =>
+            eid.startsWith('sensor.'),
         );
 
         return html`
@@ -60,7 +57,12 @@ class SugarTvCardEditor extends LitElement {
                     @selected=${this._valueChanged}
                     @closed=${(ev) => ev.stopPropagation()}
                 >
-                    ${entities.map((entity) => html`<ha-list-item .value=${entity}>${entity}</ha-list-item>`)}
+                    ${entities.map(
+                        (entity) =>
+                            html`<ha-list-item .value=${entity}
+                                >${entity}</ha-list-item
+                            >`,
+                    )}
                 </ha-select>
 
                 <ha-select
@@ -72,7 +74,12 @@ class SugarTvCardEditor extends LitElement {
                     @selected=${this._valueChanged}
                     @closed=${(ev) => ev.stopPropagation()}
                 >
-                    ${entities.map((entity) => html`<ha-list-item .value=${entity}>${entity}</ha-list-item>`)}
+                    ${entities.map(
+                        (entity) =>
+                            html`<ha-list-item .value=${entity}
+                                >${entity}</ha-list-item
+                            >`,
+                    )}
                 </ha-select>
 
                 <ha-formfield .label=${'Show prediction'}>
@@ -91,13 +98,14 @@ class SugarTvCardEditor extends LitElement {
             return;
         }
 
-        const {
-            target
-        } = ev;
-        
+        const { target } = ev;
+
         const newConfig = {
             ...this.config,
-            [target.configValue]: target.configValue === 'show_prediction' ? target.checked : target.value,
+            [target.configValue]:
+                target.configValue === 'show_prediction'
+                    ? target.checked
+                    : target.value,
         };
 
         fireEvent(this, 'config-changed', { config: newConfig });
@@ -108,4 +116,4 @@ class SugarTvCardEditor extends LitElement {
     }
 }
 
-customElements.define("sugartv-card-editor", SugarTvCardEditor); 
+customElements.define('sugartv-card-editor', SugarTvCardEditor);

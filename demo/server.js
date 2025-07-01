@@ -16,27 +16,27 @@ const mimeTypes = {
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
     '.gif': 'image/gif',
-    '.svg': 'image/svg+xml'
+    '.svg': 'image/svg+xml',
 };
 
 const server = createServer(async (req, res) => {
     try {
         let filePath = req.url === '/' ? '/demo/index.html' : req.url;
-        
+
         // Security: prevent directory traversal
         if (filePath.includes('..')) {
             res.writeHead(403);
             res.end('Forbidden');
             return;
         }
-        
+
         const fullPath = join(projectRoot, filePath);
-        
+
         try {
             const data = await readFile(fullPath);
             const ext = extname(filePath);
             const contentType = mimeTypes[ext] || 'application/octet-stream';
-            
+
             res.writeHead(200, { 'Content-Type': contentType });
             res.end(data);
         } catch (error) {
@@ -60,4 +60,4 @@ server.listen(PORT, () => {
     console.log(`📱 SugarTV Card demo available!`);
     console.log(`📝 Open http://localhost:${PORT} in your browser`);
     console.log(`⏹️  Press Ctrl+C to stop`);
-}); 
+});

@@ -1,266 +1,263 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SugarTV Card Demo</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #fafafa;
-            color: #333;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        h1 {
-            text-align: center;
-            color: #2196F3;
-            margin-bottom: 30px;
-        }
-        
-        .demo-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .demo-card {
-            background: white;
-            border-radius: 8px;
-            padding: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            position: relative;
-            min-height: 120px;
-        }
-        
-        .demo-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #666;
-            font-size: 14px;
-        }
-        
-        sugartv-card {
-            width: 100%;
-            height: 100px;
-            display: block;
-        }
-        
-        .info {
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        
-        .info h3 {
-            margin-top: 0;
-            color: #1976d2;
-        }
-        
-        .controls {
-            margin: 20px 0;
-            padding: 15px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        button {
-            background: #2196F3;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 10px;
-            margin-bottom: 10px;
-        }
-        
-        button:hover {
-            background: #1976d2;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>SugarTV Card Demo</h1>
-        
-        <div class="controls">
-            <h3>Test Scenarios</h3>
-            <button onclick="setNormalValues()">Normal Reading</button>
-            <button onclick="setHighValues()">High Reading</button>
-            <button onclick="setLowValues()">Low Reading</button>
-            <button onclick="setNoData()">No Data</button>
-            <button onclick="setRisingTrend()">Rising Trend</button>
-            <button onclick="setFallingTrend()">Falling Trend</button>
-        </div>
-        
-        <div class="demo-grid">
-            <div class="demo-card">
-                <div class="demo-title">Normal State</div>
-                <sugartv-card id="card1"></sugartv-card>
-            </div>
-            
-            <div class="demo-card">
-                <div class="demo-title">With Prediction</div>
-                <sugartv-card id="card2"></sugartv-card>
-            </div>
-            
-            <div class="demo-card">
-                <div class="demo-title">mmol/L Units</div>
-                <sugartv-card id="card3"></sugartv-card>
-            </div>
-            
-            <div class="demo-card">
-                <div class="demo-title">No Delta Data</div>
-                <sugartv-card id="card4"></sugartv-card>
-            </div>
-        </div>
-    </div>
-
-    <script type="module" src="/demo/hass-mock.js"></script>
-    <script type="module" src="/dist/sugartv-card.js"></script>
-    <script>
-        // Mock Home Assistant object
-        const mockHass = {
-            states: {
-                'sensor.dexcom_glucose_value': {
-                    state: '120',
-                    attributes: {
-                        unit_of_measurement: 'mg/dL'
-                    },
-                    last_changed: new Date().toISOString()
-                },
-                'sensor.dexcom_glucose_trend': {
-                    state: 'steady'
-                }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SugarTV Card Comprehensive Demo</title>
+        <style>
+            body {
+                background: #fafafa;
+                font-family: sans-serif;
+                margin: 0;
+                padding: 20px;
+                color: #333;
             }
-        };
+            .container {
+                max-width: 1600px;
+                margin: 0 auto;
+            }
+            .controls {
+                background: #e3f2fd;
+                padding: 15px;
+                border-radius: 8px;
+                margin: 0 0 20px 0;
+                text-align: center;
+            }
+            .controls label {
+                margin: 0 10px 0 20px;
+                font-weight: bold;
+            }
+            .demo-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(560px, 1fr));
+                gap: 32px;
+            }
+            .demo-card {
+                background: white;
+                border-radius: 16px;
+                padding: 24px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+            sugartv-card {
+                width: 100%;
+                height: 200px;
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="controls">
+                <label for="unit-select">Unit:</label>
+                <select id="unit-select">
+                    <option value="mg/dL">mg/dL</option>
+                    <option value="mmol/L">mmol/L</option>
+                </select>
+                <label for="prediction-toggle">Show Prediction:</label>
+                <input type="checkbox" id="prediction-toggle" checked />
+                <label for="locale-select">Time Format:</label>
+                <select id="locale-select">
+                    <option value="">Browser</option>
+                    <option value="en-US">12-hour</option>
+                    <option value="en-GB">24-hour</option>
+                </select>
+            </div>
+            <div class="demo-grid" id="card-grid">
+                <!-- All cards will be dynamically injected here -->
+            </div>
+        </div>
 
-        // Wait for the component to be defined
-        customElements.whenDefined('sugartv-card').then(() => {
-            setupCards();
-        });
-
-        function setupCards() {
-            const card1 = document.getElementById('card1');
-            const card2 = document.getElementById('card2');
-            const card3 = document.getElementById('card3');
-            const card4 = document.getElementById('card4');
-
-            // Card 1 - Normal
-            card1.hass = mockHass;
-            card1.setConfig({
-                glucose_value: 'sensor.dexcom_glucose_value',
-                glucose_trend: 'sensor.dexcom_glucose_trend',
-                show_prediction: false
-            });
-
-            // Card 2 - With prediction
-            card2.hass = mockHass;
-            card2.setConfig({
-                glucose_value: 'sensor.dexcom_glucose_value',
-                glucose_trend: 'sensor.dexcom_glucose_trend',
-                show_prediction: true
-            });
-
-            // Card 3 - mmol/L
-            const mmolHass = JSON.parse(JSON.stringify(mockHass));
-            mmolHass.states['sensor.dexcom_glucose_value'].state = '6.7';
-            mmolHass.states['sensor.dexcom_glucose_value'].attributes.unit_of_measurement = 'mmol/L';
-            card3.hass = mmolHass;
-            card3.setConfig({
-                glucose_value: 'sensor.dexcom_glucose_value',
-                glucose_trend: 'sensor.dexcom_glucose_trend',
-                show_prediction: true
-            });
-
-            // Card 4 - No delta (no previous data)
-            card4.hass = mockHass;
-            card4.setConfig({
-                glucose_value: 'sensor.dexcom_glucose_value',
-                glucose_trend: 'sensor.dexcom_glucose_trend',
-                show_prediction: false
-            });
-        }
-
-        function updateAllCards(glucoseValue, trend, unit = 'mg/dL') {
-            const newHass = {
-                states: {
-                    'sensor.dexcom_glucose_value': {
-                        state: glucoseValue,
-                        attributes: {
-                            unit_of_measurement: unit
+        <script type="module" src="/demo/hass-mock.js"></script>
+        <script type="module" src="/dist/sugartv-card.js"></script>
+        <script>
+            // --- Helper Functions ---
+            function createHass(value, trend, unit, date) {
+                return {
+                    states: {
+                        'sensor.dexcom_glucose_value': {
+                            state: String(value),
+                            attributes: { unit_of_measurement: unit },
+                            last_changed: date.toISOString(),
                         },
-                        last_changed: new Date().toISOString()
+                        'sensor.dexcom_glucose_trend': { state: trend },
                     },
-                    'sensor.dexcom_glucose_trend': {
-                        state: trend
-                    }
-                }
-            };
+                };
+            }
+            function setupCard(card, config, hass) {
+                if (!card) return;
+                card.hass = hass;
+                card.setConfig(config);
+            }
+            function setupCardWithDelta(
+                card,
+                config,
+                { val1, val2, trend, unit },
+            ) {
+                if (!card) return;
+                card.setConfig(config);
+                const time1 = new Date(),
+                    time2 = new Date(time1.getTime() + 300000);
+                card.hass = createHass(val1, trend, unit, time1);
+                setTimeout(() => {
+                    card.hass = createHass(val2, trend, unit, time2);
+                }, 100);
+            }
 
-            ['card1', 'card2', 'card3', 'card4'].forEach(id => {
-                const card = document.getElementById(id);
-                if (card) {
-                    card.hass = newHass;
-                    card.requestUpdate();
-                }
-            });
-        }
+            // --- Main Render Function ---
+            function renderAllCards() {
+                const grid = document.getElementById('card-grid');
+                grid.innerHTML = ''; // Clear existing cards
 
-        function setNormalValues() {
-            updateAllCards('120', 'steady');
-        }
+                const selectedUnit =
+                    document.getElementById('unit-select').value;
+                const showPrediction =
+                    document.getElementById('prediction-toggle').checked;
+                const selectedLocale =
+                    document.getElementById('locale-select').value;
 
-        function setHighValues() {
-            updateAllCards('250', 'rising');
-        }
+                const config = {
+                    glucose_value: 'sensor.dexcom_glucose_value',
+                    glucose_trend: 'sensor.dexcom_glucose_trend',
+                    show_prediction: showPrediction,
+                    locale: selectedLocale || undefined,
+                };
 
-        function setLowValues() {
-            updateAllCards('70', 'falling');
-        }
-
-        function setNoData() {
-            const noDataHass = {
-                states: {
-                    'sensor.dexcom_glucose_value': {
-                        state: 'unknown',
-                        attributes: {
-                            unit_of_measurement: 'mg/dL'
-                        },
-                        last_changed: new Date().toISOString()
+                const scenarios = [
+                    {
+                        id: 'rising_quickly',
+                        title: 'rising quickly',
+                        type: 'static',
+                        trend: 'rising_quickly',
                     },
-                    'sensor.dexcom_glucose_trend': {
-                        state: 'unknown'
+                    {
+                        id: 'rising',
+                        title: 'rising',
+                        type: 'static',
+                        trend: 'rising',
+                    },
+                    {
+                        id: 'rising_slightly',
+                        title: 'rising slightly (Delta: 0)',
+                        type: 'delta',
+                        trend: 'rising_slightly',
+                        params: { val1: 120, val2: 120 },
+                    },
+                    {
+                        id: 'steady',
+                        title: 'steady (Delta: +)',
+                        type: 'delta',
+                        trend: 'steady',
+                        params: { val1: 110, val2: 120 },
+                    },
+                    {
+                        id: 'falling_slightly',
+                        title: 'falling slightly (Delta: -)',
+                        type: 'delta',
+                        trend: 'falling_slightly',
+                        params: { val1: 130, val2: 120 },
+                    },
+                    {
+                        id: 'falling',
+                        title: 'falling',
+                        type: 'static',
+                        trend: 'falling',
+                    },
+                    {
+                        id: 'falling_quickly',
+                        title: 'falling quickly',
+                        type: 'static',
+                        trend: 'falling_quickly',
+                    },
+                    {
+                        id: 'unknown',
+                        title: 'unknown',
+                        type: 'static',
+                        trend: 'unknown',
+                    },
+                    {
+                        id: 'unavailable-value',
+                        title: 'UNAVAILABLE: Value',
+                        type: 'static',
+                        trend: 'steady',
+                        valueOverride: 'unavailable',
+                    },
+                    {
+                        id: 'unavailable-trend',
+                        title: 'UNAVAILABLE: Trend',
+                        type: 'static',
+                        trend: 'unavailable',
+                    },
+                ];
+
+                scenarios.forEach((scenario) => {
+                    const cardId = `card-${scenario.id}`;
+                    const cardWrapper = document.createElement('div');
+                    cardWrapper.className = 'demo-card';
+                    cardWrapper.innerHTML = `<sugartv-card id="${cardId}"></sugartv-card>`;
+                    grid.appendChild(cardWrapper);
+                    const cardElement = document.getElementById(cardId);
+
+                    let baseValue;
+                    if (scenario.trend.startsWith('falling')) baseValue = 45;
+                    else if (scenario.trend.startsWith('rising'))
+                        baseValue = 205;
+                    else baseValue = 120;
+
+                    if (scenario.type === 'delta') {
+                        const p = scenario.params;
+                        const v1 =
+                            selectedUnit === 'mg/dL'
+                                ? p.val1
+                                : (p.val1 / 18).toFixed(1);
+                        const v2 =
+                            selectedUnit === 'mg/dL'
+                                ? p.val2
+                                : (p.val2 / 18).toFixed(1);
+                        setupCardWithDelta(cardElement, config, {
+                            val1: v1,
+                            val2: v2,
+                            trend: scenario.trend,
+                            unit: selectedUnit,
+                        });
+                    } else {
+                        // static
+                        let value =
+                            scenario.valueOverride !== undefined
+                                ? scenario.valueOverride
+                                : baseValue;
+                        if (
+                            selectedUnit === 'mmol/L' &&
+                            !isNaN(parseFloat(value))
+                        ) {
+                            value = (parseFloat(value) / 18).toFixed(1);
+                        }
+                        setupCard(
+                            cardElement,
+                            config,
+                            createHass(
+                                value,
+                                scenario.trend,
+                                selectedUnit,
+                                new Date(),
+                            ),
+                        );
                     }
-                }
-            };
-            
-            ['card1', 'card2', 'card3', 'card4'].forEach(id => {
-                const card = document.getElementById(id);
-                if (card) {
-                    card.hass = noDataHass;
-                    card.requestUpdate();
-                }
+                });
+            }
+
+            // --- Initial Setup ---
+            customElements.whenDefined('sugartv-card').then(() => {
+                document
+                    .getElementById('unit-select')
+                    .addEventListener('change', renderAllCards);
+                document
+                    .getElementById('prediction-toggle')
+                    .addEventListener('change', renderAllCards);
+                document
+                    .getElementById('locale-select')
+                    .addEventListener('change', renderAllCards);
+                renderAllCards();
             });
-        }
-
-        function setRisingTrend() {
-            updateAllCards('140', 'rising_quickly');
-        }
-
-        function setFallingTrend() {
-            updateAllCards('95', 'falling_quickly');
-        }
-    </script>
-</body>
-</html> 
+        </script>
+    </body>
+</html>
