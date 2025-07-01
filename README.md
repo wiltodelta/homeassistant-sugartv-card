@@ -12,11 +12,11 @@ A custom Lovelace card for Home Assistant that provides an enhanced way to displ
 
 - 🔌 Uses default Dexcom integration for Home Assistant
 - 📊 Displays:
-  - Current glucose value
-  - Difference from previous reading
-  - Trend direction
-  - Last update time
-  - Glucose prediction for next 15 minutes
+    - Current glucose value
+    - Difference from previous reading
+    - Trend direction
+    - Last update time
+    - Glucose prediction for next 15 minutes
 - 🌍 Automatic local time format support
 - 📏 Automatic unit support (mmol/L and mg/dL)
 - 📱 Responsive card sizing
@@ -39,7 +39,6 @@ A custom Lovelace card for Home Assistant that provides an enhanced way to displ
 5. Click "Install"
 6. Restart Home Assistant
 
-
 ## Configuration
 
 ### Using the UI
@@ -47,9 +46,9 @@ A custom Lovelace card for Home Assistant that provides an enhanced way to displ
 1. Add a new card to your dashboard
 2. Choose "Custom: SugarTV Card"
 3. Use the visual editor to configure:
-   - Select glucose value sensor
-   - Select glucose trend sensor
-   - Toggle prediction display
+    - Select glucose value sensor
+    - Select glucose trend sensor
+    - Toggle prediction display
 
 ### Using YAML
 

@@ -1,21 +1,21 @@
 name: HACS Action
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
 
 jobs:
-  hacs:
-    name: HACS Action
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: HACS Action
-        uses: hacs/action@main
-        with:
-          category: "plugin" 
+    hacs:
+        name: HACS Action
+        runs-on: ubuntu-22.04
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: HACS Action
+              uses: hacs/action@main
+              with:
+                  category: 'plugin'
