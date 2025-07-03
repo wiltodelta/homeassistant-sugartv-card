@@ -2,15 +2,11 @@ import { LitElement, html, css } from 'lit';
 
 import { cardStyles } from './sugartv-card-styles.js';
 import './sugartv-card-editor.js';
+import { getLocalizer } from './localize.js';
 
 const VERSION = process.env.VERSION;
 
 class SugarTvCard extends LitElement {
-    static DEFAULT_VALUES = {
-        VALUE: 'N/A',
-        TIME: '00:00',
-    };
-
     static UNITS = {
         MGDL: 'mg/dL',
         MMOLL: 'mmol/L',
@@ -39,7 +35,6 @@ class SugarTvCard extends LitElement {
     constructor() {
         super();
         this._data = this._getInitialDataState();
-        this.TREND_SYMBOLS = this._getTrendDescriptions(this._data.unit);
     }
 
     _getInitialDataState() {
@@ -56,33 +51,75 @@ class SugarTvCard extends LitElement {
 
     _getTrendDescriptions(unit) {
         const isMgdl = unit === SugarTvCard.UNITS.MGDL;
+        const localize = getLocalizer(this.config, this.hass);
+        const u = isMgdl
+            ? localize('units.mgdl')
+            : localize('units.mmoll');
+        const locale =
+            (this.config && this.config.locale) ||
+            (this.hass && this.hass.language) ||
+            'en';
+
+        const nf = (val) =>
+            val.toLocaleString(locale, {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+            });
+
+        const formatMmol = (val1, val2) =>
+            val2 ? `${nf(val1)}-${nf(val2)}` : nf(val1);
+
         return {
             rising_quickly: {
                 icon: 'mdi:chevron-double-up',
-                prediction: `Expected to rise over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`,
+                prediction: localize(
+                    'predictions.rise_over',
+                    isMgdl ? '45' : formatMmol(2.5),
+                    u,
+                ),
             },
             rising: {
                 icon: 'mdi:arrow-up',
-                prediction: `Expected to rise ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`,
+                prediction: localize(
+                    'predictions.rise_in',
+                    isMgdl ? '30-45' : formatMmol(1.7, 2.5),
+                    u,
+                ),
             },
             rising_slightly: {
                 icon: 'mdi:arrow-top-right',
-                prediction: `Expected to rise ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`,
+                prediction: localize(
+                    'predictions.rise_in',
+                    isMgdl ? '15-30' : formatMmol(0.8, 1.7),
+                    u,
+                ),
             },
             steady: {
                 icon: 'mdi:arrow-right',
             },
             falling_slightly: {
                 icon: 'mdi:arrow-bottom-right',
-                prediction: `Expected to fall ${isMgdl ? '15-30 mg/dL' : '0.8-1.7 mmol/L'} in 15 minutes`,
+                prediction: localize(
+                    'predictions.fall_in',
+                    isMgdl ? '15-30' : formatMmol(0.8, 1.7),
+                    u,
+                ),
             },
             falling: {
                 icon: 'mdi:arrow-down',
-                prediction: `Expected to fall ${isMgdl ? '30-45 mg/dL' : '1.7-2.5 mmol/L'} in 15 minutes`,
+                prediction: localize(
+                    'predictions.fall_in',
+                    isMgdl ? '30-45' : formatMmol(1.7, 2.5),
+                    u,
+                ),
             },
             falling_quickly: {
                 icon: 'mdi:chevron-double-down',
-                prediction: `Expected to fall over ${isMgdl ? '45 mg/dL' : '2.5 mmol/L'} in 15 minutes`,
+                prediction: localize(
+                    'predictions.fall_over',
+                    isMgdl ? '45' : formatMmol(2.5),
+                    u,
+                ),
             },
             unknown: {
                 icon: 'mdi:help-circle-outline',
@@ -180,21 +217,20 @@ class SugarTvCard extends LitElement {
 
     _updateCurrentData(currentState) {
         if (this._data.unit !== currentState.unit) {
-            this.TREND_SYMBOLS = this._getTrendDescriptions(
-                currentState.unit || SugarTvCard.UNITS.MGDL,
-            );
+            this._getTrendDescriptions(currentState.unit || SugarTvCard.UNITS.MGDL);
             this._data.unit = currentState.unit;
         }
         Object.assign(this._data, currentState);
     }
 
     _formatTime(timestamp) {
+        const localize = getLocalizer(this.config, this.hass);
         if (
             !timestamp ||
             timestamp === 'unknown' ||
             timestamp === 'unavailable'
         ) {
-            return SugarTvCard.DEFAULT_VALUES.TIME;
+            return localize('common.default_time');
         }
 
         const options = {
@@ -233,8 +269,20 @@ class SugarTvCard extends LitElement {
         }
 
         const delta = currentValue - previousValue;
-        const roundedDelta = Math.round(Math.abs(delta) * 10) / 10;
-        return delta >= 0 ? `＋${roundedDelta}` : `－${roundedDelta}`;
+        const sign = delta >= 0 ? '＋' : '－';
+        const absDelta = Math.abs(delta);
+
+        const locale = this.config.locale || [];
+        const isMmol = this._data.unit === SugarTvCard.UNITS.MMOLL;
+
+        if (isMmol) {
+            return `${sign}${absDelta.toLocaleString(locale, {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+            })}`;
+        }
+
+        return `${sign}${Math.round(absDelta).toLocaleString(locale)}`;
     }
 
     _isValidValue(value) {
@@ -242,32 +290,36 @@ class SugarTvCard extends LitElement {
     }
 
     _formatValue(value) {
+        const localize = getLocalizer(this.config, this.hass);
         if (!this._isValidValue(value)) {
-            return SugarTvCard.DEFAULT_VALUES.VALUE;
+            return localize('common.not_available');
         }
 
         const sanitizedValue = String(value).replace(',', '.');
         const numValue = parseFloat(sanitizedValue);
 
         if (isNaN(numValue)) {
-            return SugarTvCard.DEFAULT_VALUES.VALUE;
+            return localize('common.not_available');
         }
 
-        if (this._data.unit === SugarTvCard.UNITS.MMOLL) {
-            return numValue.toFixed(1);
-        }
+        const locale = this.config.locale || [];
+        const isMmol = this._data.unit === SugarTvCard.UNITS.MMOLL;
 
-        return Math.round(numValue);
+        return numValue.toLocaleString(locale, {
+            minimumFractionDigits: isMmol ? 1 : 0,
+            maximumFractionDigits: isMmol ? 1 : 0,
+        });
     }
 
     render() {
         this._updateData();
 
-        const { value, last_changed, trend } = this._data;
+        const { value, last_changed, trend, unit } = this._data;
         const showPrediction = this.config.show_prediction !== false;
+        const trendSymbols = this._getTrendDescriptions(unit);
         const trendInfo =
-            (trend && this.TREND_SYMBOLS[trend.toLowerCase()]) ||
-            this.TREND_SYMBOLS.unknown;
+            (trend && trendSymbols[trend.toLowerCase()]) ||
+            trendSymbols.unknown;
         const trendIcon = trendInfo.icon;
         const prediction = trendInfo.prediction || '';
 
@@ -304,12 +356,12 @@ class SugarTvCard extends LitElement {
     }
 }
 
+const localize = getLocalizer();
 customElements.define('sugartv-card', SugarTvCard);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
     type: 'sugartv-card',
-    name: 'SugarTV Card',
-    description:
-        'A custom lovelace card for Home Assistant that provides a better way to display Dexcom data.',
+    name: localize('card.name'),
+    description: localize('card.description'),
 });

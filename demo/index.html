@@ -48,6 +48,13 @@
     <body>
         <div class="container">
             <div class="controls">
+                <label for="locale-select">Locale:</label>
+                <select id="locale-select">
+                    <option value="">Browser Default</option>
+                    <option value="en-US">English (en-US)</option>
+                    <option value="en-GB">English (en-GB)</option>
+                    <option value="ru-RU">Russian (ru-RU)</option>
+                </select>
                 <label for="unit-select">Unit:</label>
                 <select id="unit-select">
                     <option value="mg/dL">mg/dL</option>
@@ -55,12 +62,6 @@
                 </select>
                 <label for="prediction-toggle">Show Prediction:</label>
                 <input type="checkbox" id="prediction-toggle" checked />
-                <label for="locale-select">Time Format:</label>
-                <select id="locale-select">
-                    <option value="">Browser</option>
-                    <option value="en-US">12-hour</option>
-                    <option value="en-GB">24-hour</option>
-                </select>
             </div>
             <div class="demo-grid" id="card-grid">
                 <!-- All cards will be dynamically injected here -->

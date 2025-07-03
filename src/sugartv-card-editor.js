@@ -1,17 +1,8 @@
 import { LitElement, html } from 'lit';
+import { fireEvent } from 'custom-card-helpers';
 
 import { editorStyles } from './sugartv-card-styles.js';
-
-const fireEvent = (node, type, detail = {}, options = {}) => {
-    const event = new CustomEvent(type, {
-        bubbles: options.bubbles === undefined ? true : options.bubbles,
-        cancelable: Boolean(options.cancelable),
-        composed: options.composed === undefined ? true : options.composed,
-        detail,
-    });
-    node.dispatchEvent(event);
-    return event;
-};
+import { getLocalizer } from './localize.js';
 
 class SugarTvCardEditor extends LitElement {
     static get properties() {
@@ -45,13 +36,14 @@ class SugarTvCardEditor extends LitElement {
         const entities = Object.keys(this.hass.states).filter((eid) =>
             eid.startsWith('sensor.'),
         );
+        const localize = getLocalizer(this.config, this.hass);
 
         return html`
             <div class="card-config">
                 <ha-select
                     naturalMenuWidth
                     fixedMenuPosition
-                    label="Glucose value (required)"
+                    label="${localize('editor.glucose_value')}"
                     .configValue=${'glucose_value'}
                     .value=${this._glucose_value}
                     @selected=${this._valueChanged}
@@ -68,7 +60,7 @@ class SugarTvCardEditor extends LitElement {
                 <ha-select
                     naturalMenuWidth
                     fixedMenuPosition
-                    label="Glucose trend (required)"
+                    label="${localize('editor.glucose_trend')}"
                     .configValue=${'glucose_trend'}
                     .value=${this._glucose_trend}
                     @selected=${this._valueChanged}
@@ -82,7 +74,7 @@ class SugarTvCardEditor extends LitElement {
                     )}
                 </ha-select>
 
-                <ha-formfield .label=${'Show prediction'}>
+                <ha-formfield .label=${localize('editor.show_prediction')}>
                     <ha-switch
                         .checked=${this._show_prediction}
                         .configValue=${'show_prediction'}
