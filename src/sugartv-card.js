@@ -281,7 +281,11 @@ class SugarTvCard extends LitElement {
         const { value, previous_value, last_changed, previous_last_changed } =
             this._data;
 
-        if (!this._isValidValue(value) || !this._isValidValue(previous_value)) {
+        if (
+            !this._isValidValue(value) ||
+            !this._isValidValue(previous_value) ||
+            last_changed === previous_last_changed
+        ) {
             return null;
         }
 
