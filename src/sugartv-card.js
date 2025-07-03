@@ -238,9 +238,11 @@ class SugarTvCard extends LitElement {
             minute: '2-digit',
         };
 
-        const locale = this.config.locale || [];
+        const locale =
+            (this.config && this.config.locale) ||
+            (this.hass && this.hass.language);
 
-        return new Date(timestamp).toLocaleTimeString(locale, options);
+        return new Date(timestamp).toLocaleTimeString(locale || [], options);
     }
 
     _calculateDelta() {
