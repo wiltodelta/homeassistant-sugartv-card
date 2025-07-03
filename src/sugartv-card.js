@@ -52,9 +52,7 @@ class SugarTvCard extends LitElement {
     _getTrendDescriptions(unit) {
         const isMgdl = unit === SugarTvCard.UNITS.MGDL;
         const localize = getLocalizer(this.config, this.hass);
-        const u = isMgdl
-            ? localize('units.mgdl')
-            : localize('units.mmoll');
+        const u = isMgdl ? localize('units.mgdl') : localize('units.mmoll');
         const locale =
             (this.config && this.config.locale) ||
             (this.hass && this.hass.language) ||
@@ -249,7 +247,9 @@ class SugarTvCard extends LitElement {
 
     _updateCurrentData(currentState) {
         if (this._data.unit !== currentState.unit) {
-            this._getTrendDescriptions(currentState.unit || SugarTvCard.UNITS.MGDL);
+            this._getTrendDescriptions(
+                currentState.unit || SugarTvCard.UNITS.MGDL,
+            );
             this._data.unit = currentState.unit;
         }
         Object.assign(this._data, currentState);
