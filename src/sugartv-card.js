@@ -148,6 +148,18 @@ class SugarTvCard extends LitElement {
 
         this.config = config;
         this._data = this._data || this._getInitialDataState();
+
+        try {
+            const key = `sugartv-card-${this.config.glucose_value}`;
+            const storedState = localStorage.getItem(key);
+            if (storedState) {
+                const state = JSON.parse(storedState);
+                this._data.previous_value = state.value;
+                this._data.previous_last_changed = state.last_changed;
+            }
+        } catch (e) {
+            console.error('Error loading state from localStorage', e);
+        }
     }
 
     _updateData() {
@@ -166,6 +178,22 @@ class SugarTvCard extends LitElement {
             glucose_value,
             glucose_trend,
         );
+
+        try {
+            if (this._isValidValue(currentState.value)) {
+                const key = `sugartv-card-${this.config.glucose_value}`;
+                localStorage.setItem(
+                    key,
+                    JSON.stringify({
+                        value: currentState.value,
+                        last_changed: currentState.last_changed,
+                    }),
+                );
+            }
+        } catch (e) {
+            console.error('Error saving state to localStorage', e);
+        }
+
         const previousState =
             this._data.value !== null
                 ? {
