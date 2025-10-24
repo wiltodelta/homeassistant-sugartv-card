@@ -28,6 +28,10 @@ class SugarTvCardEditor extends LitElement {
         return this.config.show_prediction !== false;
     }
 
+    get _unit_override() {
+        return this.config.unit_override || 'auto';
+    }
+
     render() {
         if (!this.hass || !this.config) {
             return html``;
@@ -81,6 +85,20 @@ class SugarTvCardEditor extends LitElement {
                         @change=${this._valueChanged}
                     ></ha-switch>
                 </ha-formfield>
+
+                <ha-select
+                    naturalMenuWidth
+                    fixedMenuPosition
+                    label="${localize('editor.unit_override')}"
+                    .configValue=${'unit_override'}
+                    .value=${this._unit_override}
+                    @selected=${this._valueChanged}
+                    @closed=${(ev) => ev.stopPropagation()}
+                >
+                    <ha-list-item value="auto">${localize('units.auto')}</ha-list-item>
+                    <ha-list-item value="mg/dL">${localize('units.mgdl')}</ha-list-item>
+                    <ha-list-item value="mmol/L">${localize('units.mmoll')}</ha-list-item>
+                </ha-select>
             </div>
         `;
     }

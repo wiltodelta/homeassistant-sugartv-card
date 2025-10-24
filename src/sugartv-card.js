@@ -25,6 +25,7 @@ class SugarTvCard extends LitElement {
             glucose_value: 'sensor.dexcom_glucose_value',
             glucose_trend: 'sensor.dexcom_glucose_trend',
             show_prediction: true,
+            unit_override: 'auto',
         };
     }
 
@@ -221,12 +222,17 @@ class SugarTvCard extends LitElement {
             !this.hass.states[glucose_trend]
         ) {
             // Don't log error here, it will spam the console during startup
+            let unit = SugarTvCard.UNITS.MGDL;
+            if (this.config.unit_override && this.config.unit_override !== 'auto') {
+                unit = this.config.unit_override;
+            }
+            
             this._data = {
                 ...this._getInitialDataState(),
                 value: 0,
                 last_changed: 0,
                 trend: 'unknown',
-                unit: SugarTvCard.UNITS.MGDL,
+                unit: unit,
             };
             return false;
         }
@@ -237,9 +243,15 @@ class SugarTvCard extends LitElement {
         const glucoseState = this.hass.states[glucose_value];
         const trendState = this.hass.states[glucose_trend];
 
+        // Use manual unit override if configured, otherwise use sensor's unit
+        let unit = glucoseState.attributes.unit_of_measurement;
+        if (this.config.unit_override && this.config.unit_override !== 'auto') {
+            unit = this.config.unit_override;
+        }
+
         return {
             value: glucoseState.state,
-            unit: glucoseState.attributes.unit_of_measurement,
+            unit: unit,
             last_changed: glucoseState.last_changed,
             trend: trendState.state,
         };

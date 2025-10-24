@@ -9,10 +9,12 @@ const languages = {
             glucose_value: 'Glucose value entity (required)',
             glucose_trend: 'Glucose trend entity (required)',
             show_prediction: 'Show prediction',
+            unit_override: 'Unit override',
         },
         units: {
             mgdl: 'mg/dL',
             mmoll: 'mmol/L',
+            auto: 'Auto (from sensor)',
         },
         predictions: {
             rise_over: 'Expected to rise over {0} {1} in 15 minutes',
@@ -35,10 +37,12 @@ const languages = {
             glucose_value: 'Значение глюкозы (обязательно)',
             glucose_trend: 'Тренд глюкозы (обязательно)',
             show_prediction: 'Показывать прогноз?',
+            unit_override: 'Переопределение единиц',
         },
         units: {
             mgdl: 'мг/дл',
             mmoll: 'ммоль/л',
+            auto: 'Авто (с датчика)',
         },
         predictions: {
             rise_over:
