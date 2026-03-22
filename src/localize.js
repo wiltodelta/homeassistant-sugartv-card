@@ -3,18 +3,18 @@ const languages = {
         card: {
             name: 'SugarTV Card',
             description:
-                'A custom lovelace card for Home Assistant that provides a better way to display Dexcom data.',
+                'Displays CGM glucose data with trend, delta, and color-coded zones. Works with Dexcom, Nightscout, LibreView, LibreLink, and Carelink.',
         },
         editor: {
-            glucose_value: 'Glucose value entity (required)',
-            glucose_trend: 'Glucose trend entity (required)',
-            show_prediction: 'Show prediction',
-            color_thresholds: 'Color by glucose level',
+            glucose_value: 'Glucose sensor',
+            glucose_trend: 'Trend sensor (auto-detected)',
+            show_prediction: 'Glucose forecast',
+            color_thresholds: 'Color-coded glucose zones',
             urgent_low: 'Urgent low',
             low: 'Low',
             high: 'High',
             urgent_high: 'Urgent high',
-            thresholds_title: 'Glucose thresholds',
+            thresholds_title: 'Glucose thresholds (mg/dL or mmol/L)',
         },
         units: {
             mgdl: 'mg/dL',
@@ -35,18 +35,18 @@ const languages = {
         card: {
             name: 'Карточка SugarTV',
             description:
-                'Карточка для Home Assistant, которая предоставляет лучший способ отображения данных Dexcom.',
+                'Отображает данные глюкозы с трендом, дельтой и цветовыми зонами. Поддерживает Dexcom, Nightscout, LibreView, LibreLink и Carelink.',
         },
         editor: {
-            glucose_value: 'Значение глюкозы (обязательно)',
-            glucose_trend: 'Тренд глюкозы (обязательно)',
-            show_prediction: 'Показывать прогноз?',
-            color_thresholds: 'Цвет по уровню глюкозы',
+            glucose_value: 'Сенсор глюкозы',
+            glucose_trend: 'Сенсор тренда (определяется автоматически)',
+            show_prediction: 'Прогноз глюкозы',
+            color_thresholds: 'Цветовые зоны глюкозы',
             urgent_low: 'Критически низкий',
             low: 'Низкий',
             high: 'Высокий',
             urgent_high: 'Критически высокий',
-            thresholds_title: 'Пороги глюкозы',
+            thresholds_title: 'Пороги глюкозы (мг/дл или ммоль/л)',
         },
         units: {
             mgdl: 'мг/дл',

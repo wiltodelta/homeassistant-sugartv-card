@@ -107,10 +107,6 @@ class SugarTvCard extends LitElement {
                     selector: { entity: { domain: 'sensor' } },
                 },
                 {
-                    name: 'glucose_trend',
-                    selector: { entity: { domain: 'sensor' } },
-                },
-                {
                     name: 'show_prediction',
                     selector: { boolean: {} },
                 },
