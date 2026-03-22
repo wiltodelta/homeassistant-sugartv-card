@@ -56,8 +56,8 @@ const server = createServer(async (req, res) => {
 
 const PORT = 3000;
 server.listen(PORT, () => {
-    console.log(`🚀 Demo server running at http://localhost:${PORT}`);
-    console.log(`📱 SugarTV Card demo available!`);
-    console.log(`📝 Open http://localhost:${PORT} in your browser`);
-    console.log(`⏹️  Press Ctrl+C to stop`);
+    console.log(`Demo server running at http://localhost:${PORT}`);
+    console.log(`SugarTV Card demo available`);
+    console.log(`Open http://localhost:${PORT} in your browser`);
+    console.log(`Press Ctrl+C to stop`);
 });

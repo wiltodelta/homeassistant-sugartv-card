@@ -1,4 +1,4 @@
-# SugarTV Card — Project Guidelines
+# SugarTV Card — Project guidelines
 
 ## Role
 
@@ -120,6 +120,7 @@ You are an expert Frontend Developer specializing in Home Assistant custom Lovel
 
 - `src/sugartv-card.js` — Main card component + `getConfigForm()` editor schema
 - `src/sugartv-card-styles.js` — CSS styles (card zones, transitions)
+- `src/trend.js` — Trend normalization and auto-detection logic
 - `src/localize.js` — i18n translations (EN, RU)
 - `demo/index.html` — Demo page for local testing
 - `demo/hass-mock.js` — Mock HA components for demo
