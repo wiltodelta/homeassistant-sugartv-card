@@ -4,11 +4,9 @@
 
 A custom Lovelace card for Home Assistant that displays CGM (Continuous Glucose Monitor) data. Supports **Dexcom**, **Nightscout**, **LibreView**, **LibreLink**, and **Carelink (Medtronic)** with automatic trend detection.
 
-<p>
-  <img src="sugartv-card-room.png" width="32%" alt="SugarTV Card in a room" />
-  <img src="sugartv-card-fullscreen.png" width="32%" alt="Full-screen view of the SugarTV Card" />
-  <img src="sugartv-card-embedded.png" width="32%" alt="Embedded SugarTV Card on a dashboard" />
-</p>
+![SugarTV Card in a room](sugartv-card-room.png)
+![Full-screen view of the SugarTV Card](sugartv-card-fullscreen.png)
+![Embedded SugarTV Card on a dashboard](sugartv-card-embedded.png)
 
 ## Features
 
