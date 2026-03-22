@@ -88,6 +88,12 @@ class SugarTvCard extends LitElement {
             glucose_value: 'sensor.dexcom_glucose_value',
             show_prediction: true,
             color_thresholds: true,
+            thresholds: {
+                urgent_low: 54,
+                low: 70,
+                high: 180,
+                urgent_high: 250,
+            },
         };
     }
 
@@ -100,7 +106,10 @@ class SugarTvCard extends LitElement {
                     required: true,
                     selector: { entity: { domain: 'sensor' } },
                 },
-
+                {
+                    name: 'glucose_trend',
+                    selector: { entity: { domain: 'sensor' } },
+                },
                 {
                     name: 'show_prediction',
                     selector: { boolean: {} },
@@ -121,6 +130,7 @@ class SugarTvCard extends LitElement {
                             schema: [
                                 {
                                     name: 'urgent_low',
+                                    default: 54,
                                     selector: {
                                         number: {
                                             min: 0,
@@ -131,6 +141,7 @@ class SugarTvCard extends LitElement {
                                 },
                                 {
                                     name: 'low',
+                                    default: 70,
                                     selector: {
                                         number: {
                                             min: 0,
@@ -141,6 +152,7 @@ class SugarTvCard extends LitElement {
                                 },
                                 {
                                     name: 'high',
+                                    default: 180,
                                     selector: {
                                         number: {
                                             min: 0,
@@ -151,6 +163,7 @@ class SugarTvCard extends LitElement {
                                 },
                                 {
                                     name: 'urgent_high',
+                                    default: 250,
                                     selector: {
                                         number: {
                                             min: 0,
