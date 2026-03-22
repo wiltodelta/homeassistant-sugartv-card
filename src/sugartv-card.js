@@ -306,20 +306,7 @@ class SugarTvCard extends LitElement {
 
         this.config = config;
         this._data = this._data || this._getInitialDataState();
-
-        if (!this.config.disable_storage) {
-            try {
-                const key = `sugartv-card-${this.config.glucose_value}`;
-                const storedState = sessionStorage.getItem(key);
-                if (storedState) {
-                    const state = JSON.parse(storedState);
-                    this._data.previous_value = state.value;
-                    this._data.previous_last_changed = state.last_changed;
-                }
-            } catch (e) {
-                console.error('Error loading state from sessionStorage', e);
-            }
-        }
+        this._lastHistoryFetch = this._lastHistoryFetch || 0;
     }
 
     _updateData() {
@@ -330,7 +317,6 @@ class SugarTvCard extends LitElement {
         const { glucose_value, glucose_trend } = this.config;
 
         if (!this._validateEntities(glucose_value, glucose_trend)) {
-            // Data will be reset in _validateEntities, no need to return error html from here
             return;
         }
 
@@ -339,39 +325,53 @@ class SugarTvCard extends LitElement {
             glucose_trend,
         );
 
-        if (!this.config.disable_storage) {
-            try {
-                if (this._isValidValue(currentState.value)) {
-                    const key = `sugartv-card-${this.config.glucose_value}`;
-                    sessionStorage.setItem(
-                        key,
-                        JSON.stringify({
-                            value: currentState.value,
-                            last_changed: currentState.last_changed,
-                        }),
-                    );
-                }
-            } catch (e) {
-                console.error('Error saving state to sessionStorage', e);
-            }
-        }
-
-        const previousState =
-            this._data.value !== null
-                ? {
-                      previous_value: this._data.value,
-                      previous_last_changed: this._data.last_changed,
-                      previous_trend: this._data.trend,
-                  }
-                : null;
-
         this._updateCurrentData(currentState);
+        this._fetchPreviousFromHistory();
+    }
 
-        if (
-            previousState &&
-            currentState.last_changed !== previousState.previous_last_changed
-        ) {
-            Object.assign(this._data, previousState);
+    async _fetchPreviousFromHistory() {
+        const now = Date.now();
+        // Throttle: fetch at most once per 30 seconds
+        if (now - this._lastHistoryFetch < 30000) {
+            return;
+        }
+        this._lastHistoryFetch = now;
+
+        try {
+            const entityId = this.config.glucose_value;
+            const startTime = new Date(now - 15 * 60 * 1000).toISOString(); // 15 minutes
+            const endTime = new Date(now).toISOString();
+
+            const history = await this.hass.callWS({
+                type: 'history/history_during_period',
+                start_time: startTime,
+                end_time: endTime,
+                entity_ids: [entityId],
+                minimal_response: true,
+                no_attributes: true,
+            });
+
+            const states = history[entityId];
+            if (!states || states.length < 2) {
+                return;
+            }
+
+            // States are sorted chronologically; last is current, second-to-last is previous
+            const previousState = states[states.length - 2];
+            if (
+                previousState &&
+                this._isValidValue(previousState.s) &&
+                previousState.lu
+            ) {
+                this._data.previous_value = previousState.s;
+                this._data.previous_last_changed = new Date(
+                    previousState.lu * 1000,
+                ).toISOString();
+                this.requestUpdate();
+            }
+        } catch (e) {
+            // History API may not be available (e.g. recorder disabled)
+            // Delta will simply not show — graceful degradation
         }
     }
 
@@ -446,8 +446,8 @@ class SugarTvCard extends LitElement {
         const timeDiff = Math.abs(
             new Date(last_changed) - new Date(previous_last_changed),
         );
-        if (timeDiff >= 450000) {
-            // 7.5 minutes
+        if (timeDiff >= 600000) {
+            // 10 minutes (Dexcom updates every 5 min but may delay)
             return null;
         }
 
