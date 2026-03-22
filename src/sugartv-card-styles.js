@@ -80,17 +80,27 @@ export const cardStyles = css`
         opacity: 0.7;
         text-align: center;
     }
-`;
 
-export const editorStyles = css`
-    ha-select {
-        width: 100%;
-        margin-bottom: 8px;
+    .container {
+        transition:
+            background-color 0.4s ease,
+            color 0.4s ease;
+        border-radius: 12px;
     }
-    .values {
-        padding: 8px 0;
+
+    .container.zone-urgent-low,
+    .container.zone-urgent-high {
+        background-color: var(--sugartv-urgent-bg, #c62828);
+        color: var(--sugartv-urgent-text, #ffffff);
     }
-    .card-config {
-        padding: 16px;
+
+    .container.zone-low,
+    .container.zone-high {
+        color: var(--sugartv-warning-text, #e65100);
+    }
+
+    .container.zone-urgent-low .prediction,
+    .container.zone-urgent-high .prediction {
+        opacity: 0.85;
     }
 `;

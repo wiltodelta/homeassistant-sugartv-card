@@ -1,7 +1,6 @@
 import { LitElement, html, css } from 'lit';
 
 import { cardStyles } from './sugartv-card-styles.js';
-import './sugartv-card-editor.js';
 import { getLocalizer } from './localize.js';
 
 const VERSION = process.env.VERSION;
@@ -10,6 +9,21 @@ class SugarTvCard extends LitElement {
     static UNITS = {
         MGDL: 'mg/dL',
         MMOLL: 'mmol/L',
+    };
+
+    static DEFAULT_THRESHOLDS = {
+        'mg/dL': {
+            urgent_low: 54,
+            low: 70,
+            high: 180,
+            urgent_high: 250,
+        },
+        'mmol/L': {
+            urgent_low: 3.0,
+            low: 3.9,
+            high: 10.0,
+            urgent_high: 13.9,
+        },
     };
 
     static get properties() {
@@ -25,11 +39,123 @@ class SugarTvCard extends LitElement {
             glucose_value: 'sensor.dexcom_glucose_value',
             glucose_trend: 'sensor.dexcom_glucose_trend',
             show_prediction: true,
+            color_thresholds: true,
         };
     }
 
-    static async getConfigElement() {
-        return document.createElement('sugartv-card-editor');
+    static getConfigForm() {
+        const localize = getLocalizer({}, {});
+        return {
+            schema: [
+                {
+                    name: 'glucose_value',
+                    required: true,
+                    selector: { entity: { domain: 'sensor' } },
+                },
+                {
+                    name: 'glucose_trend',
+                    required: true,
+                    selector: { entity: { domain: 'sensor' } },
+                },
+                {
+                    name: 'show_prediction',
+                    selector: { boolean: {} },
+                },
+                {
+                    name: 'color_thresholds',
+                    selector: { boolean: {} },
+                },
+                {
+                    type: 'expandable',
+                    name: 'thresholds',
+                    title: localize('editor.thresholds_title'),
+                    schema: [
+                        {
+                            type: 'grid',
+                            name: '',
+                            flatten: true,
+                            schema: [
+                                {
+                                    name: 'urgent_low',
+                                    selector: {
+                                        number: {
+                                            min: 0,
+                                            mode: 'box',
+                                            step: 'any',
+                                        },
+                                    },
+                                },
+                                {
+                                    name: 'low',
+                                    selector: {
+                                        number: {
+                                            min: 0,
+                                            mode: 'box',
+                                            step: 'any',
+                                        },
+                                    },
+                                },
+                                {
+                                    name: 'high',
+                                    selector: {
+                                        number: {
+                                            min: 0,
+                                            mode: 'box',
+                                            step: 'any',
+                                        },
+                                    },
+                                },
+                                {
+                                    name: 'urgent_high',
+                                    selector: {
+                                        number: {
+                                            min: 0,
+                                            mode: 'box',
+                                            step: 'any',
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+            computeLabel: (schema) => {
+                const labels = {
+                    glucose_value: localize('editor.glucose_value'),
+                    glucose_trend: localize('editor.glucose_trend'),
+                    show_prediction: localize('editor.show_prediction'),
+                    color_thresholds: localize('editor.color_thresholds'),
+                    urgent_low: localize('editor.urgent_low'),
+                    low: localize('editor.low'),
+                    high: localize('editor.high'),
+                    urgent_high: localize('editor.urgent_high'),
+                };
+                return labels[schema.name] || undefined;
+            },
+            assertConfig: (config) => {
+                if (config.thresholds) {
+                    const t = config.thresholds;
+                    if (
+                        t.urgent_low != null &&
+                        t.low != null &&
+                        t.urgent_low >= t.low
+                    ) {
+                        throw new Error('urgent_low must be less than low');
+                    }
+                    if (t.low != null && t.high != null && t.low >= t.high) {
+                        throw new Error('low must be less than high');
+                    }
+                    if (
+                        t.high != null &&
+                        t.urgent_high != null &&
+                        t.high >= t.urgent_high
+                    ) {
+                        throw new Error('high must be less than urgent_high');
+                    }
+                }
+            },
+        };
     }
 
     constructor() {
@@ -370,6 +496,29 @@ class SugarTvCard extends LitElement {
         });
     }
 
+    _getGlucoseZone(value) {
+        if (!this._isValidValue(value)) {
+            return '';
+        }
+
+        const numValue = parseFloat(String(value).replace(',', '.'));
+        if (isNaN(numValue)) {
+            return '';
+        }
+
+        const unit = this._data.unit || SugarTvCard.UNITS.MGDL;
+        const defaults =
+            SugarTvCard.DEFAULT_THRESHOLDS[unit] ||
+            SugarTvCard.DEFAULT_THRESHOLDS['mg/dL'];
+        const t = { ...defaults, ...(this.config.thresholds || {}) };
+
+        if (numValue < t.urgent_low) return 'zone-urgent-low';
+        if (numValue < t.low) return 'zone-low';
+        if (numValue > t.urgent_high) return 'zone-urgent-high';
+        if (numValue > t.high) return 'zone-high';
+        return '';
+    }
+
     render() {
         this._updateData();
 
@@ -383,10 +532,14 @@ class SugarTvCard extends LitElement {
         const prediction = trendInfo.prediction || '';
 
         const isStale = this._isStale(last_changed);
+        const zoneClass =
+            this.config.color_thresholds !== false
+                ? this._getGlucoseZone(value)
+                : '';
 
         return html`
             <div class="wrapper">
-                <div class="container">
+                <div class="container ${zoneClass}">
                     <div class="main-row">
                         <div class="time ${isStale ? 'stale' : ''}">
                             ${this._formatTime(last_changed)}
