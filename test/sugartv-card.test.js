@@ -576,9 +576,9 @@ describe('SugarTvCard', () => {
             expect(card._calculateDelta()).toBeNull();
         });
 
-        it('returns null when time gap > 10 minutes', () => {
+        it('returns null when time gap > 20 minutes', () => {
             const now = new Date().toISOString();
-            const longAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+            const longAgo = new Date(Date.now() - 25 * 60 * 1000).toISOString();
             card._data = {
                 ...card._data,
                 value: '120',

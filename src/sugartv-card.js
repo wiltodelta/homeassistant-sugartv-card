@@ -487,7 +487,8 @@ class SugarTvCard extends LitElement {
 
         try {
             const entityId = this.config.glucose_value;
-            const startTime = new Date(now - 15 * 60 * 1000).toISOString(); // 15 minutes
+            // Fetch up to 25 mins of history to ensure we catch previous readings even from 15m sensors
+            const startTime = new Date(now - 25 * 60 * 1000).toISOString();
             const endTime = new Date(now).toISOString();
 
             const history = await this.hass.callWS({
@@ -504,26 +505,29 @@ class SugarTvCard extends LitElement {
                 return;
             }
 
-            // Find the state closest to ~5 minutes ago (standard CGM reading interval)
-            // This ensures consistent delta regardless of integration update frequency
-            const targetTime = (now - 5 * 60 * 1000) / 1000; // epoch seconds
-            let bestState = null;
-            let bestDiff = Infinity;
+            // Traverse history backwards to find the true previous reading
+            let previousState = null;
+            const currentLu = new Date(this._data.last_changed).getTime() / 1000;
 
-            for (const state of states) {
-                if (!this._isValidValue(state.s) || !state.lu) continue;
-                const diff = Math.abs(state.lu - targetTime);
-                if (diff < bestDiff) {
-                    bestDiff = diff;
-                    bestState = state;
+            for (let i = states.length - 1; i >= 0; i--) {
+                const state = states[i];
+                if (!this._isValidValue(state.s)) continue;
+
+                const stateTime = state.lu || state.lc || state.t; // Support HA versions
+                if (!stateTime) continue;
+
+                // We want the most recent state older than current by at least 60s
+                if (currentLu - stateTime > 60) {
+                    previousState = state;
+                    break;
                 }
             }
 
-            // Only use if found and within 3 minutes of our 5-min target
-            if (bestState && bestDiff < 180) {
-                this._data.previous_value = bestState.s;
+            if (previousState) {
+                this._data.previous_value = previousState.s;
+                const prevTime = previousState.lu || previousState.lc || previousState.t;
                 this._data.previous_last_changed = new Date(
-                    bestState.lu * 1000,
+                    prevTime * 1000,
                 ).toISOString();
                 this.requestUpdate();
             }
@@ -570,8 +574,8 @@ class SugarTvCard extends LitElement {
         const timeDiff = Math.abs(
             new Date(last_changed) - new Date(previous_last_changed),
         );
-        if (timeDiff >= 600000) {
-            // 10 minutes (Dexcom updates every 5 min but may delay)
+        if (timeDiff >= 1200000) {
+            // 20 minutes (Accommodates both 5m and 15min CGM update intervals)
             return null;
         }
 
