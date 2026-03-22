@@ -574,8 +574,8 @@ class SugarTvCard extends LitElement {
         const timeDiff = Math.abs(
             new Date(last_changed) - new Date(previous_last_changed),
         );
-        if (timeDiff >= 1200000) {
-            // 20 minutes (Accommodates both 5m and 15min CGM update intervals)
+        if (timeDiff >= 600000) {
+            // Strictly 10 minutes: delta makes sense only for standard ~5min CGM intervals
             return null;
         }
 
