@@ -1,5 +1,33 @@
 # SugarTV Card — Project Guidelines
 
+## General guidelines
+
+### Documentation
+
+- Update documentation (`README.md`, `.agents/project.md`) when you change functionality or add new features.
+- **DO NOT** create artifact documentation (`walkthrough.md`, `verification.md`) for bug fixes or small corrections.
+- Only create artifacts for significant new features or major refactorings.
+
+### Language
+
+- Use only English for all code, comments, docstrings, documentation, commit messages, and project artifacts.
+- Communicate with users in Russian, but all technical content must be in English.
+- Do not use emoji in logs, console output, or any code output.
+- Use sentence case for titles and headings (first word capitalized, rest lowercase unless proper nouns).
+
+### API & integrations
+
+- Do not assume or invent API request/response structures or Home Assistant entity formats.
+- Always verify payloads/entities against official documentation or source code before implementing.
+- When debugging issues, first retrieve actual data from the API/integration to see the real structure — no assumptions.
+- When documentation is unavailable or unclear, add logging to capture actual payloads and adjust code based on real data.
+
+### Work completion
+
+- You have **NO time limits**. Always complete the full task in one go.
+- Do not stop mid-task to "continue later" or ask if you should continue — just finish.
+- Do not split work into multiple commits unless the task is genuinely large and commits represent logical milestones.
+
 ## Release process
 
 ### ⚠️ Critical rules
@@ -9,7 +37,6 @@
 3. **Always increment the version** for every push that should reach users. Even for hotfixes, bump the patch version (e.g., `0.9.0` → `0.9.1`).
 4. **One tag = one release.** Once a tag is pushed and GitHub Actions creates a release, that version is "burned." Any fixes must go into the next version.
 5. **Always add release notes.** GitHub Actions creates releases without a body. After release is created, update it with notes via `gh release edit`. HACS shows these notes to users on the update screen.
-6. **Documentation must use Sentence case.** All headers and titles in documentation (like README.md or project.md) should be formatted in Sentence case (e.g., "Multi-sensor support" rather than "Multi-Sensor Support").
 
 ### Steps to release
 
