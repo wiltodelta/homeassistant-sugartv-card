@@ -26,6 +26,8 @@ export const cardStyles = css`
         line-height: 1;
         padding: 5cqi;
         box-sizing: border-box;
+        width: 100%;
+        height: 100%;
     }
 
     .main-row {
@@ -85,22 +87,22 @@ export const cardStyles = css`
         transition:
             background-color 0.4s ease,
             color 0.4s ease;
-        border-radius: 12px;
     }
 
-    .container.zone-urgent-low,
-    .container.zone-urgent-high {
+    :host(.zone-urgent-low),
+    :host(.zone-urgent-high) {
         background-color: var(--sugartv-urgent-bg, #c62828);
         color: var(--sugartv-urgent-text, #ffffff);
+        border-radius: var(--ha-card-border-radius, 12px);
     }
 
-    .container.zone-low,
-    .container.zone-high {
+    :host(.zone-low),
+    :host(.zone-high) {
         color: var(--sugartv-warning-text, #e65100);
     }
 
-    .container.zone-urgent-low .prediction,
-    .container.zone-urgent-high .prediction {
+    :host(.zone-urgent-low) .prediction,
+    :host(.zone-urgent-high) .prediction {
         opacity: 0.85;
     }
 `;

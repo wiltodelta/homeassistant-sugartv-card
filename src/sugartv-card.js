@@ -537,9 +537,11 @@ class SugarTvCard extends LitElement {
                 ? this._getGlucoseZone(value)
                 : '';
 
+        this.className = zoneClass;
+
         return html`
             <div class="wrapper">
-                <div class="container ${zoneClass}">
+                <div class="container">
                     <div class="main-row">
                         <div class="time ${isStale ? 'stale' : ''}">
                             ${this._formatTime(last_changed)}
