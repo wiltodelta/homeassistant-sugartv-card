@@ -492,6 +492,17 @@ class SugarTvCard extends LitElement {
         return Date.now() - new Date(timestamp).getTime() > 900000; // 15 minutes
     }
 
+    _handleTap() {
+        const entityId = this.config.glucose_value;
+        if (!entityId) return;
+
+        const event = new CustomEvent('hass-more-info', {
+            bubbles: true,
+            composed: true,
+            detail: { entityId },
+        });
+        this.dispatchEvent(event);
+    }
     _formatValue(value) {
         const localize = getLocalizer(this.config, this.hass);
         if (!this._isValidValue(value)) {
@@ -560,7 +571,7 @@ class SugarTvCard extends LitElement {
             .join(' ');
 
         return html`
-            <div class="wrapper">
+            <div class="wrapper" @click="${this._handleTap}">
                 <div class="container">
                     <div class="main-row">
                         <div class="time">

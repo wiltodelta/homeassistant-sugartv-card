@@ -1,6 +1,6 @@
 {
     "name": "homeassistant-sugartv-card",
-    "version": "0.9.4",
+    "version": "0.9.5",
     "description": "SugarTV Card for Home Assistant",
     "type": "module",
     "main": "dist/sugartv-card.js",

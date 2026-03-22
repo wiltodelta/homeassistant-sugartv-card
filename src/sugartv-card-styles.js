@@ -16,6 +16,7 @@ export const cardStyles = css`
         height: 100%;
         align-items: center;
         justify-content: center;
+        cursor: pointer;
     }
 
     .container {
