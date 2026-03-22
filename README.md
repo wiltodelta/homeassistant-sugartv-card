@@ -21,7 +21,7 @@ A custom Lovelace card for Home Assistant that displays CGM (Continuous Glucose 
 - Responsive card sizing
 - Visual configuration editor
 
-## Supported Integrations
+## Supported integrations
 
 | Integration              | Value Entity                   | Trend Detection                             |
 | ------------------------ | ------------------------------ | ------------------------------------------- |
@@ -83,7 +83,7 @@ thresholds:
     urgent_high: 250 # mg/dL (or 13.9 mmol/L)
 ```
 
-### Glucose Zone Thresholds
+### Glucose zone thresholds
 
 Color-coded zones are enabled by default using the [AGP/TIR international standard](https://diabetesjournals.org/care/article/42/8/1593/36034) thresholds.
 
@@ -97,7 +97,7 @@ Color-coded zones are enabled by default using the [AGP/TIR international standa
 
 To disable color coding, set `color_thresholds: false` or use the toggle in the visual editor.
 
-### Theme Integration
+### Theme integration
 
 Colors can be customized via CSS custom properties in your HA theme:
 

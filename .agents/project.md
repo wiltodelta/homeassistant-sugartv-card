@@ -1,16 +1,17 @@
 # SugarTV Card — Project Guidelines
 
-## Release Process
+## Release process
 
-### ⚠️ Critical Rules
+### ⚠️ Critical rules
 
 1. **Only release when explicitly asked.** Do NOT bump versions, create tags, or push releases on your own. Wait for the user to request a release.
 2. **Never force-push tags.** HACS caches releases by tag name. If you re-tag an existing version, HACS users **will not** receive the update.
 3. **Always increment the version** for every push that should reach users. Even for hotfixes, bump the patch version (e.g., `0.9.0` → `0.9.1`).
 4. **One tag = one release.** Once a tag is pushed and GitHub Actions creates a release, that version is "burned." Any fixes must go into the next version.
 5. **Always add release notes.** GitHub Actions creates releases without a body. After release is created, update it with notes via `gh release edit`. HACS shows these notes to users on the update screen.
+6. **Documentation must use Sentence case.** All headers and titles in documentation (like README.md or project.md) should be formatted in Sentence case (e.g., "Multi-sensor support" rather than "Multi-Sensor Support").
 
-### Steps to Release
+### Steps to release
 
 1. Bump version in `package.json`:
 
@@ -61,7 +62,7 @@
     gh release edit v<version> -R wiltodelta/homeassistant-sugartv-card --notes "<markdown notes>"
     ```
 
-### What Happens Automatically
+### What happens automatically
 
 - GitHub Actions (`build.yml`) triggers on tag push `v*`
 - It builds the project, creates a GitHub Release, and attaches `sugartv-card.js`
@@ -69,7 +70,7 @@
 - Users see release notes from the GitHub Release body
 - Users must manually clear frontend cache after updating (browser hard refresh)
 
-### Cache Busting
+### Cache busting
 
 - HACS adds `?hacstag=<timestamp>` to the resource URL automatically
 - Browsers may still cache aggressively; users must do Cmd+Shift+R (hard refresh)
@@ -84,7 +85,7 @@
 - **Rollup** for bundling
 - **Prettier** for code formatting
 
-### Key Files
+### Key files
 
 - `src/sugartv-card.js` — Main card component + `getConfigForm()` editor schema
 - `src/sugartv-card-styles.js` — CSS styles (card zones, transitions)
@@ -93,14 +94,14 @@
 - `demo/hass-mock.js` — Mock HA components for demo
 - `demo/server.js` — Local dev server
 
-### Running the Demo
+### Running the demo
 
 ```bash
 npm run demo
 # Opens at http://localhost:3000
 ```
 
-### Configuration Architecture
+### Configuration architecture
 
 The card uses HA's declarative `getConfigForm()` API (recommended approach). This means:
 
@@ -112,7 +113,7 @@ The card uses HA's declarative `getConfigForm()` API (recommended approach). Thi
 
 Important: `setConfig` normalizes the config by setting `color_thresholds: true` if undefined and populating default thresholds based on the sensor's unit.
 
-### Color-Coded Glucose Zones
+### Color-coded glucose zones
 
 Default thresholds follow the **AGP/TIR international standard**:
 
@@ -132,13 +133,13 @@ CSS custom properties for theming:
 - `--sugartv-urgent-text` (default: `#ffffff`)
 - `--sugartv-warning-text` (default: `#e65100`)
 
-### Stale Data
+### Stale data
 
 - Time turns red when data is older than 15 minutes
 - In urgent zones (red background), stale uses pulsing white animation instead
 - Stale styling must be compatible with all zone colors
 
-### Multi-Sensor Support (v0.10.0+)
+### Multi-sensor support (v0.10.0+)
 
 The card auto-detects the trend source. `glucose_trend` config is YAML-only override (not in UI editor).
 
@@ -167,7 +168,7 @@ The card auto-detects the trend source. `glucose_trend` config is YAML-only over
 
 **Delta calculation:** Uses History API to find the reading closest to ~5 minutes ago (standard CGM interval), ensuring consistent delta across integrations with different update frequencies (1 min for LibreView vs 5 min for Dexcom).
 
-### Release Notes Formatting
+### Release notes formatting
 
 - **No emojis** in release notes text — `gh` CLI can corrupt them
 - Use `###` headers and `- bullet` lists
