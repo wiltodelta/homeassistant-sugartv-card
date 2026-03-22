@@ -40,8 +40,9 @@ export const cardStyles = css`
         font-size: 6cqi;
     }
 
-    .time.stale {
-        color: var(--error-color, #db4437);
+    :host(.stale) {
+        opacity: 0.5;
+        filter: grayscale(0.8);
     }
 
     .value {
