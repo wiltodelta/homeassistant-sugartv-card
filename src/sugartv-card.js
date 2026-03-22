@@ -286,6 +286,24 @@ class SugarTvCard extends LitElement {
             );
         }
 
+        // Normalize defaults so the form editor shows correct values
+        if (config.color_thresholds === undefined) {
+            config = { ...config, color_thresholds: true };
+        }
+
+        if (!config.thresholds) {
+            const unit =
+                this.hass?.states?.[config.glucose_value]?.attributes
+                    ?.unit_of_measurement || 'mg/dL';
+            config = {
+                ...config,
+                thresholds: {
+                    ...(SugarTvCard.DEFAULT_THRESHOLDS[unit] ||
+                        SugarTvCard.DEFAULT_THRESHOLDS['mg/dL']),
+                },
+            };
+        }
+
         this.config = config;
         this._data = this._data || this._getInitialDataState();
 
