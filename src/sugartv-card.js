@@ -505,21 +505,21 @@ class SugarTvCard extends LitElement {
                 return;
             }
 
-            // Traverse history backwards to find the true previous reading
+            // Find the state closest to ~5 minutes ago (standard CGM reading interval)
+            const targetTime = (now - 5 * 60 * 1000) / 1000; // epoch seconds
             let previousState = null;
-            const currentLu = new Date(this._data.last_changed).getTime() / 1000;
+            let bestDiff = Infinity;
 
-            for (let i = states.length - 1; i >= 0; i--) {
-                const state = states[i];
+            for (const state of states) {
                 if (!this._isValidValue(state.s)) continue;
 
                 const stateTime = state.lu || state.lc || state.t; // Support HA versions
                 if (!stateTime) continue;
 
-                // We want the most recent state older than current by at least 60s
-                if (currentLu - stateTime > 60) {
+                const diff = Math.abs(stateTime - targetTime);
+                if (diff < bestDiff) {
+                    bestDiff = diff;
                     previousState = state;
-                    break;
                 }
             }
 
