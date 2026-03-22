@@ -4,10 +4,11 @@
 
 ### ⚠️ Critical Rules
 
-1. **Never force-push tags.** HACS caches releases by tag name. If you re-tag an existing version, HACS users **will not** receive the update.
-2. **Always increment the version** for every push that should reach users. Even for hotfixes, bump the patch version (e.g., `0.9.0` → `0.9.1`).
-3. **One tag = one release.** Once a tag is pushed and GitHub Actions creates a release, that version is "burned." Any fixes must go into the next version.
-4. **Always add release notes.** GitHub Actions creates releases without a body. After release is created, update it with notes via `gh release edit`. HACS shows these notes to users on the update screen.
+1. **Only release when explicitly asked.** Do NOT bump versions, create tags, or push releases on your own. Wait for the user to request a release.
+2. **Never force-push tags.** HACS caches releases by tag name. If you re-tag an existing version, HACS users **will not** receive the update.
+3. **Always increment the version** for every push that should reach users. Even for hotfixes, bump the patch version (e.g., `0.9.0` → `0.9.1`).
+4. **One tag = one release.** Once a tag is pushed and GitHub Actions creates a release, that version is "burned." Any fixes must go into the next version.
+5. **Always add release notes.** GitHub Actions creates releases without a body. After release is created, update it with notes via `gh release edit`. HACS shows these notes to users on the update screen.
 
 ### Steps to Release
 

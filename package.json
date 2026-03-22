@@ -9,7 +9,9 @@
         "watch": "rollup -c --watch",
         "demo": "npm run build && node demo/server.js",
         "demo:build": "npm run build && echo 'Demo ready! Run npm run demo to start server'",
-        "format": "prettier --write ."
+        "format": "prettier --write .",
+        "test": "vitest run",
+        "test:watch": "vitest"
     },
     "repository": {
         "type": "git",
@@ -31,7 +33,8 @@
         "@rollup/plugin-replace": "^6.0.3",
         "@rollup/plugin-terser": "^1.0.0",
         "prettier": "^3.8.0",
-        "rollup": "^4.55.1"
+        "rollup": "^4.55.1",
+        "vitest": "^4.1.0"
     },
     "dependencies": {
         "lit": "^3.3.2"
