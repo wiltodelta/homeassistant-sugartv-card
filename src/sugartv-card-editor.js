@@ -1,5 +1,13 @@
 import { LitElement, html } from 'lit';
-import { fireEvent } from 'custom-card-helpers';
+
+function fireEvent(node, type, detail) {
+    const event = new Event(type, {
+        bubbles: true,
+        composed: true,
+    });
+    event.detail = detail;
+    node.dispatchEvent(event);
+}
 
 import { editorStyles } from './sugartv-card-styles.js';
 import { getLocalizer } from './localize.js';

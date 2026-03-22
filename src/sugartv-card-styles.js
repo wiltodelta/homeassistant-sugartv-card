@@ -1,8 +1,6 @@
 import { css } from 'lit';
 
 export const cardStyles = css`
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap');
-
     :host,
     .card {
         display: flex;
@@ -38,6 +36,10 @@ export const cardStyles = css`
 
     .time {
         font-size: 6cqi;
+    }
+
+    .time.stale {
+        color: var(--error-color, #db4437);
     }
 
     .value {

@@ -37,6 +37,19 @@ class SugarTvCard extends LitElement {
         this._data = this._getInitialDataState();
     }
 
+    connectedCallback() {
+        super.connectedCallback();
+        const fontId = 'sugartv-card-font';
+        if (!document.getElementById(fontId)) {
+            const link = document.createElement('link');
+            link.id = fontId;
+            link.rel = 'stylesheet';
+            link.href =
+                'https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap';
+            document.head.appendChild(link);
+        }
+    }
+
     _getInitialDataState() {
         return {
             value: null,
@@ -126,11 +139,14 @@ class SugarTvCard extends LitElement {
     }
 
     setConfig(config) {
-        console.info(
-            '%c SUGARTV-CARD %c ' + VERSION,
-            'color: white; background: red; font-weight: 700;',
-            'color: red; background: white; font-weight: 700;',
-        );
+        if (!SugarTvCard._versionLogged) {
+            console.info(
+                '%c SUGARTV-CARD %c ' + VERSION,
+                'color: white; background: red; font-weight: 700;',
+                'color: red; background: white; font-weight: 700;',
+            );
+            SugarTvCard._versionLogged = true;
+        }
 
         if (!config.glucose_value) {
             throw new Error(
@@ -246,12 +262,6 @@ class SugarTvCard extends LitElement {
     }
 
     _updateCurrentData(currentState) {
-        if (this._data.unit !== currentState.unit) {
-            this._getTrendDescriptions(
-                currentState.unit || SugarTvCard.UNITS.MGDL,
-            );
-            this._data.unit = currentState.unit;
-        }
         Object.assign(this._data, currentState);
     }
 
@@ -327,6 +337,17 @@ class SugarTvCard extends LitElement {
         return value && value !== 'unknown' && value !== 'unavailable';
     }
 
+    _isStale(timestamp) {
+        if (
+            !timestamp ||
+            timestamp === 'unknown' ||
+            timestamp === 'unavailable'
+        ) {
+            return false;
+        }
+        return Date.now() - new Date(timestamp).getTime() > 900000; // 15 minutes
+    }
+
     _formatValue(value) {
         const localize = getLocalizer(this.config, this.hass);
         if (!this._isValidValue(value)) {
@@ -361,11 +382,13 @@ class SugarTvCard extends LitElement {
         const trendIcon = trendInfo.icon;
         const prediction = trendInfo.prediction || '';
 
+        const isStale = this._isStale(last_changed);
+
         return html`
             <div class="wrapper">
                 <div class="container">
                     <div class="main-row">
-                        <div class="time">
+                        <div class="time ${isStale ? 'stale' : ''}">
                             ${this._formatTime(last_changed)}
                         </div>
                         <div class="value">${this._formatValue(value)}</div>
@@ -389,6 +412,15 @@ class SugarTvCard extends LitElement {
         return 1;
     }
 
+    getGridOptions() {
+        return {
+            rows: 1,
+            min_rows: 1,
+            columns: 6,
+            min_columns: 3,
+        };
+    }
+
     static get styles() {
         return cardStyles;
     }
@@ -402,4 +434,7 @@ window.customCards.push({
     type: 'sugartv-card',
     name: localize('card.name'),
     description: localize('card.description'),
+    preview: true,
+    documentationURL:
+        'https://github.com/wiltodelta/homeassistant-sugartv-card',
 });

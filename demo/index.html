@@ -195,6 +195,12 @@
                         type: 'static',
                         trend: 'unavailable',
                     },
+                    {
+                        id: 'stale',
+                        title: 'STALE: 20 min ago',
+                        type: 'stale',
+                        trend: 'steady',
+                    },
                 ];
 
                 scenarios.forEach((scenario) => {
@@ -227,6 +233,22 @@
                             trend: scenario.trend,
                             unit: selectedUnit,
                         });
+                    } else if (scenario.type === 'stale') {
+                        let value = baseValue;
+                        if (selectedUnit === 'mmol/L') {
+                            value = (parseFloat(value) / 18).toFixed(1);
+                        }
+                        const staleDate = new Date(Date.now() - 20 * 60 * 1000);
+                        setupCard(
+                            cardElement,
+                            config,
+                            createHass(
+                                value,
+                                scenario.trend,
+                                selectedUnit,
+                                staleDate,
+                            ),
+                        );
                     } else {
                         // static
                         let value =
