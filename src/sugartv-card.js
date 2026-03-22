@@ -409,8 +409,10 @@ class SugarTvCard extends LitElement {
                 return;
             }
 
-            // Find the state closest to ~5 minutes ago (standard CGM reading interval)
-            const targetTime = (now - 5 * 60 * 1000) / 1000; // epoch seconds
+            // Find the state closest to ~5 minutes before the current reading
+            const currentTime =
+                new Date(this._data.last_changed).getTime() / 1000; // epoch seconds
+            const targetTime = currentTime - 5 * 60; // 5 min before current reading
             let previousState = null;
             let bestDiff = Infinity;
 
@@ -419,6 +421,9 @@ class SugarTvCard extends LitElement {
 
                 const stateTime = state.lu || state.lc || state.t; // Support HA versions
                 if (!stateTime) continue;
+
+                // Skip the current state — we need a different reading
+                if (Math.abs(stateTime - currentTime) < 1) continue;
 
                 const diff = Math.abs(stateTime - targetTime);
                 if (diff < bestDiff) {
