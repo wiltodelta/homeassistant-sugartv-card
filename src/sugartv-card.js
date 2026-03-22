@@ -26,6 +26,55 @@ class SugarTvCard extends LitElement {
         },
     };
 
+    // Normalize trend values from different integrations to internal format
+    static TREND_MAP = {
+        // Dexcom (already normalized)
+        rising_quickly: 'rising_quickly',
+        rising: 'rising',
+        rising_slightly: 'rising_slightly',
+        steady: 'steady',
+        falling_slightly: 'falling_slightly',
+        falling: 'falling',
+        falling_quickly: 'falling_quickly',
+        // Nightscout direction values
+        doubleup: 'rising_quickly',
+        singleup: 'rising',
+        fortyfiveup: 'rising_slightly',
+        flat: 'steady',
+        fortyfivedown: 'falling_slightly',
+        singledown: 'falling',
+        doubledown: 'falling_quickly',
+        // LibreView numeric trends
+        2: 'rising_quickly',
+        3: 'rising',
+        4: 'rising_slightly',
+        5: 'steady',
+        6: 'falling_slightly',
+        7: 'falling',
+        8: 'falling_quickly',
+        // LibreView/PTST (attribute 'trend' — snake_case)
+        'rising quickly': 'rising_quickly',
+        'rising slightly': 'rising_slightly',
+        stable: 'steady',
+        'falling slightly': 'falling_slightly',
+        'falling quickly': 'falling_quickly',
+        decreasing_fast: 'falling_quickly',
+        decreasing: 'falling',
+        increasing: 'rising',
+        increasing_fast: 'rising_quickly',
+        // LibreLink/gillesvs (separate trend entity — human-readable text)
+        'decreasing fast': 'falling_quickly',
+        'increasing fast': 'rising_quickly',
+        // Carelink/Medtronic trend values (raw API: UP, DOWN, FLAT)
+        up: 'rising',
+        up_up: 'rising_quickly',
+        up_double: 'rising_quickly',
+        down: 'falling',
+        down_down: 'falling_quickly',
+        down_double: 'falling_quickly',
+        none: 'steady',
+    };
+
     static get properties() {
         return {
             hass: { type: Object },
@@ -37,7 +86,6 @@ class SugarTvCard extends LitElement {
         return {
             type: 'custom:sugartv-card',
             glucose_value: 'sensor.dexcom_glucose_value',
-            glucose_trend: 'sensor.dexcom_glucose_trend',
             show_prediction: true,
             color_thresholds: true,
         };
@@ -52,11 +100,7 @@ class SugarTvCard extends LitElement {
                     required: true,
                     selector: { entity: { domain: 'sensor' } },
                 },
-                {
-                    name: 'glucose_trend',
-                    required: true,
-                    selector: { entity: { domain: 'sensor' } },
-                },
+
                 {
                     name: 'show_prediction',
                     selector: { boolean: {} },
@@ -280,12 +324,6 @@ class SugarTvCard extends LitElement {
             );
         }
 
-        if (!config.glucose_trend) {
-            throw new Error(
-                'You need to define glucose_trend in your configuration.',
-            );
-        }
-
         // Normalize defaults so the form editor shows correct values
         if (config.color_thresholds === undefined) {
             config = { ...config, color_thresholds: true };
@@ -314,19 +352,120 @@ class SugarTvCard extends LitElement {
             return;
         }
 
-        const { glucose_value, glucose_trend } = this.config;
+        const { glucose_value } = this.config;
 
-        if (!this._validateEntities(glucose_value, glucose_trend)) {
+        if (!this._validateEntities(glucose_value)) {
             return;
         }
 
-        const currentState = this._getCurrentState(
-            glucose_value,
-            glucose_trend,
-        );
+        const currentState = this._getCurrentState(glucose_value);
 
         this._updateCurrentData(currentState);
         this._fetchPreviousFromHistory();
+    }
+
+    _validateEntities(glucose_value) {
+        if (!this.hass.states[glucose_value]) {
+            this._data = {
+                ...this._getInitialDataState(),
+                value: 0,
+                last_changed: 0,
+                trend: 'unknown',
+                unit: SugarTvCard.UNITS.MGDL,
+            };
+            return false;
+        }
+        return true;
+    }
+
+    _getCurrentState(glucose_value) {
+        const glucoseState = this.hass.states[glucose_value];
+        const trend = this._resolveTrend(glucose_value, glucoseState);
+
+        return {
+            value: glucoseState.state,
+            unit: glucoseState.attributes.unit_of_measurement,
+            last_changed: glucoseState.last_changed,
+            trend,
+        };
+    }
+
+    /**
+     * Auto-detect trend from multiple sources:
+     * 1. YAML override: config.glucose_trend entity
+     * 2. Sibling entity patterns:
+     *    - Dexcom: *_glucose_value → *_glucose_trend
+     *    - Carelink: *_last_sg_mgdl / *_last_sg_mmol → *_last_sg_trend
+     *    - LibreLink (gillesvs): *_glucose_measurement → find *_trend entity
+     * 3. Nightscout: attribute 'direction' on value entity
+     * 4. LibreView (PTST): attribute 'trend' on value entity
+     * 5. Fallback: 'unknown'
+     */
+    _resolveTrend(glucose_value, glucoseState) {
+        // 1. YAML override
+        if (this.config.glucose_trend) {
+            const trendState = this.hass.states[this.config.glucose_trend];
+            if (trendState) {
+                return this._normalizeTrend(trendState.state);
+            }
+        }
+
+        // 2. Sibling entity patterns
+        const siblingPatterns = [
+            // Dexcom: sensor.dexcom_*_glucose_value → sensor.dexcom_*_glucose_trend
+            ['_glucose_value', '_glucose_trend'],
+            // Carelink: sensor.carelink_*_last_sg_mgdl → sensor.carelink_*_last_sg_trend
+            ['_last_sg_mgdl', '_last_sg_trend'],
+            ['_last_sg_mmol', '_last_sg_trend'],
+        ];
+
+        for (const [valueSuffix, trendSuffix] of siblingPatterns) {
+            if (glucose_value.endsWith(valueSuffix)) {
+                const trendEntityId = glucose_value.replace(
+                    valueSuffix,
+                    trendSuffix,
+                );
+                const trendState = this.hass.states[trendEntityId];
+                if (trendState) {
+                    return this._normalizeTrend(trendState.state);
+                }
+            }
+        }
+
+        // LibreLink (gillesvs): entities share a prefix, trend entity has key "_trend"
+        // e.g. sensor.*_glucose_measurement + sensor.*_trend
+        const prefix = glucose_value.substring(
+            0,
+            glucose_value.lastIndexOf('_'),
+        );
+        if (prefix) {
+            const trendState = this.hass.states[`${prefix}_trend`];
+            if (trendState) {
+                return this._normalizeTrend(trendState.state);
+            }
+        }
+
+        // 3. Nightscout: 'direction' attribute
+        if (glucoseState.attributes.direction) {
+            return this._normalizeTrend(glucoseState.attributes.direction);
+        }
+
+        // 4. LibreView (PTST): 'trend' attribute
+        if (glucoseState.attributes.trend) {
+            return this._normalizeTrend(String(glucoseState.attributes.trend));
+        }
+
+        return 'unknown';
+    }
+
+    _normalizeTrend(rawTrend) {
+        if (!rawTrend) return 'unknown';
+        const key = String(rawTrend).toLowerCase().trim();
+        return SugarTvCard.TREND_MAP[key] || key;
+    }
+
+    _updateCurrentData(currentState) {
+        Object.assign(this._data, currentState);
     }
 
     async _fetchPreviousFromHistory() {
@@ -356,16 +495,26 @@ class SugarTvCard extends LitElement {
                 return;
             }
 
-            // States are sorted chronologically; last is current, second-to-last is previous
-            const previousState = states[states.length - 2];
-            if (
-                previousState &&
-                this._isValidValue(previousState.s) &&
-                previousState.lu
-            ) {
-                this._data.previous_value = previousState.s;
+            // Find the state closest to ~5 minutes ago (standard CGM reading interval)
+            // This ensures consistent delta regardless of integration update frequency
+            const targetTime = (now - 5 * 60 * 1000) / 1000; // epoch seconds
+            let bestState = null;
+            let bestDiff = Infinity;
+
+            for (const state of states) {
+                if (!this._isValidValue(state.s) || !state.lu) continue;
+                const diff = Math.abs(state.lu - targetTime);
+                if (diff < bestDiff) {
+                    bestDiff = diff;
+                    bestState = state;
+                }
+            }
+
+            // Only use if found and within 3 minutes of our 5-min target
+            if (bestState && bestDiff < 180) {
+                this._data.previous_value = bestState.s;
                 this._data.previous_last_changed = new Date(
-                    previousState.lu * 1000,
+                    bestState.lu * 1000,
                 ).toISOString();
                 this.requestUpdate();
             }
@@ -373,40 +522,6 @@ class SugarTvCard extends LitElement {
             // History API may not be available (e.g. recorder disabled)
             // Delta will simply not show — graceful degradation
         }
-    }
-
-    _validateEntities(glucose_value, glucose_trend) {
-        if (
-            !this.hass.states[glucose_value] ||
-            !this.hass.states[glucose_trend]
-        ) {
-            // Don't log error here, it will spam the console during startup
-            this._data = {
-                ...this._getInitialDataState(),
-                value: 0,
-                last_changed: 0,
-                trend: 'unknown',
-                unit: SugarTvCard.UNITS.MGDL,
-            };
-            return false;
-        }
-        return true;
-    }
-
-    _getCurrentState(glucose_value, glucose_trend) {
-        const glucoseState = this.hass.states[glucose_value];
-        const trendState = this.hass.states[glucose_trend];
-
-        return {
-            value: glucoseState.state,
-            unit: glucoseState.attributes.unit_of_measurement,
-            last_changed: glucoseState.last_changed,
-            trend: trendState.state,
-        };
-    }
-
-    _updateCurrentData(currentState) {
-        Object.assign(this._data, currentState);
     }
 
     _formatTime(timestamp) {

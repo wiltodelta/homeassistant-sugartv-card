@@ -136,3 +136,38 @@ CSS custom properties for theming:
 - Time turns red when data is older than 15 minutes
 - In urgent zones (red background), stale uses pulsing white animation instead
 - Stale styling must be compatible with all zone colors
+
+### Multi-Sensor Support (v0.10.0+)
+
+The card auto-detects the trend source. `glucose_trend` config is YAML-only override (not in UI editor).
+
+**Auto-detect order in `_resolveTrend()`:**
+
+1. YAML override: `config.glucose_trend` entity
+2. Sibling entity patterns:
+    - Dexcom: `*_glucose_value` → `*_glucose_trend`
+    - Carelink: `*_last_sg_mgdl` / `*_last_sg_mmol` → `*_last_sg_trend`
+3. Generic prefix match: `sensor.*_{key}` → `sensor.*_trend` (LibreLink/gillesvs)
+4. Nightscout: attribute `direction` on value entity
+5. LibreView/PTST: attribute `trend` on value entity
+6. Fallback: `'unknown'`
+
+**TREND_MAP** normalizes all integration-specific values to internal format (`rising_quickly`, `rising`, `rising_slightly`, `steady`, `falling_slightly`, `falling`, `falling_quickly`).
+
+**Verified integrations (source code audit):**
+
+| Integration               | Entity Naming                                     | Trend Source                      |
+| ------------------------- | ------------------------------------------------- | --------------------------------- |
+| Dexcom (official)         | `sensor.dexcom_{user}_glucose_value`              | Separate `*_glucose_trend` entity |
+| Nightscout (official)     | `sensor.blood_sugar`                              | Attribute `direction`             |
+| LibreView/PTST (HACS)     | `sensor.{name}_glucose_level`                     | Attribute `trend`                 |
+| LibreLink/gillesvs (HACS) | `sensor.librelink_{name}_glucose_measurement`     | Separate `*_trend` entity         |
+| Carelink/Medtronic (HACS) | `sensor.carelink_{name}_last_glucose_level_mg_dl` | Separate `*_last_sg_trend` entity |
+
+**Delta calculation:** Uses History API to find the reading closest to ~5 minutes ago (standard CGM interval), ensuring consistent delta across integrations with different update frequencies (1 min for LibreView vs 5 min for Dexcom).
+
+### Release Notes Formatting
+
+- **No emojis** in release notes text — `gh` CLI can corrupt them
+- Use `###` headers and `- bullet` lists
+- Keep notes concise and user-facing
