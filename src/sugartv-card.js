@@ -584,6 +584,12 @@ class SugarTvCard extends LitElement {
 const localize = getLocalizer();
 customElements.define('sugartv-card', SugarTvCard);
 
+console.info(
+    `%c SugarTV Card %c v${VERSION} `,
+    'color: white; background: #4fc3f7; font-weight: bold; padding: 2px 4px; border-radius: 4px 0 0 4px;',
+    'color: white; background: #333; font-weight: bold; padding: 2px 4px; border-radius: 0 4px 4px 0;',
+);
+
 window.customCards = window.customCards || [];
 window.customCards.push({
     type: 'sugartv-card',
