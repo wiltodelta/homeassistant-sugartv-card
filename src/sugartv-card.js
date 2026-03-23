@@ -145,28 +145,6 @@ class SugarTvCard extends LitElement {
                 };
                 return labels[schema.name] || undefined;
             },
-            assertConfig: (config) => {
-                if (config.thresholds) {
-                    const t = config.thresholds;
-                    if (
-                        t.urgent_low != null &&
-                        t.low != null &&
-                        t.urgent_low >= t.low
-                    ) {
-                        throw new Error('urgent_low must be less than low');
-                    }
-                    if (t.low != null && t.high != null && t.low >= t.high) {
-                        throw new Error('low must be less than high');
-                    }
-                    if (
-                        t.high != null &&
-                        t.urgent_high != null &&
-                        t.high >= t.urgent_high
-                    ) {
-                        throw new Error('high must be less than urgent_high');
-                    }
-                }
-            },
         };
     }
 
