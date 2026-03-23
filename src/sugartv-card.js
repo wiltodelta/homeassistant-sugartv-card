@@ -342,8 +342,8 @@ class SugarTvCard extends LitElement {
         if (!this.hass.states[glucose_value]) {
             this._data = {
                 ...this._getInitialDataState(),
-                value: 0,
-                last_changed: 0,
+                value: null,
+                last_changed: null,
                 trend: 'unknown',
                 unit: SugarTvCard.UNITS.MGDL,
             };
@@ -525,7 +525,7 @@ class SugarTvCard extends LitElement {
             timestamp === 'unknown' ||
             timestamp === 'unavailable'
         ) {
-            return false;
+            return true;
         }
         return Date.now() - new Date(timestamp).getTime() > 900000; // 15 minutes
     }

@@ -422,10 +422,10 @@ describe('SugarTvCard', () => {
             expect(card._isStale(boundary)).toBe(false);
         });
 
-        it('returns false for null/unknown/unavailable', () => {
-            expect(card._isStale(null)).toBe(false);
-            expect(card._isStale('unknown')).toBe(false);
-            expect(card._isStale('unavailable')).toBe(false);
+        it('returns true for null/unknown/unavailable (no data = stale)', () => {
+            expect(card._isStale(null)).toBe(true);
+            expect(card._isStale('unknown')).toBe(true);
+            expect(card._isStale('unavailable')).toBe(true);
         });
     });
 

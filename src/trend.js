@@ -50,6 +50,8 @@ export const TREND_MAP = {
 export function normalizeTrend(rawTrend) {
     if (!rawTrend) return 'unknown';
     const key = String(rawTrend).toLowerCase().trim();
+    // HA system states are not real trends
+    if (key === 'unknown' || key === 'unavailable') return 'unknown';
     return TREND_MAP[key] || key;
 }
 
