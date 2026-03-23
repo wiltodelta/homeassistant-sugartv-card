@@ -89,6 +89,7 @@ class SugarTvCard extends LitElement {
                                     selector: {
                                         number: {
                                             min: 0,
+                                            max: 500,
                                             mode: 'box',
                                             step: 'any',
                                         },
@@ -100,6 +101,7 @@ class SugarTvCard extends LitElement {
                                     selector: {
                                         number: {
                                             min: 0,
+                                            max: 500,
                                             mode: 'box',
                                             step: 'any',
                                         },
@@ -111,6 +113,7 @@ class SugarTvCard extends LitElement {
                                     selector: {
                                         number: {
                                             min: 0,
+                                            max: 500,
                                             mode: 'box',
                                             step: 'any',
                                         },
@@ -122,6 +125,7 @@ class SugarTvCard extends LitElement {
                                     selector: {
                                         number: {
                                             min: 0,
+                                            max: 500,
                                             mode: 'box',
                                             step: 'any',
                                         },
