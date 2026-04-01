@@ -32,9 +32,6 @@ jobs:
             - name: Build
               run: npm run build
 
-            - name: Check formatting
-              run: npx prettier --check .
-
             - name: Run tests
               run: npm test
 

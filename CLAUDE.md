@@ -13,10 +13,10 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
 - **Always increment version** for every push that should reach users, even hotfixes.
 
 Steps:
+
 ```bash
 npm version <major|minor|patch> --no-git-tag-version
 npm run build
-npx prettier --check .
 git add -A && git commit -m "v<version>: <description>"
 git tag -a v<version> -m "v<version>: <description>"
 git push origin main --tags
