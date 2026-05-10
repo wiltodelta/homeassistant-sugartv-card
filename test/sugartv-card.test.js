@@ -637,8 +637,8 @@ describe('SugarTvCard', () => {
             expect(card._calculateDelta()).toMatch(/^0[.,]0$/);
         });
 
-        it('shows unsigned "0" in mg/dL when sub-integer drift rounds to zero', () => {
-            // 120.4 - 120 = 0.4 -> rounds to 0; should not display "＋0".
+        it('keeps "＋0" for positive sub-integer drift in mg/dL', () => {
+            // 120.4 - 120 = 0.4 rounds to 0, but direction is preserved.
             const now = new Date().toISOString();
             const fiveMinAgo = new Date(
                 Date.now() - 5 * 60 * 1000,
@@ -651,7 +651,23 @@ describe('SugarTvCard', () => {
                 previous_last_changed: fiveMinAgo,
                 unit: 'mg/dL',
             };
-            expect(card._calculateDelta()).toBe('0');
+            expect(card._calculateDelta()).toBe('＋0');
+        });
+
+        it('keeps "－0" for negative sub-integer drift in mg/dL', () => {
+            const now = new Date().toISOString();
+            const fiveMinAgo = new Date(
+                Date.now() - 5 * 60 * 1000,
+            ).toISOString();
+            card._data = {
+                ...card._data,
+                value: '120',
+                previous_value: '120.4',
+                last_changed: now,
+                previous_last_changed: fiveMinAgo,
+                unit: 'mg/dL',
+            };
+            expect(card._calculateDelta()).toBe('－0');
         });
 
         it('handles comma-separated decimals (European locale)', () => {

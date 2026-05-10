@@ -506,13 +506,13 @@ class SugarTvCard extends LitElement {
             : {};
         const absFormatted = roundedAbs.toLocaleString(locale, formatOpts);
 
-        // No-change reading: show the unsigned zero rather than "＋0", so the
-        // user can tell "no change" apart from "still waiting" (clock icon).
-        if (roundedAbs === 0) {
+        // Exact equality: drop the sign so "no change" is visually distinct
+        // from sub-unit drift (＋0 / －0 still preserve direction).
+        if (delta === 0) {
             return absFormatted;
         }
 
-        const sign = delta >= 0 ? '＋' : '－';
+        const sign = delta > 0 ? '＋' : '－';
         return `${sign}${absFormatted}`;
     }
 
