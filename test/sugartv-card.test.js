@@ -604,6 +604,56 @@ describe('SugarTvCard', () => {
             expect(card._calculateDelta()).toBeNull();
         });
 
+        it('shows unsigned "0" when value did not change in mg/dL', () => {
+            // Distinguishes "no change" from "waiting for data" (clock icon).
+            const now = new Date().toISOString();
+            const fiveMinAgo = new Date(
+                Date.now() - 5 * 60 * 1000,
+            ).toISOString();
+            card._data = {
+                ...card._data,
+                value: '120',
+                previous_value: '120',
+                last_changed: now,
+                previous_last_changed: fiveMinAgo,
+                unit: 'mg/dL',
+            };
+            expect(card._calculateDelta()).toBe('0');
+        });
+
+        it('shows unsigned "0,0" / "0.0" when value did not change in mmol/L', () => {
+            const now = new Date().toISOString();
+            const fiveMinAgo = new Date(
+                Date.now() - 5 * 60 * 1000,
+            ).toISOString();
+            card._data = {
+                ...card._data,
+                value: '6.5',
+                previous_value: '6.5',
+                last_changed: now,
+                previous_last_changed: fiveMinAgo,
+                unit: 'mmol/L',
+            };
+            expect(card._calculateDelta()).toMatch(/^0[.,]0$/);
+        });
+
+        it('shows unsigned "0" in mg/dL when sub-integer drift rounds to zero', () => {
+            // 120.4 - 120 = 0.4 -> rounds to 0; should not display "＋0".
+            const now = new Date().toISOString();
+            const fiveMinAgo = new Date(
+                Date.now() - 5 * 60 * 1000,
+            ).toISOString();
+            card._data = {
+                ...card._data,
+                value: '120.4',
+                previous_value: '120',
+                last_changed: now,
+                previous_last_changed: fiveMinAgo,
+                unit: 'mg/dL',
+            };
+            expect(card._calculateDelta()).toBe('0');
+        });
+
         it('handles comma-separated decimals (European locale)', () => {
             const now = new Date().toISOString();
             const fiveMinAgo = new Date(

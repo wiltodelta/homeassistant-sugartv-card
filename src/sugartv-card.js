@@ -495,20 +495,25 @@ class SugarTvCard extends LitElement {
         }
 
         const delta = currentValue - previousValue;
-        const sign = delta >= 0 ? '＋' : '－';
-        const absDelta = Math.abs(delta);
-
         const locale = this.config.locale || [];
         const isMmol = this._data.unit === SugarTvCard.UNITS.MMOLL;
 
-        if (isMmol) {
-            return `${sign}${absDelta.toLocaleString(locale, {
-                minimumFractionDigits: 1,
-                maximumFractionDigits: 1,
-            })}`;
+        const roundedAbs = isMmol
+            ? Math.round(Math.abs(delta) * 10) / 10
+            : Math.round(Math.abs(delta));
+        const formatOpts = isMmol
+            ? { minimumFractionDigits: 1, maximumFractionDigits: 1 }
+            : {};
+        const absFormatted = roundedAbs.toLocaleString(locale, formatOpts);
+
+        // No-change reading: show the unsigned zero rather than "＋0", so the
+        // user can tell "no change" apart from "still waiting" (clock icon).
+        if (roundedAbs === 0) {
+            return absFormatted;
         }
 
-        return `${sign}${Math.round(absDelta).toLocaleString(locale)}`;
+        const sign = delta >= 0 ? '＋' : '－';
+        return `${sign}${absFormatted}`;
     }
 
     _isValidValue(value) {
