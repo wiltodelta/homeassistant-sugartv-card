@@ -16,6 +16,20 @@ class SugarTvCard extends LitElement {
         MMOLL: 'mmol/L',
     };
 
+    static UNIT_ALIASES = {
+        'mg/dl': 'mg/dL',
+        'mmol/l': 'mmol/L',
+    };
+
+    // HA integrations vary on casing; fall back to mg/dL for missing/unknown.
+    static normalizeUnit(unit) {
+        if (!unit) return SugarTvCard.UNITS.MGDL;
+        return (
+            SugarTvCard.UNIT_ALIASES[String(unit).toLowerCase()] ||
+            SugarTvCard.UNITS.MGDL
+        );
+    }
+
     static DEFAULT_THRESHOLDS = {
         'mg/dL': {
             urgent_low: 54,
@@ -280,15 +294,13 @@ class SugarTvCard extends LitElement {
         }
 
         if (!config.thresholds) {
-            const unit =
+            const unit = SugarTvCard.normalizeUnit(
                 this.hass?.states?.[config.glucose_value]?.attributes
-                    ?.unit_of_measurement || 'mg/dL';
+                    ?.unit_of_measurement,
+            );
             config = {
                 ...config,
-                thresholds: {
-                    ...(SugarTvCard.DEFAULT_THRESHOLDS[unit] ||
-                        SugarTvCard.DEFAULT_THRESHOLDS['mg/dL']),
-                },
+                thresholds: { ...SugarTvCard.DEFAULT_THRESHOLDS[unit] },
             };
         }
 
@@ -340,7 +352,9 @@ class SugarTvCard extends LitElement {
 
         return {
             value: glucoseState.state,
-            unit: glucoseState.attributes.unit_of_measurement,
+            unit: SugarTvCard.normalizeUnit(
+                glucoseState.attributes.unit_of_measurement,
+            ),
             last_changed: glucoseState.last_changed,
             trend,
         };
@@ -558,7 +572,7 @@ class SugarTvCard extends LitElement {
         const unit = this._data.unit || SugarTvCard.UNITS.MGDL;
         const defaults =
             SugarTvCard.DEFAULT_THRESHOLDS[unit] ||
-            SugarTvCard.DEFAULT_THRESHOLDS['mg/dL'];
+            SugarTvCard.DEFAULT_THRESHOLDS[SugarTvCard.UNITS.MGDL];
         const t = { ...defaults, ...(this.config.thresholds || {}) };
 
         if (numValue < t.urgent_low) return 'zone-urgent-low';

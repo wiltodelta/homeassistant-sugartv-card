@@ -726,6 +726,101 @@ describe('SugarTvCard', () => {
             });
             expect(card.config.thresholds).toEqual(custom);
         });
+
+        it('uses mg/dL thresholds for lowercase "mg/dl" unit', () => {
+            // Freestyle Libre 3 / LibreView integrations report "mg/dl"
+            const card = new SugarTvCard();
+            card.hass = {
+                states: {
+                    'sensor.test': {
+                        attributes: { unit_of_measurement: 'mg/dl' },
+                    },
+                },
+            };
+            card.setConfig({ glucose_value: 'sensor.test' });
+            expect(card.config.thresholds).toEqual({
+                urgent_low: 54,
+                low: 70,
+                high: 180,
+                urgent_high: 250,
+            });
+        });
+
+        it('uses mmol/L thresholds for lowercase "mmol/l" unit', () => {
+            const card = new SugarTvCard();
+            card.hass = {
+                states: {
+                    'sensor.test': {
+                        attributes: { unit_of_measurement: 'mmol/l' },
+                    },
+                },
+            };
+            card.setConfig({ glucose_value: 'sensor.test' });
+            expect(card.config.thresholds).toEqual({
+                urgent_low: 3.0,
+                low: 3.9,
+                high: 10.0,
+                urgent_high: 13.9,
+            });
+        });
+    });
+
+    // ── unit normalization ──────────────────────────────────────────
+    describe('unit normalization', () => {
+        it('normalizes lowercase "mg/dl" to canonical "mg/dL"', () => {
+            const card = createCard(
+                { glucose_value: 'sensor.glucose' },
+                {
+                    states: {
+                        'sensor.glucose': {
+                            state: '120',
+                            last_changed: '2026-01-01T00:00:00Z',
+                            attributes: { unit_of_measurement: 'mg/dl' },
+                        },
+                    },
+                },
+            );
+            card._updateData();
+            expect(card._data.unit).toBe('mg/dL');
+        });
+
+        it('normalizes lowercase "mmol/l" to canonical "mmol/L"', () => {
+            const card = createCard(
+                { glucose_value: 'sensor.glucose' },
+                {
+                    states: {
+                        'sensor.glucose': {
+                            state: '6.5',
+                            last_changed: '2026-01-01T00:00:00Z',
+                            attributes: { unit_of_measurement: 'mmol/l' },
+                        },
+                    },
+                },
+            );
+            card._updateData();
+            expect(card._data.unit).toBe('mmol/L');
+        });
+
+        it('produces mg/dL prediction text for lowercase "mg/dl" unit', () => {
+            // Issue #78: prediction was rendered in mmol/L because the strict
+            // unit === 'mg/dL' check failed for the LibreView "mg/dl" casing.
+            const card = createCard(
+                { glucose_value: 'sensor.glucose' },
+                {
+                    states: {
+                        'sensor.glucose': {
+                            state: '120',
+                            last_changed: '2026-01-01T00:00:00Z',
+                            attributes: { unit_of_measurement: 'mg/dl' },
+                        },
+                    },
+                },
+            );
+            card._updateData();
+            const trends = card._getTrendDescriptions(card._data.unit);
+            expect(trends.rising.prediction).toContain('mg/dL');
+            expect(trends.rising.prediction).toContain('30-45');
+        });
     });
 
     // ── TREND_MAP completeness ──────────────────────────────────────

@@ -897,9 +897,9 @@ describe('Missing data scenarios', () => {
             const currentState = card._getCurrentState(
                 'sensor.dexcom_glucose_value',
             );
-            // unit will be undefined — the card should still function
+            // Missing unit defaults to mg/dL so downstream comparisons still hold
             expect(currentState.value).toBe('120');
-            expect(currentState.unit).toBeUndefined();
+            expect(currentState.unit).toBe('mg/dL');
         });
 
         it('_getGlucoseZone still works with default thresholds when unit is missing', () => {
