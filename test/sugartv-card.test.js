@@ -416,10 +416,15 @@ describe('SugarTvCard', () => {
         });
 
         it('returns false for exactly 15 minutes (boundary)', () => {
-            const boundary = new Date(
-                Date.now() - 15 * 60 * 1000,
-            ).toISOString();
+            // Freeze time so the boundary timestamp matches Date.now() inside
+            // _isStale to the millisecond; otherwise sub-ms drift between
+            // building `boundary` and the assertion makes this test flaky.
+            vi.useFakeTimers();
+            const now = Date.now();
+            vi.setSystemTime(now);
+            const boundary = new Date(now - 15 * 60 * 1000).toISOString();
             expect(card._isStale(boundary)).toBe(false);
+            vi.useRealTimers();
         });
 
         it('returns true for null/unknown/unavailable (no data = stale)', () => {
