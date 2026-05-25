@@ -112,6 +112,10 @@ sugartv-warning-text: '#e65100'
 - Have an idea? [Suggest an improvement](https://github.com/wiltodelta/homeassistant-sugartv-card/issues)
 - Like the project? Star it on GitHub!
 
+If this card is useful to you, please consider supporting its development:
+
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-GitHub-ea4aaa.svg?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/wiltodelta)
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
