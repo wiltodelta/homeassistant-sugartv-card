@@ -6,7 +6,7 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
 
 - `npm run build` — build the card
 - `npm run demo` — local demo on http://localhost:3000
-- No `maintain.sh` / test suite — pre-commit checklist step 1 should state "no maintain.sh; run `npm run build` to verify".
+- No `maintain.sh` / test suite; run `npm run build` to verify changes.
 
 ## Release process
 
