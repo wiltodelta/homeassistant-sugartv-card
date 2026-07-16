@@ -790,13 +790,21 @@ class SugarTvCard extends LitElement {
                             <ha-icon icon="${trendIcon}"></ha-icon>
                         </div>
                         <div class="delta">
-                            ${this._calculateDelta() ||
-                            html`<ha-icon icon="mdi:progress-clock"></ha-icon>`}
+                            ${
+                                this._calculateDelta() ||
+                                html`<ha-icon
+                                    icon="mdi:progress-clock"
+                                ></ha-icon>`
+                            }
                         </div>
                     </div>
-                    ${showPrediction && prediction
-                        ? html` <div class="prediction">${prediction}</div> `
-                        : ''}
+                    ${
+                        showPrediction && prediction
+                            ? html`
+                                  <div class="prediction">${prediction}</div>
+                              `
+                            : ''
+                    }
                 </div>
             </div>
         `;
