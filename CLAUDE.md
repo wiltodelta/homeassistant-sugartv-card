@@ -5,8 +5,26 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
 ## How to run
 
 - `npm run build` — build the card
+- `npm test` — vitest suite (`test/*.test.js`)
 - `npm run demo` — local demo on http://localhost:3000
-- No `maintain.sh` / test suite; run `npm run build` to verify changes.
+- No `maintain.sh`. The gate is `npm test && npm run build && npx prettier --check .`
+
+## Home Assistant facts worth not re-deriving
+
+- **Entity ids come from an integration's entity NAMES, not its internal keys.**
+  Carelink's `last_sg_mgdl` key is published as "Last glucose level mg/dl", so
+  the entity is `sensor.*_last_glucose_level_mg_dl`. Trend auto-detection was
+  keyed on the key spelling and never matched. Read the integration's
+  `SensorEntityDescription(name=...)`, never the `key=`.
+- **`last_updated` is not "when the sensor was last polled."** HA only advances
+  it when the state or an attribute actually changes; an identical rewrite
+  early-returns and bumps `last_reported`, which the websocket never sends to
+  the frontend. A flat glucose value on an attribute-less integration (Dexcom)
+  therefore has no readable freshness.
+- **Sections view: row height 56px, gap 8px, so `rows: N` is `N*64-8` px.** The
+  height is only definite when `getGridOptions()` returns a numeric `rows`.
+  Masonry never sets a card height, so `cqh`/`height: 100%` do not resolve
+  there and layout must degrade gracefully.
 
 ## Release process
 

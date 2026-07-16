@@ -303,6 +303,52 @@ describe('SugarTvCard', () => {
             ).toBe('rising_quickly');
         });
 
+        it('detects Carelink trend from the real sibling entity', () => {
+            // Carelink entity ids are slugified from its entity names
+            // ("Last glucose level mg/dl"), not from its last_sg_* keys.
+            const card = createCard(
+                {},
+                {
+                    states: {
+                        'sensor.carelink_pump_last_glucose_level_mg_dl': {
+                            state: '150',
+                            attributes: { unit_of_measurement: 'mg/dL' },
+                        },
+                        'sensor.carelink_pump_last_glucose_trend': {
+                            state: 'UP',
+                        },
+                    },
+                },
+            );
+            const entity = 'sensor.carelink_pump_last_glucose_level_mg_dl';
+            card.config.glucose_value = entity;
+            expect(card._resolveTrend(entity, card.hass.states[entity])).toBe(
+                'rising',
+            );
+        });
+
+        it('detects Carelink trend for the mmol entity', () => {
+            const card = createCard(
+                {},
+                {
+                    states: {
+                        'sensor.carelink_pump_last_glucose_level_mmol': {
+                            state: '8.3',
+                            attributes: { unit_of_measurement: 'mmol/L' },
+                        },
+                        'sensor.carelink_pump_last_glucose_trend': {
+                            state: 'DOWN',
+                        },
+                    },
+                },
+            );
+            const entity = 'sensor.carelink_pump_last_glucose_level_mmol';
+            card.config.glucose_value = entity;
+            expect(card._resolveTrend(entity, card.hass.states[entity])).toBe(
+                'falling',
+            );
+        });
+
         it('detects Nightscout direction attribute', () => {
             const card = createCard(
                 {},

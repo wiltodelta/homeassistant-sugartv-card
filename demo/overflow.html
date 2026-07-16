@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>SugarTV Card overflow repro (issue #92)</title>
+        <style>
+            body {
+                background: #fafafa;
+                font-family: sans-serif;
+                margin: 0;
+                padding: 20px;
+            }
+            /* Mimic a HA sections-view cell: full width, one grid row tall. */
+            .ha-card {
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+                margin-bottom: 24px;
+                /* Fixed, not percentage: the harness viewport can report 0
+                   width, which would collapse the repro. */
+                width: 1000px;
+            }
+            /* Real sections-view geometry, from hui-grid-section.ts:
+               height = rows * (row-height 56px + row-gap 8px) - row-gap.
+               A numeric `rows` in getGridOptions() is what makes it definite. */
+            .row-1 {
+                height: 56px;
+            }
+            .row-2 {
+                height: 120px;
+            }
+            sugartv-card {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+            .label {
+                font-size: 12px;
+                color: #666;
+                margin: 0 0 6px;
+            }
+            /* Auto-height parent — masonry-style. Must not collapse. */
+            .auto {
+                height: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <p class="label">12 columns wide, 1 row tall (the reported case)</p>
+        <div class="ha-card row-1"><sugartv-card id="a"></sugartv-card></div>
+
+        <p class="label">12 columns wide, 2 rows tall</p>
+        <div class="ha-card row-2"><sugartv-card id="b"></sugartv-card></div>
+
+        <p class="label">Narrow (6 columns), 1 row tall</p>
+        <div class="ha-card row-1" style="width: 400px">
+            <sugartv-card id="c"></sugartv-card>
+        </div>
+
+        <p class="label">Auto-height parent (masonry) — must not collapse</p>
+        <div class="ha-card auto"><sugartv-card id="d"></sugartv-card></div>
+
+        <script type="module" src="/dist/sugartv-card.js"></script>
+        <script type="module">
+            const hass = {
+                language: 'en',
+                states: {
+                    'sensor.dexcom_glucose_value': {
+                        state: '120',
+                        attributes: { unit_of_measurement: 'mg/dL' },
+                        last_changed: new Date().toISOString(),
+                        last_updated: new Date().toISOString(),
+                    },
+                    // 'rising' actually renders a prediction line; 'steady'
+                    // has none, so it would not exercise the tallest stack.
+                    'sensor.dexcom_glucose_trend': { state: 'rising' },
+                },
+                callWS: async () => ({}),
+            };
+
+            const IDS = ['a', 'b', 'c', 'd'];
+
+            function apply(showPrediction) {
+                for (const id of IDS) {
+                    const card = document.getElementById(id);
+                    card.setConfig({
+                        type: 'custom:sugartv-card',
+                        glucose_value: 'sensor.dexcom_glucose_value',
+                        show_prediction: showPrediction,
+                    });
+                    card.hass = hass;
+                }
+            }
+            apply(false);
+            window.__apply = apply;
+
+            // Report overflow: does the rendered content escape the card box?
+            // Measures the whole stack (number + prediction line), not just
+            // the number, against the box the dashboard gave the card.
+            window.__overflow = () =>
+                IDS.map((id) => {
+                    const card = document.getElementById(id);
+                    const host = card.getBoundingClientRect();
+                    const value = card.shadowRoot.querySelector('.value');
+                    const container =
+                        card.shadowRoot.querySelector('.container');
+                    const v = value.getBoundingClientRect();
+                    return {
+                        id,
+                        hostH: Math.round(host.height),
+                        hostW: Math.round(host.width),
+                        valueH: Math.round(v.height),
+                        fontSize: getComputedStyle(value).fontSize,
+                        valueOverflowsBy: Math.round(v.height - host.height),
+                        // Full content stack vs the visible box
+                        stackOverflowsBy:
+                            container.scrollHeight - container.clientHeight,
+                    };
+                });
+        </script>
+    </body>
+</html>

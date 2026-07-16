@@ -8,6 +8,7 @@ const languages = {
         editor: {
             glucose_value: 'Glucose sensor',
             glucose_trend: 'Trend sensor (auto-detected)',
+            timestamp_attribute: 'Reading time attribute (optional)',
             show_prediction: 'Glucose forecast',
             color_thresholds: 'Color-coded glucose zones',
             urgent_low: 'Urgent low',
@@ -40,6 +41,7 @@ const languages = {
         editor: {
             glucose_value: 'Сенсор глюкозы',
             glucose_trend: 'Сенсор тренда (определяется автоматически)',
+            timestamp_attribute: 'Атрибут времени измерения (необязательно)',
             show_prediction: 'Прогноз глюкозы',
             color_thresholds: 'Цветовые зоны глюкозы',
             urgent_low: 'Критически низкий',

@@ -21,13 +21,13 @@ A custom Lovelace card for Home Assistant that displays CGM (Continuous Glucose 
 
 ## Supported integrations
 
-| Integration              | Value Entity                   | Trend Detection                             |
-| ------------------------ | ------------------------------ | ------------------------------------------- |
-| **Dexcom**               | `sensor.*_glucose_value`       | Auto-detected from `*_glucose_trend` entity |
-| **Nightscout**           | `sensor.blood_glucose`         | Auto-detected from `direction` attribute    |
-| **LibreView** (PTST)     | `sensor.*_glucose_level`       | Auto-detected from `trend` attribute        |
-| **LibreLink** (gillesvs) | `sensor.*_glucose_measurement` | Auto-detected from sibling `*_trend` entity |
-| **Carelink** (Medtronic) | `sensor.*_last_sg_mgdl`        | Auto-detected from `*_last_sg_trend` entity |
+| Integration              | Value Entity                        | Trend Detection                                  |
+| ------------------------ | ----------------------------------- | ------------------------------------------------ |
+| **Dexcom**               | `sensor.*_glucose_value`            | Auto-detected from `*_glucose_trend` entity      |
+| **Nightscout**           | `sensor.blood_sugar`                | Auto-detected from `direction` attribute         |
+| **LibreView** (PTST)     | `sensor.*_glucose_level`            | Auto-detected from `trend` attribute             |
+| **LibreLink** (gillesvs) | `sensor.*_glucose_measurement`      | Auto-detected from sibling `*_trend` entity      |
+| **Carelink** (Medtronic) | `sensor.*_last_glucose_level_mg_dl` | Auto-detected from `*_last_glucose_trend` entity |
 
 Just select your glucose sensor — the card figures out the rest automatically.
 
@@ -72,6 +72,7 @@ glucose_value: sensor.dexcom_glucose_value
 type: custom:sugartv-card
 glucose_value: sensor.dexcom_glucose_value
 glucose_trend: sensor.dexcom_glucose_trend # optional override
+timestamp_attribute: measurement_timestamp # optional override
 show_prediction: true
 color_thresholds: true
 thresholds:
@@ -80,6 +81,42 @@ thresholds:
     high: 180 # mg/dL (or 10.0 mmol/L)
     urgent_high: 250 # mg/dL (or 13.9 mmol/L)
 ```
+
+### Reading time
+
+The time on the card is when the reading was last confirmed, and it drives the
+dimming of stale data.
+
+The card resolves it in this order:
+
+1. The attribute named by `timestamp_attribute`, if you set one.
+2. A `measurement_timestamp` attribute (LibreView).
+3. A `date` attribute, but only on a sensor that also carries Nightscout's
+   `direction`/`delta` attributes, since `date` is a generic name.
+4. A sibling entity holding the time: `*_last_glucose_update` (Carelink) or
+   `*_minutes_since_update` (LibreLink).
+5. The entity's `last_updated`, then `last_changed`.
+
+Both ISO date strings and epoch values (seconds or milliseconds) are accepted;
+anything unparseable falls back to the next step.
+
+**Accuracy depends on your integration**, because Home Assistant only advances
+`last_updated` when the state or one of its attributes actually changes. A poll
+that re-reports an identical value with identical attributes leaves both
+`last_updated` and `last_changed` frozen. Home Assistant records that poll in
+`last_reported`, which it does not send to the frontend, so a card cannot see
+it. That is why the card prefers a time the integration itself reports.
+
+| Integration      | Reading time                                                                   |
+| ---------------- | ------------------------------------------------------------------------------ |
+| LibreView (PTST) | Exact, from `measurement_timestamp`                                            |
+| Nightscout       | Exact, from `date`                                                             |
+| Carelink         | Exact, from the `*_last_glucose_update` entity                                 |
+| LibreLink        | To the minute, derived from the `*_minutes_since_update` entity                |
+| Dexcom           | Approximate: it publishes no time at all, so a flat value can still look stale |
+
+If your integration reports the measurement time under some other attribute of
+the glucose sensor, point the card at it with `timestamp_attribute`.
 
 ### Glucose zone thresholds
 

@@ -4,6 +4,7 @@ import { cardStyles } from './sugartv-card-styles.js';
 import { getLocalizer } from './localize.js';
 import {
     TREND_MAP as TREND_MAP_DATA,
+    VALUE_SUFFIXES,
     normalizeTrend,
     resolveTrend,
 } from './trend.js';
@@ -28,6 +29,60 @@ class SugarTvCard extends LitElement {
             SugarTvCard.UNIT_ALIASES[String(unit).toLowerCase()] ||
             SugarTvCard.UNITS.MGDL
         );
+    }
+
+    // Attributes carrying the true measurement time. Only the PTST libreview
+    // integration is known to publish one; Dexcom exposes no attributes on the
+    // glucose sensor at all, which is why timestamp_attribute exists as an
+    // escape hatch.
+    static TIMESTAMP_ATTRIBUTES = ['measurement_timestamp'];
+
+    // Integrations that keep the reading time in a sibling entity instead of an
+    // attribute. Entity ids are slugified from the integration's entity NAMES,
+    // not its internal keys: Carelink's `last_sg_timestamp` key is published as
+    // "Last glucose update".
+    static TIMESTAMP_SIBLINGS = [
+        // Carelink (Medtronic)
+        [VALUE_SUFFIXES.carelinkMgdl, '_last_glucose_update'],
+        [VALUE_SUFFIXES.carelinkMmol, '_last_glucose_update'],
+    ];
+
+    // Siblings reporting an age in minutes rather than a timestamp.
+    static AGE_SIBLINGS = [
+        // LibreLink (gillesvs)
+        [VALUE_SUFFIXES.librelink, '_minutes_since_update'],
+    ];
+
+    // An age sibling is derived from the integration's own clock, so a
+    // misconfigured timezone can yield a wildly wrong number. Discarding one
+    // is safe here: the only age sibling belongs to LibreLink, whose glucose
+    // sensor carries no attributes, so the last_updated it falls back to can
+    // only read stale, never falsely fresh.
+    static MAX_SIBLING_AGE_MINUTES = 180;
+
+    // Epoch values arrive in seconds from some integrations and milliseconds
+    // from others. Anything below this bound is too small to be a modern
+    // millisecond value, so treat it as seconds.
+    static EPOCH_SECONDS_BOUND = 1e11;
+
+    static parseTimestamp(raw) {
+        if (raw === null || raw === undefined) return null;
+
+        // Numbers round-trip through String() losslessly, so they land on the
+        // epoch branch below and need no case of their own.
+        const trimmed = String(raw).trim();
+        if (!SugarTvCard.isValidValue(trimmed)) return null;
+
+        const asNumber = Number(trimmed);
+        const date = Number.isFinite(asNumber)
+            ? new Date(
+                  Math.abs(asNumber) < SugarTvCard.EPOCH_SECONDS_BOUND
+                      ? asNumber * 1000
+                      : asNumber,
+              )
+            : new Date(trimmed);
+
+        return isNaN(date.getTime()) ? null : date.toISOString();
     }
 
     static DEFAULT_THRESHOLDS = {
@@ -78,6 +133,10 @@ class SugarTvCard extends LitElement {
                     name: 'glucose_value',
                     required: true,
                     selector: { entity: { domain: 'sensor' } },
+                },
+                {
+                    name: 'timestamp_attribute',
+                    selector: { text: {} },
                 },
                 {
                     name: 'show_prediction',
@@ -154,6 +213,7 @@ class SugarTvCard extends LitElement {
                 const labels = {
                     glucose_value: localize('editor.glucose_value'),
                     glucose_trend: localize('editor.glucose_trend'),
+                    timestamp_attribute: localize('editor.timestamp_attribute'),
                     show_prediction: localize('editor.show_prediction'),
                     color_thresholds: localize('editor.color_thresholds'),
                     urgent_low: localize('editor.urgent_low'),
@@ -353,11 +413,101 @@ class SugarTvCard extends LitElement {
         return {
             value: glucoseState.state,
             unit: SugarTvCard.normalizeUnit(
-                glucoseState.attributes.unit_of_measurement,
+                glucoseState.attributes?.unit_of_measurement,
             ),
-            last_changed: glucoseState.last_changed,
+            last_changed: this._resolveTimestamp(glucose_value, glucoseState),
             trend,
         };
+    }
+
+    // When the reading was last confirmed — not when the value last moved.
+    // A steady glucose level keeps last_changed frozen, which made a live
+    // sensor read as stale and suppressed the delta.
+    //
+    // last_updated is only a partial fallback: HA advances it when the state
+    // OR any attribute changes, so it helps for integrations that publish a
+    // varying attribute (Nightscout ships delta/direction), but stays frozen
+    // alongside last_changed when a poll rewrites a byte-identical state. HA
+    // tracks those in last_reported, which the websocket never sends to the
+    // frontend, so an integration-supplied time is the only reliable source.
+    //
+    // Each candidate is validated differently on purpose. A rejected one falls
+    // through to last_updated, which can read fresher than reality, so only
+    // reject a value that is more likely wrong than merely stale.
+    _resolveTimestamp(glucose_value, glucoseState) {
+        const attributes = glucoseState.attributes || {};
+        const configured = this.config?.timestamp_attribute;
+
+        if (configured) {
+            const parsed = SugarTvCard.parseTimestamp(attributes[configured]);
+            if (parsed) return parsed;
+        } else {
+            for (const name of SugarTvCard.TIMESTAMP_ATTRIBUTES) {
+                const parsed = SugarTvCard.parseTimestamp(attributes[name]);
+                if (parsed) return parsed;
+            }
+
+            const nightscoutDate = this._nightscoutDate(attributes);
+            if (nightscoutDate) return nightscoutDate;
+
+            const sibling = this._timestampFromSibling(glucose_value);
+            if (sibling) return sibling;
+        }
+
+        return glucoseState.last_updated || glucoseState.last_changed || null;
+    }
+
+    // Nightscout publishes the reading time as `date`. That name is a generic
+    // HA constant shared by unrelated domains, so only trust it on an entity
+    // that also carries Nightscout's own companion attributes.
+    _nightscoutDate(attributes) {
+        const looksLikeNightscout =
+            attributes.direction !== undefined ||
+            attributes.delta !== undefined;
+        return looksLikeNightscout
+            ? SugarTvCard.parseTimestamp(attributes.date)
+            : null;
+    }
+
+    _timestampFromSibling(glucose_value) {
+        const states = this.hass?.states;
+        if (!states) return null;
+
+        for (const [
+            valueSuffix,
+            timeSuffix,
+        ] of SugarTvCard.TIMESTAMP_SIBLINGS) {
+            if (!glucose_value.endsWith(valueSuffix)) continue;
+            const sibling =
+                states[glucose_value.replace(valueSuffix, timeSuffix)];
+            const parsed = SugarTvCard.parseTimestamp(sibling?.state);
+            if (parsed) return parsed;
+        }
+
+        for (const [valueSuffix, ageSuffix] of SugarTvCard.AGE_SIBLINGS) {
+            if (!glucose_value.endsWith(valueSuffix)) continue;
+            const sibling =
+                states[glucose_value.replace(valueSuffix, ageSuffix)];
+            const minutes = Number(sibling?.state);
+            if (!Number.isFinite(minutes)) continue;
+            if (minutes < 0 || minutes > SugarTvCard.MAX_SIBLING_AGE_MINUTES) {
+                continue;
+            }
+
+            // Count back from when the sibling reported that age, not from the
+            // wall clock: an integration that stops polling freezes the age,
+            // and counting from now would hold the reading permanently fresh.
+            const reportedAt = SugarTvCard.parseTimestamp(
+                sibling.last_updated || sibling.last_changed,
+            );
+            if (!reportedAt) continue;
+
+            return new Date(
+                new Date(reportedAt).getTime() - minutes * 60000,
+            ).toISOString();
+        }
+
+        return null;
     }
 
     _resolveTrend(glucose_value, glucoseState) {
@@ -430,11 +580,12 @@ class SugarTvCard extends LitElement {
 
             if (previousState) {
                 this._data.previous_value = previousState.s;
-                const prevTime =
-                    previousState.lu || previousState.lc || previousState.t;
-                this._data.previous_last_changed = new Date(
-                    prevTime * 1000,
-                ).toISOString();
+                // History carries HA's ingest time, not the measurement time:
+                // the query asks for no_attributes, so a sensor-supplied
+                // timestamp is not available for previous readings.
+                this._data.previous_last_changed = SugarTvCard.parseTimestamp(
+                    previousState.lu || previousState.lc || previousState.t,
+                );
                 this.requestUpdate();
             }
         } catch (e) {
@@ -516,8 +667,13 @@ class SugarTvCard extends LitElement {
         return `${sign}${absFormatted}`;
     }
 
-    _isValidValue(value) {
+    // HA reports a missing reading with one of two sentinel states.
+    static isValidValue(value) {
         return value && value !== 'unknown' && value !== 'unavailable';
+    }
+
+    _isValidValue(value) {
+        return SugarTvCard.isValidValue(value);
     }
 
     _isStale(timestamp) {

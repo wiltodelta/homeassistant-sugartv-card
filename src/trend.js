@@ -1,3 +1,14 @@
+// Entity id suffixes of each integration's glucose value sensor. Shared so the
+// trend and reading-time lookups cannot drift apart: an id is slugified from
+// the integration's entity NAME, never from its internal key, which is how the
+// Carelink suffixes below were wrong (last_sg_mgdl) until 2026-07.
+export const VALUE_SUFFIXES = {
+    dexcom: '_glucose_value',
+    carelinkMgdl: '_last_glucose_level_mg_dl',
+    carelinkMmol: '_last_glucose_level_mmol',
+    librelink: '_glucose_measurement',
+};
+
 // Normalize trend values from different CGM integrations to internal format
 export const TREND_MAP = {
     // Dexcom (already normalized)
@@ -60,7 +71,9 @@ export function normalizeTrend(rawTrend) {
  * 1. YAML override: config.glucose_trend entity
  * 2. Sibling entity patterns:
  *    - Dexcom: *_glucose_value → *_glucose_trend
- *    - Carelink: *_last_sg_mgdl / *_last_sg_mmol → *_last_sg_trend
+ *    - Carelink: *_last_glucose_level_mg_dl / *_last_glucose_level_mmol →
+ *      *_last_glucose_trend (the *_last_sg_* spelling is the integration's
+ *      internal keys, which never became entity ids)
  *    - LibreLink (gillesvs): *_glucose_measurement → find *_trend entity
  * 3. Nightscout: attribute 'direction' on value entity
  * 4. LibreView (PTST): attribute 'trend' on value entity
@@ -78,8 +91,10 @@ export function resolveTrend(glucose_value, glucoseState, config, hass) {
     // 2. Sibling entity patterns
     const siblingPatterns = [
         // Dexcom: sensor.dexcom_*_glucose_value → sensor.dexcom_*_glucose_trend
-        ['_glucose_value', '_glucose_trend'],
-        // Carelink: sensor.carelink_*_last_sg_mgdl → sensor.carelink_*_last_sg_trend
+        [VALUE_SUFFIXES.dexcom, '_glucose_trend'],
+        [VALUE_SUFFIXES.carelinkMgdl, '_last_glucose_trend'],
+        [VALUE_SUFFIXES.carelinkMmol, '_last_glucose_trend'],
+        // Kept for installs whose entities were renamed to the key spelling.
         ['_last_sg_mgdl', '_last_sg_trend'],
         ['_last_sg_mmol', '_last_sg_trend'],
     ];
@@ -108,12 +123,12 @@ export function resolveTrend(glucose_value, glucoseState, config, hass) {
     }
 
     // 3. Nightscout: 'direction' attribute
-    if (glucoseState.attributes.direction) {
+    if (glucoseState.attributes?.direction) {
         return normalizeTrend(glucoseState.attributes.direction);
     }
 
     // 4. LibreView (PTST): 'trend' attribute
-    if (glucoseState.attributes.trend) {
+    if (glucoseState.attributes?.trend) {
         return normalizeTrend(String(glucoseState.attributes.trend));
     }
 
