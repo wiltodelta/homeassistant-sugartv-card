@@ -112,8 +112,16 @@ it. That is why the card prefers a time the integration itself reports.
 | LibreView (PTST) | Exact, from `measurement_timestamp`                                            |
 | Nightscout       | Exact, from `date`                                                             |
 | Carelink         | Exact, from the `*_last_glucose_update` entity                                 |
-| LibreLink        | To the minute, derived from the `*_minutes_since_update` entity                |
+| LibreLink        | To the minute while the reading is recent, from `*_minutes_since_update`       |
 | Dexcom           | Approximate: it publishes no time at all, so a flat value can still look stale |
+
+LibreLink is the weak one. It reports an age rather than a time, and computes it
+by subtracting a device-local reading time from the Home Assistant server's
+clock, so the number is wrong by the offset between the two timezones
+([gillesvs/librelink#27](https://github.com/gillesvs/librelink/issues/27)
+reports -118 minutes). A wrong age cannot be told apart from an old reading, so
+the card only trusts an age below the staleness threshold. Past it, the age and
+`last_updated` both say "stale" anyway.
 
 If your integration reports the measurement time under some other attribute of
 the glucose sensor, point the card at it with `timestamp_attribute`.

@@ -16,11 +16,30 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
   the entity is `sensor.*_last_glucose_level_mg_dl`. Trend auto-detection was
   keyed on the key spelling and never matched. Read the integration's
   `SensorEntityDescription(name=...)`, never the `key=`.
+- **An entity id has no predictable head, so match its tail.** The same
+  integration yields different ids depending on when it was installed: HA only
+  consults `suggested_object_id` at first registration, so a rename upstream
+  never moves an existing id, and HA 2026.4 changed composition for entities
+  without `has_entity_name` (the device name is now prepended). Carelink alone
+  has three live shapes, from `sensor.last_glucose_level_mg_dl` to
+  `sensor.john_doe_carelink_john_doe_last_glucose_level_mg_dl`. Use
+  `siblingEntityId()`, never a prefix assumption or a bare `endsWith`.
 - **`last_updated` is not "when the sensor was last polled."** HA only advances
   it when the state or an attribute actually changes; an identical rewrite
   early-returns and bumps `last_reported`, which the websocket never sends to
   the frontend. A flat glucose value on an attribute-less integration (Dexcom)
   therefore has no readable freshness.
+- **Do not reach for `last_reported` to fix that.** It is obtainable, via a
+  `render_template` subscription whose template calls `now()` to force a
+  per-minute re-render (a plain template only re-renders on
+  `EVENT_STATE_CHANGED` and would freeze; REST and `get_states` freeze too, as
+  `State._as_dict` is an uninvalidated `under_cached_property`). It is still the
+  wrong signal: it means "HA polled the API", not "the reading is recent".
+  Dexcom's coordinator never checks a reading's age, so an out-of-range
+  transmitter keeps `last_reported` advancing on a hours-old value. That turns
+  a safe failure (live sensor looks stale) into an unsafe one (dead sensor
+  looks live). The fix belongs upstream: `pydexcom` already exposes
+  `GlucoseReading.datetime`, and the integration drops it.
 - **Sections view: row height 56px, gap 8px, so `rows: N` is `N*64-8` px.** The
   height is only definite when `getGridOptions()` returns a numeric `rows`.
   Masonry never sets a card height, so `cqh`/`height: 100%` do not resolve

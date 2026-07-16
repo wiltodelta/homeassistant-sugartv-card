@@ -7,6 +7,7 @@ import {
     VALUE_SUFFIXES,
     normalizeTrend,
     resolveTrend,
+    siblingEntityId,
 } from './trend.js';
 
 const VERSION = process.env.VERSION;
@@ -31,6 +32,9 @@ class SugarTvCard extends LitElement {
         );
     }
 
+    // Set by both core glucose integrations, and by nothing else in core.
+    static GLUCOSE_DEVICE_CLASS = 'blood_glucose_concentration';
+
     // Attributes carrying the true measurement time. Only the PTST libreview
     // integration is known to publish one; Dexcom exposes no attributes on the
     // glucose sensor at all, which is why timestamp_attribute exists as an
@@ -43,22 +47,23 @@ class SugarTvCard extends LitElement {
     // "Last glucose update".
     static TIMESTAMP_SIBLINGS = [
         // Carelink (Medtronic)
-        [VALUE_SUFFIXES.carelinkMgdl, '_last_glucose_update'],
-        [VALUE_SUFFIXES.carelinkMmol, '_last_glucose_update'],
+        [VALUE_SUFFIXES.carelinkMgdl, 'last_glucose_update'],
+        [VALUE_SUFFIXES.carelinkMmol, 'last_glucose_update'],
     ];
 
     // Siblings reporting an age in minutes rather than a timestamp.
     static AGE_SIBLINGS = [
         // LibreLink (gillesvs)
-        [VALUE_SUFFIXES.librelink, '_minutes_since_update'],
+        [VALUE_SUFFIXES.librelink, 'minutes_since_update'],
     ];
 
-    // An age sibling is derived from the integration's own clock, so a
-    // misconfigured timezone can yield a wildly wrong number. Discarding one
-    // is safe here: the only age sibling belongs to LibreLink, whose glucose
-    // sensor carries no attributes, so the last_updated it falls back to can
-    // only read stale, never falsely fresh.
-    static MAX_SIBLING_AGE_MINUTES = 180;
+    // LibreLink derives its age by subtracting a device-local reading time from
+    // the HA server's local clock, so it is wrong by the offset between the two
+    // timezones (gillesvs/librelink#27 reports -118 minutes from Poland). The
+    // error cannot be told apart from a genuinely old reading, so only trust an
+    // age below the staleness threshold, where a timezone gap of even 15 minutes
+    // cannot hide. Above it, both this and last_updated say "stale" anyway.
+    static MAX_SIBLING_AGE_MINUTES = 15;
 
     // Epoch values arrive in seconds from some integrations and milliseconds
     // from others. Anything below this bound is too small to be a modern
@@ -460,10 +465,18 @@ class SugarTvCard extends LitElement {
     // Nightscout publishes the reading time as `date`. That name is a generic
     // HA constant shared by unrelated domains, so only trust it on an entity
     // that also carries Nightscout's own companion attributes.
+    //
+    // Test key presence, not value: the integration writes all four keys on
+    // every update whatever the server returned, so `delta` is null on a real
+    // install (Nightscout computes it client-side and never sends it) and
+    // `direction` is null when no trend is known. A truthiness check would
+    // reject exactly the readings this exists to date.
     _nightscoutDate(attributes) {
         const looksLikeNightscout =
-            attributes.direction !== undefined ||
-            attributes.delta !== undefined;
+            attributes.device_class === SugarTvCard.GLUCOSE_DEVICE_CLASS &&
+            'date' in attributes &&
+            'direction' in attributes &&
+            'delta' in attributes;
         return looksLikeNightscout
             ? SugarTvCard.parseTimestamp(attributes.date)
             : null;
@@ -473,21 +486,17 @@ class SugarTvCard extends LitElement {
         const states = this.hass?.states;
         if (!states) return null;
 
-        for (const [
-            valueSuffix,
-            timeSuffix,
-        ] of SugarTvCard.TIMESTAMP_SIBLINGS) {
-            if (!glucose_value.endsWith(valueSuffix)) continue;
-            const sibling =
-                states[glucose_value.replace(valueSuffix, timeSuffix)];
-            const parsed = SugarTvCard.parseTimestamp(sibling?.state);
+        for (const [valueTail, timeTail] of SugarTvCard.TIMESTAMP_SIBLINGS) {
+            const id = siblingEntityId(glucose_value, valueTail, timeTail);
+            if (!id) continue;
+            const parsed = SugarTvCard.parseTimestamp(states[id]?.state);
             if (parsed) return parsed;
         }
 
-        for (const [valueSuffix, ageSuffix] of SugarTvCard.AGE_SIBLINGS) {
-            if (!glucose_value.endsWith(valueSuffix)) continue;
-            const sibling =
-                states[glucose_value.replace(valueSuffix, ageSuffix)];
+        for (const [valueTail, ageTail] of SugarTvCard.AGE_SIBLINGS) {
+            const id = siblingEntityId(glucose_value, valueTail, ageTail);
+            if (!id) continue;
+            const sibling = states[id];
             const minutes = Number(sibling?.state);
             if (!Number.isFinite(minutes)) continue;
             if (minutes < 0 || minutes > SugarTvCard.MAX_SIBLING_AGE_MINUTES) {

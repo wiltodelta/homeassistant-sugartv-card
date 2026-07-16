@@ -1,13 +1,39 @@
-// Entity id suffixes of each integration's glucose value sensor. Shared so the
+// Object id tails of each integration's glucose value sensor. Shared so the
 // trend and reading-time lookups cannot drift apart: an id is slugified from
 // the integration's entity NAME, never from its internal key, which is how the
-// Carelink suffixes below were wrong (last_sg_mgdl) until 2026-07.
+// Carelink tails below were wrong (last_sg_mgdl) until 2026-07.
 export const VALUE_SUFFIXES = {
-    dexcom: '_glucose_value',
-    carelinkMgdl: '_last_glucose_level_mg_dl',
-    carelinkMmol: '_last_glucose_level_mmol',
-    librelink: '_glucose_measurement',
+    dexcom: 'glucose_value',
+    carelinkMgdl: 'last_glucose_level_mg_dl',
+    carelinkMmol: 'last_glucose_level_mmol',
+    librelink: 'glucose_measurement',
 };
+
+// Resolve a sibling entity by swapping the tail of an entity id, keeping
+// whatever head the install happens to have.
+//
+// The head is not predictable. HA builds the object id from the entity's name,
+// and what goes into that name has changed: a Carelink install from before
+// 2026-02 is plain `sensor.last_glucose_level_mg_dl`, a later one carries the
+// patient name, and since HA 2026.4 an entity without has_entity_name also gets
+// the device name prepended, which doubles it. All three must resolve, so match
+// the tail and rebuild the head rather than assuming a prefix.
+export function siblingEntityId(entityId, valueTail, siblingTail) {
+    const dot = entityId.indexOf('.');
+    if (dot === -1) return null;
+
+    const domain = entityId.slice(0, dot);
+    const objectId = entityId.slice(dot + 1);
+
+    if (objectId === valueTail) {
+        return `${domain}.${siblingTail}`;
+    }
+    if (objectId.endsWith(`_${valueTail}`)) {
+        const head = objectId.slice(0, -valueTail.length);
+        return `${domain}.${head}${siblingTail}`;
+    }
+    return null;
+}
 
 // Normalize trend values from different CGM integrations to internal format
 export const TREND_MAP = {
@@ -91,24 +117,25 @@ export function resolveTrend(glucose_value, glucoseState, config, hass) {
     // 2. Sibling entity patterns
     const siblingPatterns = [
         // Dexcom: sensor.dexcom_*_glucose_value → sensor.dexcom_*_glucose_trend
-        [VALUE_SUFFIXES.dexcom, '_glucose_trend'],
-        [VALUE_SUFFIXES.carelinkMgdl, '_last_glucose_trend'],
-        [VALUE_SUFFIXES.carelinkMmol, '_last_glucose_trend'],
+        [VALUE_SUFFIXES.dexcom, 'glucose_trend'],
+        [VALUE_SUFFIXES.carelinkMgdl, 'last_glucose_trend'],
+        [VALUE_SUFFIXES.carelinkMmol, 'last_glucose_trend'],
         // Kept for installs whose entities were renamed to the key spelling.
-        ['_last_sg_mgdl', '_last_sg_trend'],
-        ['_last_sg_mmol', '_last_sg_trend'],
+        ['last_sg_mgdl', 'last_sg_trend'],
+        ['last_sg_mmol', 'last_sg_trend'],
     ];
 
-    for (const [valueSuffix, trendSuffix] of siblingPatterns) {
-        if (glucose_value.endsWith(valueSuffix)) {
-            const trendEntityId = glucose_value.replace(
-                valueSuffix,
-                trendSuffix,
-            );
-            const trendState = hass.states[trendEntityId];
-            if (trendState) {
-                return normalizeTrend(trendState.state);
-            }
+    for (const [valueTail, trendTail] of siblingPatterns) {
+        const trendEntityId = siblingEntityId(
+            glucose_value,
+            valueTail,
+            trendTail,
+        );
+        if (!trendEntityId) continue;
+
+        const trendState = hass.states[trendEntityId];
+        if (trendState) {
+            return normalizeTrend(trendState.state);
         }
     }
 

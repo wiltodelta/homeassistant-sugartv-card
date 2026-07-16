@@ -257,11 +257,14 @@ describe('Reading timestamp resolution', () => {
     // Nightscout keeps the reading time in a generically-named `date`.
     // ────────────────────────────────────────────────────────────────
     describe('Nightscout date attribute', () => {
+        // The integration writes all four keys on every update whatever the
+        // server returned, so null values are the norm, not an edge case.
         const nightscout = (extra) => ({
             attributes: {
                 unit_of_measurement: 'mg/dL',
+                device_class: 'blood_glucose_concentration',
                 device: 'nightscout',
-                delta: '2',
+                delta: null,
                 direction: 'Flat',
                 ...extra,
             },
@@ -272,6 +275,23 @@ describe('Reading timestamp resolution', () => {
         it('uses date when Nightscout companion attributes are present', () => {
             const measured = iso(3 * MINUTE);
             const card = createCard({}, nightscout({ date: measured }));
+
+            expect(card._getCurrentState(ENTITY).last_changed).toBe(measured);
+        });
+
+        it('uses date when the server reported no trend at all', () => {
+            // Nightscout never sends delta (it computes it client-side), and
+            // direction can be null too. Both keys are still written, so this
+            // must not be mistaken for a non-Nightscout entity.
+            const measured = iso(3 * MINUTE);
+            const card = createCard(
+                {},
+                nightscout({
+                    date: measured,
+                    delta: null,
+                    direction: null,
+                }),
+            );
 
             expect(card._getCurrentState(ENTITY).last_changed).toBe(measured);
         });
@@ -369,6 +389,31 @@ describe('Reading timestamp resolution', () => {
             ).toBe(measured);
         });
 
+        // HA has composed this object id three different ways over time, and
+        // an install keeps whatever id it was first registered with.
+        it.each([
+            [
+                'pre-2026-02 Carelink',
+                'sensor.last_glucose_level_mg_dl',
+                'sensor.last_glucose_update',
+            ],
+            [
+                'patient-named',
+                'sensor.carelink_john_doe_last_glucose_level_mg_dl',
+                'sensor.carelink_john_doe_last_glucose_update',
+            ],
+            [
+                'HA 2026.4+ device-prefixed',
+                'sensor.john_doe_carelink_john_doe_last_glucose_level_mg_dl',
+                'sensor.john_doe_carelink_john_doe_last_glucose_update',
+            ],
+        ])('resolves the %s entity id shape', (_name, value, sibling) => {
+            const measured = iso(4 * MINUTE);
+            const card = withSibling(value, sibling, measured);
+
+            expect(card._getCurrentState(value).last_changed).toBe(measured);
+        });
+
         it('falls back when the Carelink sibling is unavailable', () => {
             const card = withSibling(CARELINK, CARELINK_TIME, 'unavailable');
 
@@ -413,18 +458,22 @@ describe('Reading timestamp resolution', () => {
             expect(Math.abs(resolved - expected)).toBeLessThan(2000);
         });
 
-        it.each(['-5', '600', 'not a number'])(
-            'ignores an implausible age of %s minutes',
-            (age) => {
-                // A timezone-skewed integration clock can produce these; the
-                // plain state timestamps are safer than a wrong freshness.
-                const card = withSibling(LIBRELINK, LIBRELINK_AGE, age);
+        it.each([
+            ['-118', 'the timezone gap reported in gillesvs/librelink#27'],
+            ['120', 'a server two hours ahead of the account'],
+            ['600', 'a wildly skewed clock'],
+            ['not a number', 'garbage'],
+        ])('ignores an age of %s minutes: %s', (age) => {
+            // The integration subtracts a device-local reading time from the
+            // server's local clock, so the error is the offset between the two
+            // timezones. It cannot be told apart from an old reading, so an age
+            // past the staleness threshold is not trusted at all.
+            const card = withSibling(LIBRELINK, LIBRELINK_AGE, age);
 
-                expect(card._getCurrentState(LIBRELINK).last_changed).toBe(
-                    card.hass.states[LIBRELINK].last_updated,
-                );
-            },
-        );
+            expect(card._getCurrentState(LIBRELINK).last_changed).toBe(
+                card.hass.states[LIBRELINK].last_updated,
+            );
+        });
 
         it('falls back when the sibling entity does not exist', () => {
             const card = withSibling(CARELINK, 'sensor.unrelated', iso(0));
