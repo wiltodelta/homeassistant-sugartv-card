@@ -99,7 +99,7 @@ describe('Reading timestamp resolution', () => {
                 },
             );
 
-            const { last_changed: resolved } = card._getCurrentState(ENTITY);
+            const { reading_time: resolved } = card._getCurrentState(ENTITY);
 
             expect(resolved).toBe(card.hass.states[ENTITY].last_updated);
         });
@@ -115,7 +115,7 @@ describe('Reading timestamp resolution', () => {
 
             card._updateCurrentData(card._getCurrentState(ENTITY));
 
-            expect(card._isStale(card._data.last_changed)).toBe(false);
+            expect(card._isStale(card._data.reading_time)).toBe(false);
         });
     });
 
@@ -137,7 +137,7 @@ describe('Reading timestamp resolution', () => {
                 },
             );
 
-            expect(card._getCurrentState(ENTITY).last_changed).toBe(measured);
+            expect(card._getCurrentState(ENTITY).reading_time).toBe(measured);
         });
 
         it('falls back to last_updated when the attribute is unparseable', () => {
@@ -153,7 +153,7 @@ describe('Reading timestamp resolution', () => {
                 },
             );
 
-            expect(card._getCurrentState(ENTITY).last_changed).toBe(
+            expect(card._getCurrentState(ENTITY).reading_time).toBe(
                 card.hass.states[ENTITY].last_updated,
             );
         });
@@ -173,7 +173,7 @@ describe('Reading timestamp resolution', () => {
                     },
                 );
 
-                expect(card._getCurrentState(ENTITY).last_changed).toBe(
+                expect(card._getCurrentState(ENTITY).reading_time).toBe(
                     card.hass.states[ENTITY].last_updated,
                 );
             },
@@ -198,7 +198,7 @@ describe('Reading timestamp resolution', () => {
                 },
             );
 
-            expect(card._getCurrentState(ENTITY).last_changed).toBe(measured);
+            expect(card._getCurrentState(ENTITY).reading_time).toBe(measured);
         });
 
         it('wins over the built-in measurement_timestamp', () => {
@@ -216,7 +216,7 @@ describe('Reading timestamp resolution', () => {
                 },
             );
 
-            expect(card._getCurrentState(ENTITY).last_changed).toBe(configured);
+            expect(card._getCurrentState(ENTITY).reading_time).toBe(configured);
         });
 
         it('falls back when the configured attribute is absent', () => {
@@ -228,7 +228,7 @@ describe('Reading timestamp resolution', () => {
                 },
             );
 
-            expect(card._getCurrentState(ENTITY).last_changed).toBe(
+            expect(card._getCurrentState(ENTITY).reading_time).toBe(
                 card.hass.states[ENTITY].last_updated,
             );
         });
@@ -247,7 +247,7 @@ describe('Reading timestamp resolution', () => {
                 },
             );
 
-            expect(card._getCurrentState(ENTITY).last_changed).toBe(
+            expect(card._getCurrentState(ENTITY).reading_time).toBe(
                 new Date(seconds * 1000).toISOString(),
             );
         });
@@ -276,7 +276,7 @@ describe('Reading timestamp resolution', () => {
             const measured = iso(3 * MINUTE);
             const card = createCard({}, nightscout({ date: measured }));
 
-            expect(card._getCurrentState(ENTITY).last_changed).toBe(measured);
+            expect(card._getCurrentState(ENTITY).reading_time).toBe(measured);
         });
 
         it('uses date when the server reported no trend at all', () => {
@@ -293,7 +293,7 @@ describe('Reading timestamp resolution', () => {
                 }),
             );
 
-            expect(card._getCurrentState(ENTITY).last_changed).toBe(measured);
+            expect(card._getCurrentState(ENTITY).reading_time).toBe(measured);
         });
 
         it('ignores a generic date on a non-Nightscout entity', () => {
@@ -311,7 +311,7 @@ describe('Reading timestamp resolution', () => {
                 },
             );
 
-            expect(card._getCurrentState(ENTITY).last_changed).toBe(
+            expect(card._getCurrentState(ENTITY).reading_time).toBe(
                 card.hass.states[ENTITY].last_updated,
             );
         });
@@ -326,7 +326,7 @@ describe('Reading timestamp resolution', () => {
                 }),
             );
 
-            expect(card._getCurrentState(ENTITY).last_changed).toBe(measured);
+            expect(card._getCurrentState(ENTITY).reading_time).toBe(measured);
         });
     });
 
@@ -371,7 +371,7 @@ describe('Reading timestamp resolution', () => {
             const measured = iso(4 * MINUTE);
             const card = withSibling(CARELINK, CARELINK_TIME, measured);
 
-            expect(card._getCurrentState(CARELINK).last_changed).toBe(measured);
+            expect(card._getCurrentState(CARELINK).reading_time).toBe(measured);
         });
 
         it('handles the mmol Carelink entity', () => {
@@ -385,7 +385,7 @@ describe('Reading timestamp resolution', () => {
             expect(
                 card._getCurrentState(
                     'sensor.carelink_pump_last_glucose_level_mmol',
-                ).last_changed,
+                ).reading_time,
             ).toBe(measured);
         });
 
@@ -411,13 +411,13 @@ describe('Reading timestamp resolution', () => {
             const measured = iso(4 * MINUTE);
             const card = withSibling(value, sibling, measured);
 
-            expect(card._getCurrentState(value).last_changed).toBe(measured);
+            expect(card._getCurrentState(value).reading_time).toBe(measured);
         });
 
         it('falls back when the Carelink sibling is unavailable', () => {
             const card = withSibling(CARELINK, CARELINK_TIME, 'unavailable');
 
-            expect(card._getCurrentState(CARELINK).last_changed).toBe(
+            expect(card._getCurrentState(CARELINK).reading_time).toBe(
                 card.hass.states[CARELINK].last_updated,
             );
         });
@@ -426,7 +426,7 @@ describe('Reading timestamp resolution', () => {
             const card = withSibling(LIBRELINK, LIBRELINK_AGE, '3');
 
             const resolved = new Date(
-                card._getCurrentState(LIBRELINK).last_changed,
+                card._getCurrentState(LIBRELINK).reading_time,
             ).getTime();
             const expected = Date.now() - 3 * MINUTE;
             expect(Math.abs(resolved - expected)).toBeLessThan(2000);
@@ -443,7 +443,7 @@ describe('Reading timestamp resolution', () => {
                 40 * MINUTE,
             );
 
-            const resolved = card._getCurrentState(LIBRELINK).last_changed;
+            const resolved = card._getCurrentState(LIBRELINK).reading_time;
             expect(card._isStale(resolved)).toBe(true);
         });
 
@@ -451,7 +451,7 @@ describe('Reading timestamp resolution', () => {
             const card = withSibling(LIBRELINK, LIBRELINK_AGE, '3', 2 * MINUTE);
 
             const resolved = new Date(
-                card._getCurrentState(LIBRELINK).last_changed,
+                card._getCurrentState(LIBRELINK).reading_time,
             ).getTime();
             // Reported 2 minutes ago, and the reading was 3 minutes old then.
             const expected = Date.now() - 5 * MINUTE;
@@ -470,7 +470,7 @@ describe('Reading timestamp resolution', () => {
             // past the staleness threshold is not trusted at all.
             const card = withSibling(LIBRELINK, LIBRELINK_AGE, age);
 
-            expect(card._getCurrentState(LIBRELINK).last_changed).toBe(
+            expect(card._getCurrentState(LIBRELINK).reading_time).toBe(
                 card.hass.states[LIBRELINK].last_updated,
             );
         });
@@ -478,7 +478,7 @@ describe('Reading timestamp resolution', () => {
         it('falls back when the sibling entity does not exist', () => {
             const card = withSibling(CARELINK, 'sensor.unrelated', iso(0));
 
-            expect(card._getCurrentState(CARELINK).last_changed).toBe(
+            expect(card._getCurrentState(CARELINK).reading_time).toBe(
                 card.hass.states[CARELINK].last_updated,
             );
         });
@@ -492,13 +492,13 @@ describe('Reading timestamp resolution', () => {
             const changed = iso(12 * MINUTE);
             const card = createCard({}, { last_changed: changed });
 
-            expect(card._getCurrentState(ENTITY).last_changed).toBe(changed);
+            expect(card._getCurrentState(ENTITY).reading_time).toBe(changed);
         });
 
         it('returns null when the state carries no timestamps at all', () => {
             const card = createCard({}, {});
 
-            expect(card._getCurrentState(ENTITY).last_changed).toBeNull();
+            expect(card._getCurrentState(ENTITY).reading_time).toBeNull();
         });
 
         it('does not throw when attributes are missing entirely', () => {

@@ -574,8 +574,8 @@ describe('SugarTvCard', () => {
                 ...card._data,
                 value: '130',
                 previous_value: '120',
-                last_changed: now,
-                previous_last_changed: fiveMinAgo,
+                reading_time: now,
+                previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
             expect(card._calculateDelta()).toBe('＋10');
@@ -590,8 +590,8 @@ describe('SugarTvCard', () => {
                 ...card._data,
                 value: '100',
                 previous_value: '120',
-                last_changed: now,
-                previous_last_changed: fiveMinAgo,
+                reading_time: now,
+                previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
             expect(card._calculateDelta()).toBe('－20');
@@ -606,8 +606,8 @@ describe('SugarTvCard', () => {
                 ...card._data,
                 value: '6.5',
                 previous_value: '5.8',
-                last_changed: now,
-                previous_last_changed: fiveMinAgo,
+                reading_time: now,
+                previous_ingest_time: fiveMinAgo,
                 unit: 'mmol/L',
             };
             const delta = card._calculateDelta();
@@ -620,8 +620,8 @@ describe('SugarTvCard', () => {
                 ...card._data,
                 value: '120',
                 previous_value: '110',
-                last_changed: now,
-                previous_last_changed: now,
+                reading_time: now,
+                previous_ingest_time: now,
                 unit: 'mg/dL',
             };
             expect(card._calculateDelta()).toBeNull();
@@ -634,8 +634,8 @@ describe('SugarTvCard', () => {
                 ...card._data,
                 value: '120',
                 previous_value: '110',
-                last_changed: now,
-                previous_last_changed: longAgo,
+                reading_time: now,
+                previous_ingest_time: longAgo,
                 unit: 'mg/dL',
             };
             expect(card._calculateDelta()).toBeNull();
@@ -646,8 +646,8 @@ describe('SugarTvCard', () => {
                 ...card._data,
                 value: 'unknown',
                 previous_value: '110',
-                last_changed: new Date().toISOString(),
-                previous_last_changed: new Date(
+                reading_time: new Date().toISOString(),
+                previous_ingest_time: new Date(
                     Date.now() - 5 * 60 * 1000,
                 ).toISOString(),
                 unit: 'mg/dL',
@@ -665,8 +665,8 @@ describe('SugarTvCard', () => {
                 ...card._data,
                 value: '120',
                 previous_value: '120',
-                last_changed: now,
-                previous_last_changed: fiveMinAgo,
+                reading_time: now,
+                previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
             expect(card._calculateDelta()).toBe('0');
@@ -681,8 +681,8 @@ describe('SugarTvCard', () => {
                 ...card._data,
                 value: '6.5',
                 previous_value: '6.5',
-                last_changed: now,
-                previous_last_changed: fiveMinAgo,
+                reading_time: now,
+                previous_ingest_time: fiveMinAgo,
                 unit: 'mmol/L',
             };
             expect(card._calculateDelta()).toMatch(/^0[.,]0$/);
@@ -698,8 +698,8 @@ describe('SugarTvCard', () => {
                 ...card._data,
                 value: '120.4',
                 previous_value: '120',
-                last_changed: now,
-                previous_last_changed: fiveMinAgo,
+                reading_time: now,
+                previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
             expect(card._calculateDelta()).toBe('＋0');
@@ -714,8 +714,8 @@ describe('SugarTvCard', () => {
                 ...card._data,
                 value: '120',
                 previous_value: '120.4',
-                last_changed: now,
-                previous_last_changed: fiveMinAgo,
+                reading_time: now,
+                previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
             expect(card._calculateDelta()).toBe('－0');
@@ -730,8 +730,8 @@ describe('SugarTvCard', () => {
                 ...card._data,
                 value: '6,5',
                 previous_value: '5,8',
-                last_changed: now,
-                previous_last_changed: fiveMinAgo,
+                reading_time: now,
+                previous_ingest_time: fiveMinAgo,
                 unit: 'mmol/L',
             };
             const delta = card._calculateDelta();

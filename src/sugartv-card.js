@@ -252,11 +252,14 @@ class SugarTvCard extends LitElement {
     _getInitialDataState() {
         return {
             value: null,
-            last_changed: null,
+            // Resolved reading time (attribute, sibling, or HA fallback), not
+            // HA's own last_changed. previous_ingest_time is a different clock:
+            // it comes from history, which carries HA's ingest time only.
+            reading_time: null,
             trend: null,
             unit: SugarTvCard.UNITS.MGDL,
             previous_value: null,
-            previous_last_changed: null,
+            previous_ingest_time: null,
             previous_trend: null,
         };
     }
@@ -402,7 +405,7 @@ class SugarTvCard extends LitElement {
             this._data = {
                 ...this._getInitialDataState(),
                 value: null,
-                last_changed: null,
+                reading_time: null,
                 trend: 'unknown',
                 unit: SugarTvCard.UNITS.MGDL,
             };
@@ -420,7 +423,7 @@ class SugarTvCard extends LitElement {
             unit: SugarTvCard.normalizeUnit(
                 glucoseState.attributes?.unit_of_measurement,
             ),
-            last_changed: this._resolveTimestamp(glucose_value, glucoseState),
+            reading_time: this._resolveTimestamp(glucose_value, glucoseState),
             trend,
         };
     }
@@ -564,9 +567,13 @@ class SugarTvCard extends LitElement {
                 return;
             }
 
-            // Find the state closest to ~5 minutes before the current reading
+            // Find the state closest to ~5 minutes before the current reading.
+            // reading_time may be a sensor-supplied measurement time while the
+            // history entries below are HA ingest times; the two can differ by
+            // the ingest lag, which is why the previous field is named for its
+            // source rather than matched to this one.
             const currentTime =
-                new Date(this._data.last_changed).getTime() / 1000; // epoch seconds
+                new Date(this._data.reading_time).getTime() / 1000; // epoch seconds
             const targetTime = currentTime - 5 * 60; // 5 min before current reading
             let previousState = null;
             let bestDiff = Infinity;
@@ -592,7 +599,7 @@ class SugarTvCard extends LitElement {
                 // History carries HA's ingest time, not the measurement time:
                 // the query asks for no_attributes, so a sensor-supplied
                 // timestamp is not available for previous readings.
-                this._data.previous_last_changed = SugarTvCard.parseTimestamp(
+                this._data.previous_ingest_time = SugarTvCard.parseTimestamp(
                     previousState.lu || previousState.lc || previousState.t,
                 );
                 this.requestUpdate();
@@ -626,19 +633,22 @@ class SugarTvCard extends LitElement {
     }
 
     _calculateDelta() {
-        const { value, previous_value, last_changed, previous_last_changed } =
+        const { value, previous_value, reading_time, previous_ingest_time } =
             this._data;
 
         if (
             !this._isValidValue(value) ||
             !this._isValidValue(previous_value) ||
-            last_changed === previous_last_changed
+            reading_time === previous_ingest_time
         ) {
             return null;
         }
 
+        // reading_time and previous_ingest_time are different clocks (see
+        // _fetchPreviousFromHistory); the gap is the ingest lag, small enough
+        // that the 9-minute gate below still holds.
         const timeDiff = Math.abs(
-            new Date(last_changed) - new Date(previous_last_changed),
+            new Date(reading_time) - new Date(previous_ingest_time),
         );
         if (timeDiff >= 540000) {
             // Strictly 9 minutes: delta makes sense only for standard ~5min CGM intervals
@@ -753,7 +763,7 @@ class SugarTvCard extends LitElement {
     }
 
     render() {
-        const { value, last_changed, trend, unit } = this._data;
+        const { value, reading_time, trend, unit } = this._data;
         const showPrediction = this.config.show_prediction !== false;
         const trendSymbols = this._getTrendDescriptions(unit);
         const trendInfo =
@@ -762,7 +772,7 @@ class SugarTvCard extends LitElement {
         const trendIcon = trendInfo.icon;
         const prediction = trendInfo.prediction || '';
 
-        const isStale = this._isStale(last_changed);
+        const isStale = this._isStale(reading_time);
         const zoneClass =
             this.config.color_thresholds !== false
                 ? this._getGlucoseZone(value)
@@ -792,7 +802,7 @@ class SugarTvCard extends LitElement {
                 <div class="container">
                     <div class="main-row">
                         <div class="time">
-                            ${this._formatTime(last_changed)}
+                            ${this._formatTime(reading_time)}
                         </div>
                         <div class="value">${this._formatValue(value)}</div>
                         <div class="trend">

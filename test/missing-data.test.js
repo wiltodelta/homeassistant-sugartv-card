@@ -90,7 +90,7 @@ describe('Missing data scenarios', () => {
             const card = createCard({}, { states: {} });
             card._validateEntities('sensor.dexcom_glucose_value');
             expect(card._data.value).toBeNull();
-            expect(card._data.last_changed).toBeNull();
+            expect(card._data.reading_time).toBeNull();
             expect(card._data.trend).toBe('unknown');
             expect(card._data.unit).toBe('mg/dL');
         });
@@ -98,10 +98,10 @@ describe('Missing data scenarios', () => {
         it('_validateEntities resets previous_value to null on missing entity', () => {
             const card = createCard({}, { states: {} });
             card._data.previous_value = '120';
-            card._data.previous_last_changed = new Date().toISOString();
+            card._data.previous_ingest_time = new Date().toISOString();
             card._validateEntities('sensor.dexcom_glucose_value');
             expect(card._data.previous_value).toBeNull();
-            expect(card._data.previous_last_changed).toBeNull();
+            expect(card._data.previous_ingest_time).toBeNull();
         });
 
         it('_validateEntities returns true when entity exists', () => {
@@ -171,8 +171,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: 'unknown',
                 previous_value: '110',
-                last_changed: new Date().toISOString(),
-                previous_last_changed: fiveMinAgo,
+                reading_time: new Date().toISOString(),
+                previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
             expect(card._calculateDelta()).toBeNull();
@@ -186,8 +186,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: '120',
                 previous_value: 'unknown',
-                last_changed: new Date().toISOString(),
-                previous_last_changed: fiveMinAgo,
+                reading_time: new Date().toISOString(),
+                previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
             expect(card._calculateDelta()).toBeNull();
@@ -235,8 +235,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: 'unavailable',
                 previous_value: '110',
-                last_changed: new Date().toISOString(),
-                previous_last_changed: fiveMinAgo,
+                reading_time: new Date().toISOString(),
+                previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
             expect(card._calculateDelta()).toBeNull();
@@ -250,8 +250,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: '120',
                 previous_value: 'unavailable',
-                last_changed: new Date().toISOString(),
-                previous_last_changed: fiveMinAgo,
+                reading_time: new Date().toISOString(),
+                previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
             expect(card._calculateDelta()).toBeNull();
@@ -294,8 +294,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: null,
                 previous_value: '110',
-                last_changed: new Date().toISOString(),
-                previous_last_changed: new Date(
+                reading_time: new Date().toISOString(),
+                previous_ingest_time: new Date(
                     Date.now() - 5 * 60 * 1000,
                 ).toISOString(),
                 unit: 'mg/dL',
@@ -308,8 +308,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: '120',
                 previous_value: null,
-                last_changed: new Date().toISOString(),
-                previous_last_changed: new Date(
+                reading_time: new Date().toISOString(),
+                previous_ingest_time: new Date(
                     Date.now() - 5 * 60 * 1000,
                 ).toISOString(),
                 unit: 'mg/dL',
@@ -322,8 +322,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: null,
                 previous_value: null,
-                last_changed: new Date().toISOString(),
-                previous_last_changed: new Date(
+                reading_time: new Date().toISOString(),
+                previous_ingest_time: new Date(
                     Date.now() - 5 * 60 * 1000,
                 ).toISOString(),
                 unit: 'mg/dL',
@@ -382,8 +382,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: '120',
                 previous_value: '110',
-                last_changed: now,
-                previous_last_changed: now,
+                reading_time: now,
+                previous_ingest_time: now,
                 unit: 'mg/dL',
             };
             expect(card._calculateDelta()).toBeNull();
@@ -394,26 +394,26 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: '120',
                 previous_value: '110',
-                last_changed: null,
-                previous_last_changed: new Date(
+                reading_time: null,
+                previous_ingest_time: new Date(
                     Date.now() - 5 * 60 * 1000,
                 ).toISOString(),
                 unit: 'mg/dL',
             };
-            // last_changed === null, same as previous_last_changed? No.
+            // last_changed === null, same as previous_ingest_time? No.
             // But _isValidValue checks are done first, nulls pass differently
             // The real check: null !== string, so it proceeds to time diff calculation
             // new Date(null) = epoch, which will make timeDiff very large => null
             expect(card._calculateDelta()).toBeNull();
         });
 
-        it('_calculateDelta returns null when previous_last_changed is null', () => {
+        it('_calculateDelta returns null when previous_ingest_time is null', () => {
             card._data = {
                 ...card._data,
                 value: '120',
                 previous_value: '110',
-                last_changed: new Date().toISOString(),
-                previous_last_changed: null,
+                reading_time: new Date().toISOString(),
+                previous_ingest_time: null,
                 unit: 'mg/dL',
             };
             expect(card._calculateDelta()).toBeNull();
@@ -633,7 +633,7 @@ describe('Missing data scenarios', () => {
                     }),
                 },
             );
-            card._data.last_changed = new Date().toISOString();
+            card._data.reading_time = new Date().toISOString();
             await card._fetchPreviousFromHistory();
             expect(card._data.previous_value).toBeNull();
         });
@@ -654,7 +654,7 @@ describe('Missing data scenarios', () => {
                     }),
                 },
             );
-            card._data.last_changed = new Date().toISOString();
+            card._data.reading_time = new Date().toISOString();
             await card._fetchPreviousFromHistory();
             expect(card._data.previous_value).toBeNull();
         });
@@ -678,7 +678,7 @@ describe('Missing data scenarios', () => {
                     }),
                 },
             );
-            card._data.last_changed = new Date(now).toISOString();
+            card._data.reading_time = new Date(now).toISOString();
             await card._fetchPreviousFromHistory();
             expect(card._data.previous_value).toBeNull();
         });
@@ -699,7 +699,7 @@ describe('Missing data scenarios', () => {
                         .mockRejectedValue(new Error('Recorder not available')),
                 },
             );
-            card._data.last_changed = new Date().toISOString();
+            card._data.reading_time = new Date().toISOString();
             // Should not throw
             await expect(
                 card._fetchPreviousFromHistory(),
@@ -735,7 +735,7 @@ describe('Missing data scenarios', () => {
                     }),
                 },
             );
-            card._data.last_changed = new Date(now).toISOString();
+            card._data.reading_time = new Date(now).toISOString();
             await card._fetchPreviousFromHistory();
             // 'unknown' and 'unavailable' are skipped, only the current reading
             // is left — but we skip it because it matches current time,
@@ -765,7 +765,7 @@ describe('Missing data scenarios', () => {
                     }),
                 },
             );
-            card._data.last_changed = new Date(now).toISOString();
+            card._data.reading_time = new Date(now).toISOString();
             await card._fetchPreviousFromHistory();
             // The entry without timestamp is skipped, only current remains
             expect(card._data.previous_value).toBeNull();
@@ -799,7 +799,7 @@ describe('Missing data scenarios', () => {
                     }),
                 },
             );
-            card._data.last_changed = new Date(now).toISOString();
+            card._data.reading_time = new Date(now).toISOString();
             await card._fetchPreviousFromHistory();
             // Should pick up the valid '115' entry, skipping 'unavailable'
             expect(card._data.previous_value).toBe('115');
@@ -819,7 +819,7 @@ describe('Missing data scenarios', () => {
                     callWS: vi.fn().mockResolvedValue({}),
                 },
             );
-            card._data.last_changed = new Date().toISOString();
+            card._data.reading_time = new Date().toISOString();
             await card._fetchPreviousFromHistory();
             expect(card._data.previous_value).toBeNull();
         });
@@ -846,7 +846,7 @@ describe('Missing data scenarios', () => {
                     callWS,
                 },
             );
-            card._data.last_changed = new Date().toISOString();
+            card._data.reading_time = new Date().toISOString();
 
             await card._fetchPreviousFromHistory();
             expect(callWS).toHaveBeenCalledTimes(1);
@@ -930,8 +930,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: '130',
                 previous_value: '120',
-                last_changed: new Date().toISOString(),
-                previous_last_changed: new Date(
+                reading_time: new Date().toISOString(),
+                previous_ingest_time: new Date(
                     Date.now() - 10 * 60 * 1000,
                 ).toISOString(),
                 unit: 'mg/dL',
@@ -945,8 +945,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: '130',
                 previous_value: '120',
-                last_changed: new Date(now).toISOString(),
-                previous_last_changed: new Date(
+                reading_time: new Date(now).toISOString(),
+                previous_ingest_time: new Date(
                     now - 9 * 60 * 1000 + 1, // just under 9 minutes
                 ).toISOString(),
                 unit: 'mg/dL',
@@ -960,8 +960,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: '130',
                 previous_value: '120',
-                last_changed: new Date(now).toISOString(),
-                previous_last_changed: new Date(now - 540000).toISOString(),
+                reading_time: new Date(now).toISOString(),
+                previous_ingest_time: new Date(now - 540000).toISOString(),
                 unit: 'mg/dL',
             };
             // >= 540000 means null
@@ -974,8 +974,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: '130',
                 previous_value: '120',
-                last_changed: new Date(now).toISOString(),
-                previous_last_changed: new Date(
+                reading_time: new Date(now).toISOString(),
+                previous_ingest_time: new Date(
                     now - 5 * 60 * 1000,
                 ).toISOString(),
                 unit: 'mg/dL',
@@ -989,8 +989,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: '120',
                 previous_value: '120',
-                last_changed: now,
-                previous_last_changed: now,
+                reading_time: now,
+                previous_ingest_time: now,
                 unit: 'mg/dL',
             };
             // same timestamps → null regardless of values
@@ -1003,8 +1003,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: 'not_a_number',
                 previous_value: '120',
-                last_changed: new Date(now).toISOString(),
-                previous_last_changed: new Date(
+                reading_time: new Date(now).toISOString(),
+                previous_ingest_time: new Date(
                     now - 5 * 60 * 1000,
                 ).toISOString(),
                 unit: 'mg/dL',
@@ -1023,10 +1023,10 @@ describe('Missing data scenarios', () => {
             const card = createCard();
             const initial = card._getInitialDataState();
             expect(initial.value).toBeNull();
-            expect(initial.last_changed).toBeNull();
+            expect(initial.reading_time).toBeNull();
             expect(initial.trend).toBeNull();
             expect(initial.previous_value).toBeNull();
-            expect(initial.previous_last_changed).toBeNull();
+            expect(initial.previous_ingest_time).toBeNull();
             expect(initial.previous_trend).toBeNull();
             expect(initial.unit).toBe('mg/dL');
         });
@@ -1043,7 +1043,7 @@ describe('Missing data scenarios', () => {
 
         it('_isStale returns true for initial null timestamp', () => {
             const card = createCard();
-            expect(card._isStale(card._data.last_changed)).toBe(true);
+            expect(card._isStale(card._data.reading_time)).toBe(true);
         });
 
         it('_getGlucoseZone returns empty for initial null value', () => {
@@ -1062,14 +1062,14 @@ describe('Missing data scenarios', () => {
             card._data = {
                 ...card._data,
                 value: '120',
-                last_changed: new Date().toISOString(),
+                reading_time: new Date().toISOString(),
                 trend: 'steady',
                 unit: 'mg/dL',
             };
             // Sensor goes unavailable
             card._updateCurrentData({
                 value: 'unavailable',
-                last_changed: new Date().toISOString(),
+                reading_time: new Date().toISOString(),
                 trend: 'unknown',
                 unit: 'mg/dL',
             });
@@ -1083,10 +1083,10 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: 'unavailable',
                 previous_value: '120',
-                previous_last_changed: new Date(
+                previous_ingest_time: new Date(
                     Date.now() - 5 * 60 * 1000,
                 ).toISOString(),
-                last_changed: new Date().toISOString(),
+                reading_time: new Date().toISOString(),
                 trend: 'unknown',
                 unit: 'mg/dL',
             };
@@ -1138,8 +1138,8 @@ describe('Missing data scenarios', () => {
                 ...card._data,
                 value: 'abc',
                 previous_value: 'def',
-                last_changed: new Date(now).toISOString(),
-                previous_last_changed: new Date(
+                reading_time: new Date(now).toISOString(),
+                previous_ingest_time: new Date(
                     now - 5 * 60 * 1000,
                 ).toISOString(),
                 unit: 'mg/dL',
@@ -1209,7 +1209,7 @@ describe('Missing data scenarios', () => {
             card._data = {
                 ...card._data,
                 value: 'unknown',
-                last_changed: new Date().toISOString(),
+                reading_time: new Date().toISOString(),
                 trend: 'unknown',
                 unit: 'mg/dL',
             };
@@ -1221,7 +1221,7 @@ describe('Missing data scenarios', () => {
             card._data = {
                 ...card._data,
                 value: 'unavailable',
-                last_changed: null,
+                reading_time: null,
                 trend: null,
                 unit: 'mg/dL',
             };
@@ -1232,11 +1232,11 @@ describe('Missing data scenarios', () => {
             const card = createCard();
             card._data = {
                 value: null,
-                last_changed: null,
+                reading_time: null,
                 trend: null,
                 unit: null,
                 previous_value: null,
-                previous_last_changed: null,
+                previous_ingest_time: null,
                 previous_trend: null,
             };
             expect(() => card.render()).not.toThrow();
@@ -1260,7 +1260,7 @@ describe('Missing data scenarios', () => {
             card._data = {
                 ...card._data,
                 value: '120',
-                last_changed: null,
+                reading_time: null,
                 trend: 'steady',
                 unit: 'mg/dL',
             };
@@ -1273,7 +1273,7 @@ describe('Missing data scenarios', () => {
             card._data = {
                 ...card._data,
                 value: '120',
-                last_changed: new Date(
+                reading_time: new Date(
                     Date.now() - 20 * 60 * 1000,
                 ).toISOString(),
                 trend: 'steady',
