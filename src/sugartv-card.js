@@ -118,7 +118,7 @@ class SugarTvCard extends LitElement {
     static getStubConfig() {
         return {
             type: 'custom:sugartv-card',
-            glucose_value: 'sensor.dexcom_glucose_value',
+            glucose_value: 'sensor.jane_glucose_value',
             show_prediction: true,
             color_thresholds: true,
             thresholds: {

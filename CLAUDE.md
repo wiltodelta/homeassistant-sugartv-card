@@ -18,10 +18,10 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
   `SensorEntityDescription(name=...)`, never the `key=`.
 - **Dexcom sets `has_entity_name = True` with the device name equal to your
   account username, so its entity is `sensor.<username>_glucose_value` (entity
-  name "Glucose value"), with no `dexcom_` in the id.** The README long shipped
-  `sensor.dexcom_glucose_value` in its examples and `getStubConfig()` still
-  does; that exact id exists for nobody. Match the `*_glucose_value` tail, never
-  a literal `dexcom_` head.
+  name "Glucose value"), with no `dexcom_` in the id.** The README examples and
+  `getStubConfig()` both once shipped `sensor.dexcom_glucose_value`, an id that
+  exists for nobody; both now use a `sensor.<username>_glucose_value`
+  placeholder. Match the `*_glucose_value` tail, never a literal `dexcom_` head.
 - **An entity id has no predictable head, so match its tail.** The same
   integration yields different ids depending on when it was installed: HA only
   consults `suggested_object_id` at first registration, so a rename upstream
