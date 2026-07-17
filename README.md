@@ -21,13 +21,13 @@ A custom Lovelace card for Home Assistant that displays CGM (Continuous Glucose 
 
 ## Supported integrations
 
-| Integration              | Value Entity                        | Trend Detection                                  |
-| ------------------------ | ----------------------------------- | ------------------------------------------------ |
-| **Dexcom**               | `sensor.*_glucose_value`            | Auto-detected from `*_glucose_trend` entity      |
-| **Nightscout**           | `sensor.blood_sugar`                | Auto-detected from `direction` attribute         |
-| **LibreView** (PTST)     | `sensor.*_glucose_level`            | Auto-detected from `trend` attribute             |
-| **LibreLink** (gillesvs) | `sensor.*_glucose_measurement`      | Auto-detected from sibling `*_trend` entity      |
-| **Carelink** (Medtronic) | `sensor.*_last_glucose_level_mg_dl` | Auto-detected from `*_last_glucose_trend` entity |
+| Integration              | Value Entity                       | Trend Detection                                 |
+| ------------------------ | ---------------------------------- | ----------------------------------------------- |
+| **Dexcom**               | `sensor.*_glucose_value`           | Auto-detected from `*_glucose_trend` entity     |
+| **Nightscout**           | `sensor.blood_sugar`               | Auto-detected from `direction` attribute        |
+| **LibreView** (PTST)     | `sensor.*_glucose_level`           | Auto-detected from `trend` attribute            |
+| **LibreLink** (gillesvs) | `sensor.*_glucose_measurement`     | Auto-detected from sibling `*_trend` entity     |
+| **Carelink** (Medtronic) | `sensor.*last_glucose_level_mg_dl` | Auto-detected from `*last_glucose_trend` entity |
 
 Just select your glucose sensor — the card figures out the rest automatically.
 
@@ -64,14 +64,14 @@ Just select your glucose sensor — the card figures out the rest automatically.
 ```yaml
 # Minimal — just one entity, trend auto-detected
 type: custom:sugartv-card
-glucose_value: sensor.dexcom_glucose_value
+glucose_value: sensor.jane_glucose_value
 ```
 
 ```yaml
 # Full config with all options
 type: custom:sugartv-card
-glucose_value: sensor.dexcom_glucose_value
-glucose_trend: sensor.dexcom_glucose_trend # optional override
+glucose_value: sensor.jane_glucose_value
+glucose_trend: sensor.jane_glucose_trend # optional override
 timestamp_attribute: measurement_timestamp # optional override
 show_prediction: true
 color_thresholds: true
@@ -81,6 +81,11 @@ thresholds:
     high: 180 # mg/dL (or 10.0 mmol/L)
     urgent_high: 250 # mg/dL (or 13.9 mmol/L)
 ```
+
+`sensor.jane_*` is a placeholder. Your entity ids depend on the integration, so
+check Developer Tools, States and match the patterns in the table above. Dexcom,
+for example, builds the id from your account username, so it is
+`sensor.<username>_glucose_value`, with no `dexcom_` prefix.
 
 ### Reading time
 
@@ -93,7 +98,7 @@ The card resolves it in this order:
 2. A `measurement_timestamp` attribute (LibreView).
 3. A `date` attribute, but only on a sensor that also carries Nightscout's
    `direction`/`delta` attributes, since `date` is a generic name.
-4. A sibling entity holding the time: `*_last_glucose_update` (Carelink) or
+4. A sibling entity holding the time: `*last_glucose_update` (Carelink) or
    `*_minutes_since_update` (LibreLink).
 5. The entity's `last_updated`, then `last_changed`.
 
@@ -111,7 +116,7 @@ it. That is why the card prefers a time the integration itself reports.
 | ---------------- | ------------------------------------------------------------------------------ |
 | LibreView (PTST) | Exact, from `measurement_timestamp`                                            |
 | Nightscout       | Exact, from `date`                                                             |
-| Carelink         | Exact, from the `*_last_glucose_update` entity                                 |
+| Carelink         | Exact, from the `*last_glucose_update` entity                                  |
 | LibreLink        | To the minute while the reading is recent, from `*_minutes_since_update`       |
 | Dexcom           | Approximate: it publishes no time at all, so a flat value can still look stale |
 
