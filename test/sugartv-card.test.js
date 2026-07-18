@@ -522,6 +522,99 @@ describe('SugarTvCard', () => {
         });
     });
 
+    // ── staleness derived from the sensor's own cadence (#94, point 3) ──
+    describe('cadenceFromHistory', () => {
+        const MIN = 60 * 1000;
+        const at = (...minutes) => minutes.map((m) => m * MIN);
+
+        it('reads the interval off evenly spaced readings', () => {
+            expect(SugarTvCard.cadenceFromHistory(at(0, 5, 10, 15))).toBe(
+                5 * MIN,
+            );
+        });
+
+        /*
+         * The reason this takes the smallest gap rather than an average. HA
+         * writes no history entry when a reading repeats, so a flat stretch
+         * leaves a double-width hole. An average would report 7.5 minutes for
+         * this 5 minute sensor and stretch the stale window by half again.
+         */
+        it('is not fooled by a gap where a repeated reading was dropped', () => {
+            expect(SugarTvCard.cadenceFromHistory(at(0, 5, 15, 20))).toBe(
+                5 * MIN,
+            );
+        });
+
+        // A rewrite lands seconds after the reading it repeats, so it does not
+        // sit on the cadence grid and the gap it leaves behind is not a round
+        // interval. What matters is only that the 12 second gap itself is never
+        // mistaken for the cadence, which would collapse the stale window.
+        it('ignores sub-minute gaps, which are rewrites and not a cadence', () => {
+            const times = [0, 0.2 * MIN, 5 * MIN, 10 * MIN];
+
+            expect(
+                SugarTvCard.cadenceFromHistory(times),
+            ).toBeGreaterThanOrEqual(MIN);
+        });
+
+        it.each([
+            ['nothing', []],
+            ['a single reading', at(0)],
+            ['only duplicates', [0, 0]],
+            ['only sub-minute gaps', [0, 100, 200]],
+        ])('returns null given %s', (_label, times) => {
+            expect(SugarTvCard.cadenceFromHistory(times)).toBeNull();
+        });
+    });
+
+    describe('_staleThresholdMs', () => {
+        const MIN = 60 * 1000;
+
+        it('falls back to 15 minutes before history has been read', () => {
+            expect(createCard()._staleThresholdMs()).toBe(15 * MIN);
+        });
+
+        // The point of the whole exercise: 15 minutes is three missed polls on
+        // a 5 minute sensor but fifteen on a 1 minute one, so the fixed number
+        // meant two very different things.
+        it('gives a 1 minute sensor a 3 minute window, not 15', () => {
+            const card = createCard();
+            card._cadenceMs = 1 * MIN;
+
+            expect(card._staleThresholdMs()).toBe(3 * MIN);
+        });
+
+        it('keeps the familiar 15 minutes for a 5 minute sensor', () => {
+            const card = createCard();
+            card._cadenceMs = 5 * MIN;
+
+            expect(card._staleThresholdMs()).toBe(15 * MIN);
+        });
+
+        /*
+         * A derived cadence may only tighten the window. Trusting a slow
+         * cadence outright would let a 15 minute sensor go 45 minutes without
+         * dimming, turning a safe failure (live sensor looks stale) into an
+         * unsafe one (dead sensor looks live).
+         */
+        it('never waits longer than the fallback, however slow the sensor', () => {
+            const card = createCard();
+            card._cadenceMs = 15 * MIN;
+
+            expect(card._staleThresholdMs()).toBe(15 * MIN);
+        });
+
+        it('drives _isStale, so a fast sensor dims sooner', () => {
+            const card = createCard();
+            card._cadenceMs = 1 * MIN;
+            const fiveMinutesAgo = new Date(Date.now() - 5 * MIN).toISOString();
+
+            // The same timestamp is fresh under the 15 minute fallback.
+            expect(card._isStale(fiveMinutesAgo)).toBe(true);
+            expect(createCard()._isStale(fiveMinutesAgo)).toBe(false);
+        });
+    });
+
     // ── _getGlucoseZone ─────────────────────────────────────────────
     describe('_getGlucoseZone (mg/dL)', () => {
         let card;

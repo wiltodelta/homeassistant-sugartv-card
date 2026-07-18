@@ -101,6 +101,23 @@ class SugarTvCard extends LitElement {
     // millisecond value, so treat it as seconds.
     static EPOCH_SECONDS_BOUND = 1e11;
 
+    // A reading is stale once this many polling intervals have been missed.
+    // Three is the ratio the hard-coded 15 minutes already encoded for a 5
+    // minute sensor; deriving the interval is what makes it mean the same
+    // thing on a 1 minute one (#94, point 3).
+    static STALE_INTERVALS = 3;
+
+    // The fallback, used when history cannot be read (recorder disabled) and as
+    // the ceiling on a derived threshold. It is also the widest the card will
+    // ever wait, so a derived cadence can only tighten staleness, never loosen
+    // it: a wrong cadence must not let a dead sensor keep looking live.
+    static STALE_FALLBACK_MS = 15 * 60 * 1000;
+
+    // No CGM reports faster than once a minute, so a shorter gap is two writes
+    // of one reading rather than a cadence. Without this floor a single
+    // duplicate would collapse the threshold and flag every reading stale.
+    static MIN_CADENCE_MS = 60 * 1000;
+
     static parseTimestamp(raw) {
         if (raw === null || raw === undefined) return null;
 
@@ -408,6 +425,8 @@ class SugarTvCard extends LitElement {
         this.config = config;
         this._data = this._data || this._getInitialDataState();
         this._lastHistoryFetch = this._lastHistoryFetch || 0;
+        // Null until history has been read; _staleThresholdMs falls back.
+        this._cadenceMs = this._cadenceMs || null;
     }
 
     willUpdate(changedProperties) {
@@ -669,12 +688,14 @@ class SugarTvCard extends LitElement {
             const targetTime = currentTime - 5 * 60; // 5 min before current reading
             let previousState = null;
             let bestDiff = Infinity;
+            const seenTimes = [];
 
             for (const state of states) {
                 if (!this._isValidValue(state.s)) continue;
 
                 const stateTime = state.lu || state.lc || state.t; // Support HA versions
                 if (!stateTime) continue;
+                seenTimes.push(stateTime * 1000);
 
                 // Skip the current state — we need a different reading
                 if (Math.abs(stateTime - currentTime) < 1) continue;
@@ -684,6 +705,16 @@ class SugarTvCard extends LitElement {
                     bestDiff = diff;
                     previousState = state;
                 }
+            }
+
+            // Keep the last known cadence when this window was too sparse to
+            // measure one: a flat stretch is exactly when the reading is most
+            // likely to look stuck, and reverting to the 15 minute fallback
+            // there would widen the window at the worst moment.
+            const cadence = SugarTvCard.cadenceFromHistory(seenTimes);
+            if (cadence) {
+                this._cadenceMs = cadence;
+                this.requestUpdate();
             }
 
             if (previousState) {
@@ -787,6 +818,44 @@ class SugarTvCard extends LitElement {
         return SugarTvCard.isValidValue(value);
     }
 
+    /**
+     * Recover the sensor's polling interval from the gaps between its history
+     * entries.
+     *
+     * Take the SMALLEST gap, not the average or the median. Home Assistant only
+     * writes a history entry when the state actually changes, so a CGM that
+     * reports the same number twice leaves no entry and the gap around it comes
+     * out double. That error runs one way only: a missing entry can inflate a
+     * gap, never shrink one. The smallest observed gap is therefore the closest
+     * thing to the true cadence, and averaging would drag it upward on exactly
+     * the flat stretches where a stuck sensor most needs catching.
+     */
+    static cadenceFromHistory(timestampsMs) {
+        const sorted = [...new Set(timestampsMs)].sort((a, b) => a - b);
+        if (sorted.length < 2) return null;
+
+        let smallest = Infinity;
+        for (let i = 1; i < sorted.length; i++) {
+            const gap = sorted[i] - sorted[i - 1];
+            if (gap >= SugarTvCard.MIN_CADENCE_MS && gap < smallest) {
+                smallest = gap;
+            }
+        }
+        return Number.isFinite(smallest) ? smallest : null;
+    }
+
+    // The window after which a reading stops being trustworthy. Derived from
+    // the sensor's own cadence where history allows, so that "stale" means the
+    // same number of missed polls on a 1 minute sensor as on a 5 minute one.
+    _staleThresholdMs() {
+        const cadence = this._cadenceMs;
+        if (!cadence) return SugarTvCard.STALE_FALLBACK_MS;
+        return Math.min(
+            cadence * SugarTvCard.STALE_INTERVALS,
+            SugarTvCard.STALE_FALLBACK_MS,
+        );
+    }
+
     _isStale(timestamp) {
         if (
             !timestamp ||
@@ -795,7 +864,8 @@ class SugarTvCard extends LitElement {
         ) {
             return true;
         }
-        return Date.now() - new Date(timestamp).getTime() > 900000; // 15 minutes
+        const age = Date.now() - new Date(timestamp).getTime();
+        return age > this._staleThresholdMs();
     }
 
     _handleTap() {

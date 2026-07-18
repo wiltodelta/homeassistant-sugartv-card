@@ -13,7 +13,8 @@ One card and one config in two slots: it takes the shape it is given.
 - **Multi-sensor support** — Dexcom, Nightscout, LibreView, LibreLink, Carelink (auto-detected)
 - Displays: current glucose, delta from previous reading, trend direction, last update time, glucose prediction
 - Color-coded glucose zones (AGP/TIR standard thresholds)
-- Stale data indicator — card fades when data is older than 15 minutes
+- Stale data indicator — the card fades once three polls have been missed,
+  measured against the sensor's own update interval
 - Tap to open HA more-info dialog with history graph
 - Automatic local time format and unit support (mmol/L and mg/dL)
 - Adapts to the space it is given: a wide slot lays the reading out in a row, a
@@ -183,6 +184,25 @@ the card only trusts an age below the staleness threshold. Past it, the age and
 
 If your integration reports the measurement time under some other attribute of
 the glucose sensor, point the card at it with `timestamp_attribute`.
+
+#### When the card calls a reading stale
+
+The card dims once three polls have gone missing. Three of what depends on your
+sensor, so the card measures rather than assumes: it reads the gaps between your
+own readings in the recorder history and takes the smallest one as the update
+interval. A one minute CGM therefore dims after three minutes, a five minute one
+after fifteen.
+
+There is no setting for this, and the interval is not asked for. The card
+already reads history to compute the delta, so the answer is in data it holds.
+
+Two deliberate limits. It takes the smallest gap rather than an average, because
+Home Assistant writes no history entry when a reading repeats, and averaging
+would stretch the window on exactly the flat stretches where a stuck sensor most
+needs catching. And a measured interval can only shorten the window, never
+extend it past fifteen minutes: a live sensor that looks stale is a harmless
+failure, a dead one that looks live is not. With the recorder disabled, fifteen
+minutes is what you get.
 
 ### Glucose zone thresholds
 
