@@ -310,19 +310,118 @@ class SugarTvCard extends LitElement {
         };
     }
 
+    /**
+     * The language the card's own words are in, and the fallback for anything
+     * Home Assistant has no explicit preference about.
+     *
+     * Everything that renders a number or a time has to agree on this, and it
+     * used to be resolved in four places under three different rules. Two of
+     * them stopped at `config.locale` and fell through to the browser, so a
+     * Home Assistant running in German with no explicit locale drew the clock
+     * as 15:10 from its own language while the reading next to it read 8.1
+     * rather than 8,1, taking the decimal separator from the browser. One card,
+     * two conventions.
+     */
+    _locale() {
+        return (
+            this.config?.locale ||
+            this.hass?.locale?.language ||
+            this.hass?.language ||
+            undefined // let Intl pick the runtime default
+        );
+    }
+
+    /**
+     * Whether to draw the clock as AM/PM.
+     *
+     * The language does not decide this. Home Assistant has a Time format
+     * setting in each user's profile, and its default is "auto-detect from
+     * language", which is only a default: someone in the UK running Home
+     * Assistant in English is on `en`, and `en` alone means American English to
+     * Intl, so the card drew 03:12 PM at a user who had set 24 hours.
+     *
+     * Mirrors the frontend's own useAmPm, including its sniff: format a 22:00
+     * date and see whether a "10" comes out. That is a strange way to ask, but
+     * matching it is the point. A card that disagrees with the clock in the
+     * Home Assistant header is worse than one that is merely wrong.
+     */
+    _useAmPm() {
+        const format = this.hass?.locale?.time_format;
+        if (format === '12') return true;
+        if (format === '24') return false;
+
+        // 'system' asks the browser rather than the chosen language; anything
+        // else, including a missing setting, follows the language.
+        const probeLocale =
+            format === 'system'
+                ? undefined
+                : this.config?.locale || this._locale();
+        try {
+            return new Date('January 1, 2023 22:00:00')
+                .toLocaleString(probeLocale)
+                .includes('10');
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * The locale to format numbers against.
+     *
+     * Also a separate Home Assistant profile setting, and it does not name a
+     * language: it names a style, "1.234.567,89". Mirrors the frontend's
+     * numberFormatToLocale, which reaches for a language that happens to write
+     * numbers that way.
+     *
+     * A chosen style is read before `config.locale`, matching _useAmPm. One
+     * rule covers both: a format Home Assistant was explicitly told to use wins
+     * over a language tag, and `locale` decides everything left on auto. The
+     * alternative, letting `locale` win here but not for the clock, would draw
+     * a 24-hour clock beside an English decimal point on the same card.
+     */
+    _numberLocale() {
+        switch (this.hass?.locale?.number_format) {
+            case 'comma_decimal':
+                return ['en-US', 'en'];
+            case 'decimal_comma':
+                return ['de', 'es', 'it'];
+            case 'space_comma':
+                return ['fr', 'sv', 'cs'];
+            case 'quote_decimal':
+                return ['de-CH'];
+            // 'none' means plain digits with no grouping at all.
+            case 'none':
+                return 'en-US';
+            case 'system':
+                return undefined;
+            default:
+                return this._locale();
+        }
+    }
+
+    // Home Assistant's "none" number format means no thousands separator at
+    // all. Glucose readings never reach four digits, so this only shows up on
+    // a misconfigured sensor, but the setting is cheap to honour.
+    _groupingOption() {
+        return this.hass?.locale?.number_format === 'none'
+            ? { useGrouping: false }
+            : {};
+    }
+
     _getTrendDescriptions(unit) {
         const isMgdl = unit === SugarTvCard.UNITS.MGDL;
         const localize = getLocalizer(this.config, this.hass);
         const u = isMgdl ? localize('units.mgdl') : localize('units.mmoll');
-        const locale =
-            (this.config && this.config.locale) ||
-            (this.hass && this.hass.language) ||
-            'en';
 
+        // The number locale, not the language one. These are the same numbers
+        // the reading is written in, one line apart, so a profile asking for
+        // 1.234,56 has to reach the forecast too or the card shows 8.1 above
+        // "rise 1,7-2,5" and contradicts itself within one card.
         const nf = (val) =>
-            val.toLocaleString(locale, {
+            val.toLocaleString(this._numberLocale(), {
                 minimumFractionDigits: 1,
                 maximumFractionDigits: 1,
+                ...this._groupingOption(),
             });
 
         const formatMmol = (val1, val2) =>
@@ -743,16 +842,17 @@ class SugarTvCard extends LitElement {
             return localize('common.default_time');
         }
 
+        const locale = this._locale();
+
+        // hour12 has to be stated: left to Intl it follows the locale, which
+        // is exactly the assumption Home Assistant's own setting overrides.
         const options = {
             hour: '2-digit',
             minute: '2-digit',
+            hour12: this._useAmPm(),
         };
 
-        const locale =
-            (this.config && this.config.locale) ||
-            (this.hass && this.hass.language);
-
-        return new Date(timestamp).toLocaleTimeString(locale || [], options);
+        return new Date(timestamp).toLocaleTimeString(locale, options);
     }
 
     _calculateDelta() {
@@ -788,7 +888,7 @@ class SugarTvCard extends LitElement {
         }
 
         const delta = currentValue - previousValue;
-        const locale = this.config.locale || [];
+        const locale = this._locale();
         const isMmol = this._data.unit === SugarTvCard.UNITS.MMOLL;
 
         const roundedAbs = isMmol
@@ -797,7 +897,10 @@ class SugarTvCard extends LitElement {
         const formatOpts = isMmol
             ? { minimumFractionDigits: 1, maximumFractionDigits: 1 }
             : {};
-        const absFormatted = roundedAbs.toLocaleString(locale, formatOpts);
+        const absFormatted = roundedAbs.toLocaleString(this._numberLocale(), {
+            ...formatOpts,
+            ...this._groupingOption(),
+        });
 
         // Exact equality: drop the sign so "no change" is visually distinct
         // from sub-unit drift (＋0 / －0 still preserve direction).
@@ -892,12 +995,13 @@ class SugarTvCard extends LitElement {
             return localize('common.not_available');
         }
 
-        const locale = this.config.locale || [];
+        const locale = this._locale();
         const isMmol = this._data.unit === SugarTvCard.UNITS.MMOLL;
 
-        return numValue.toLocaleString(locale, {
+        return numValue.toLocaleString(this._numberLocale(), {
             minimumFractionDigits: isMmol ? 1 : 0,
             maximumFractionDigits: isMmol ? 1 : 0,
+            ...this._groupingOption(),
         });
     }
 

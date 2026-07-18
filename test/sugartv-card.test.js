@@ -522,6 +522,196 @@ describe('SugarTvCard', () => {
         });
     });
 
+    // ── one locale for the whole card ───────────────────────────────
+    describe('locale resolution', () => {
+        const mmolCard = (config, hass) => {
+            const card = createCard(config, hass);
+            card._data = {
+                ...card._getInitialDataState(),
+                unit: 'mmol/L',
+                value: '8.1',
+                previous_value: '7.6',
+                reading_time: new Date().toISOString(),
+                previous_ingest_time: new Date(
+                    Date.now() - 300000,
+                ).toISOString(),
+            };
+            return card;
+        };
+
+        /*
+         * The regression this exists for. The clock read the Home Assistant
+         * language while the number stopped at config.locale and fell through
+         * to the browser, so a German install with no explicit locale drew
+         * 15:10 next to 8.1 instead of 8,1.
+         */
+        it.each(['de', 'ru', 'fr'])(
+            'takes the decimal separator from the %s Home Assistant language',
+            (language) => {
+                const card = mmolCard({}, { language });
+
+                expect(card._formatValue('8.1')).toBe('8,1');
+                expect(card._calculateDelta()).toContain(',');
+            },
+        );
+
+        it('lets an explicit locale override the Home Assistant language', () => {
+            const card = mmolCard({ locale: 'en' }, { language: 'de' });
+
+            expect(card._formatValue('8.1')).toBe('8.1');
+        });
+
+        // Found by reviewing the diff, not by a failure: the forecast formatted
+        // its numbers against the language while the reading beside it used the
+        // number format, so one card could read 8.1 above "rise 1,7-2,5".
+        it('writes the forecast numbers the same way as the reading', () => {
+            const card = createCard(
+                {},
+                {
+                    language: 'en',
+                    locale: { language: 'en', number_format: 'decimal_comma' },
+                },
+            );
+            card._data = { ...card._getInitialDataState(), unit: 'mmol/L' };
+
+            const forecast =
+                card._getTrendDescriptions('mmol/L').rising.prediction;
+
+            expect(card._formatValue('8.1')).toBe('8,1');
+            expect(forecast).toContain('1,7');
+            expect(forecast).not.toContain('1.7');
+        });
+
+        it('formats the clock and the number against the same locale', () => {
+            const card = mmolCard({}, { language: 'de' });
+
+            // 24-hour clock and a decimal comma both mean "German".
+            expect(card._formatTime(new Date().toISOString())).not.toMatch(
+                /M$/,
+            );
+            expect(card._formatValue('8.1')).toBe('8,1');
+        });
+    });
+
+    /*
+     * Home Assistant carries a Time format and a Number format in each user's
+     * profile, separate from the language. The card used to read neither, so a
+     * user in the UK on `en` who had chosen 24 hours still got 03:12 PM: `en`
+     * alone means American English to Intl.
+     */
+    describe('the Home Assistant format settings', () => {
+        const at = (card, iso = '2023-01-01T15:12:00') =>
+            card._formatTime(new Date(iso).toISOString());
+
+        it.each([
+            ['12', true],
+            ['24', false],
+        ])(
+            'honours a time_format of %s over the language',
+            (format, isAmPm) => {
+                // German gives 24 hours on its own and American English gives 12,
+                // so each case here is the setting overriding the language rather
+                // than quietly agreeing with it.
+                const language = isAmPm ? 'de' : 'en-US';
+                const card = createCard(
+                    {},
+                    { language, locale: { language, time_format: format } },
+                );
+
+                expect(/[AP]M/.test(at(card))).toBe(isAmPm);
+            },
+        );
+
+        it('auto-detects from the language when no format is set', () => {
+            const german = createCard(
+                {},
+                { language: 'de', locale: { language: 'de' } },
+            );
+            const american = createCard(
+                {},
+                { language: 'en-US', locale: { language: 'en-US' } },
+            );
+
+            expect(at(german)).not.toMatch(/M$/);
+            expect(at(american)).toMatch(/M$/);
+        });
+
+        it('still works against a Home Assistant too old to send locale', () => {
+            expect(() => at(createCard({}, { language: 'de' }))).not.toThrow();
+        });
+
+        /*
+         * number_format names a style, not a language: someone reading Home
+         * Assistant in English can still ask for 1.234,56.
+         */
+        it.each([
+            ['comma_decimal', '8.1'],
+            ['decimal_comma', '8,1'],
+            ['space_comma', '8,1'],
+            ['none', '8.1'],
+        ])('honours a number_format of %s', (numberFormat, expected) => {
+            const card = createCard(
+                {},
+                {
+                    language: 'en',
+                    locale: { language: 'en', number_format: numberFormat },
+                },
+            );
+            card._data = { ...card._getInitialDataState(), unit: 'mmol/L' };
+
+            expect(card._formatValue('8.1')).toBe(expected);
+        });
+
+        it('drops the thousands separator when the format is none', () => {
+            const card = createCard(
+                {},
+                {
+                    language: 'en',
+                    locale: { language: 'en', number_format: 'none' },
+                },
+            );
+
+            expect(card._formatValue('1234')).toBe('1234');
+        });
+
+        /*
+         * One precedence rule for both, which is the whole point of pinning it:
+         * a format Home Assistant was explicitly told to use beats a language
+         * tag. Letting `locale` win for the number but not for the clock would
+         * put a 24-hour clock beside an English decimal point on one card.
+         */
+        it('keeps a chosen profile format ahead of an explicit locale', () => {
+            const card = createCard(
+                { locale: 'en-US' },
+                {
+                    language: 'de',
+                    locale: {
+                        language: 'de',
+                        time_format: '24',
+                        number_format: 'decimal_comma',
+                    },
+                },
+            );
+            card._data = { ...card._getInitialDataState(), unit: 'mmol/L' };
+
+            expect(card._formatValue('8.1')).toBe('8,1');
+            expect(at(card)).not.toMatch(/M$/);
+        });
+
+        // With the profile on auto, which is where it ships, `locale` is what
+        // decides. This is how an English install gets a 24-hour clock.
+        it('lets locale decide when the profile is left on auto', () => {
+            const card = createCard(
+                { locale: 'en-GB' },
+                { language: 'en', locale: { language: 'en' } },
+            );
+            card._data = { ...card._getInitialDataState(), unit: 'mmol/L' };
+
+            expect(at(card)).not.toMatch(/M$/);
+            expect(card._formatValue('8.1')).toBe('8.1');
+        });
+    });
+
     // ── staleness derived from the sensor's own cadence (#94, point 3) ──
     describe('cadenceFromHistory', () => {
         const MIN = 60 * 1000;

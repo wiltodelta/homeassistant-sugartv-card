@@ -103,7 +103,27 @@ for example, builds the id from your account username, so it is
 | `locale`              | string    | your HA language     | Formats the clock and the number, for example `en-GB` or `ru-RU`. YAML only.      |
 
 `glucose_trend` and `locale` are the two you have to write by hand; the rest are
-in the visual editor. The card's own text is available in English and Russian.
+in the visual editor.
+
+#### Where the clock format and the decimal separator come from
+
+The card takes both from Home Assistant, in this order.
+
+1. **Your Home Assistant profile**, if you have set Time format or Number format
+   there. Those are explicit choices about clocks and digits, so they win. Both
+   ship set to "auto-detect from language", in which case they defer.
+2. **The card's `locale`**, if you set one.
+3. **Your Home Assistant language**.
+
+The order matters for one common case. Home Assistant's language list has `en`
+and `en-GB`, and `en` on its own means American English to a browser, so a
+24-hour country running Home Assistant in plain English gets an AM/PM clock
+unless something says otherwise. Setting Time format to 24 hours in your profile
+is that something; `locale: en-GB` on the card is another.
+
+They are deliberately not separate card options. A card showing 15:12 beside 8.1
+is half German and half English, so the clock, the decimal separator and the
+digits are decided together or the card contradicts itself.
 
 ### The forecast line
 
