@@ -133,6 +133,11 @@ been checked by a native speaker, so corrections are genuinely welcome.
 `src/localize.js` holds all of it, one block per language, and
 `test/localize.test.js` will tell you if a key or a `{0}` slot goes missing.
 
+That covers the card face, the editor's own labels, and the card's name in the
+picker you add it from. The last two arrive without a Home Assistant object
+attached, so they read the language off the frontend directly; up to v0.12.0
+they were English whatever your language was.
+
 ### The forecast line
 
 `show_prediction` puts a line like "Expected to rise 30-45 mg/dL in 15 minutes"
