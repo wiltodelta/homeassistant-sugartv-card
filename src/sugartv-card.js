@@ -117,6 +117,12 @@ class SugarTvCard extends LitElement {
     // it: a wrong cadence must not let a dead sensor keep looking live.
     static STALE_FALLBACK_MS = 15 * 60 * 1000;
 
+    // Intervals a reading may be old before its time is worth reading. One
+    // missed poll is unremarkable, so up to here the time stays quiet and the
+    // number carries the card; past it the time comes up to full strength,
+    // ahead of the whole card dimming at STALE_INTERVALS (#94, point 2).
+    static FRESH_INTERVALS = 1;
+
     // No CGM reports faster than once a minute, so a shorter gap is two writes
     // of one reading rather than a cadence. Without this floor a single
     // duplicate would collapse the threshold and flag every reading stale.
@@ -202,6 +208,10 @@ class SugarTvCard extends LitElement {
                     selector: { boolean: {} },
                 },
                 {
+                    name: 'dim_fresh_time',
+                    selector: { boolean: {} },
+                },
+                {
                     name: 'color_thresholds',
                     selector: { boolean: {} },
                 },
@@ -275,6 +285,7 @@ class SugarTvCard extends LitElement {
                     timestamp_attribute: localize('editor.timestamp_attribute'),
                     show_prediction: localize('editor.show_prediction'),
                     relative_time: localize('editor.relative_time'),
+                    dim_fresh_time: localize('editor.dim_fresh_time'),
                     color_thresholds: localize('editor.color_thresholds'),
                     urgent_low: localize('editor.urgent_low'),
                     low: localize('editor.low'),
@@ -312,15 +323,19 @@ class SugarTvCard extends LitElement {
 
     /**
      * An age has to be redrawn as it grows, since nothing about the card
-     * changes when a minute passes. A clock reading does not, so the timer only
-     * runs when the age is what is on screen.
+     * changes when a minute passes. So does a time that brightens with age,
+     * even though its text never changes: the tier it sits in does. A plain
+     * clock needs neither, so the timer only runs for the two that do.
      *
      * Called from both connectedCallback and setConfig because their order is
      * not fixed: Lovelace configures a card before attaching it, the editor
      * reconfigures one already attached.
      */
     _syncAgeTicker() {
-        const wanted = Boolean(this.config?.relative_time && this.isConnected);
+        const wanted = Boolean(
+            (this.config?.relative_time || this.config?.dim_fresh_time) &&
+            this.isConnected,
+        );
         if (wanted === Boolean(this._ageTicker)) return;
 
         if (!wanted) {
@@ -1321,6 +1336,27 @@ class SugarTvCard extends LitElement {
         );
     }
 
+    /**
+     * Whether the reading is current enough that its time needs no attention.
+     *
+     * Scaled off the same cadence as staleness, so the two tiers keep their
+     * ratio on any sensor: one missed poll quiet, three missed polls stale.
+     */
+    _isFresh(timestamp) {
+        if (
+            !timestamp ||
+            timestamp === 'unknown' ||
+            timestamp === 'unavailable'
+        ) {
+            return false;
+        }
+        const age = Date.now() - new Date(timestamp).getTime();
+        const fresh =
+            (this._staleThresholdMs() * SugarTvCard.FRESH_INTERVALS) /
+            SugarTvCard.STALE_INTERVALS;
+        return age <= fresh;
+    }
+
     _isStale(timestamp) {
         if (
             !timestamp ||
@@ -1429,6 +1465,8 @@ class SugarTvCard extends LitElement {
         const prediction = trendInfo.prediction || '';
 
         const isStale = this._isStale(reading_time);
+        const quietTime =
+            this.config.dim_fresh_time === true && this._isFresh(reading_time);
         const zoneClass =
             this.config.color_thresholds !== false
                 ? this._getGlucoseZone(value)
@@ -1460,7 +1498,7 @@ class SugarTvCard extends LitElement {
             >
                 <div class="container">
                     <div class="line">
-                        <div class="time">
+                        <div class="time ${quietTime ? 'fresh' : ''}">
                             ${this._formatTime(reading_time)}
                         </div>
                         <div class="value">${this._formatValue(value)}</div>
