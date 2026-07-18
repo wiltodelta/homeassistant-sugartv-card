@@ -2271,6 +2271,28 @@ function resolveLanguage(tag) {
     return languages[base] || languages.en;
 }
 
+/**
+ * The language Home Assistant's own interface is running in.
+ *
+ * Two of the card's surfaces are reached without a hass, so both used to fall
+ * through to English: getConfigForm is static, and window.customCards is filled
+ * at module load, long before a hass exists. That left 14 of the card's 22
+ * strings unreadable in any of the 64 languages they are translated into.
+ *
+ * The root element is the way in. `home-assistant` is a real custom element
+ * holding the hass object, and the card picker reads a custom card's name and
+ * description as properties while it renders rather than when the entry is
+ * registered, so a getter is evaluated late enough to find one.
+ *
+ * Undefined is the honest answer when there is no frontend around it, which is
+ * every test and the demo page; getLocalizer falls back to English from there.
+ */
+export function frontendLanguage() {
+    if (typeof document === 'undefined') return undefined;
+    const hass = document.querySelector('home-assistant')?.hass;
+    return hass?.locale?.language || hass?.language;
+}
+
 export function getLocalizer(config, hass) {
     const lang = (config && config.locale) || (hass && hass.language) || 'en';
     const table = resolveLanguage(lang);

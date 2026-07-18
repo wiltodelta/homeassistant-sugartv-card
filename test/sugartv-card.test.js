@@ -791,6 +791,82 @@ describe('SugarTvCard', () => {
         });
     });
 
+    /*
+     * The two surfaces Home Assistant reaches without a hass. Both were English
+     * in every language until #101, and the translations for them were sitting
+     * in localize.js the whole time looking correct.
+     */
+    describe('localisation off a hass', () => {
+        const withFrontend = (language, run) => {
+            const previous = globalThis.document;
+            globalThis.document = {
+                querySelector: (sel) =>
+                    sel === 'home-assistant'
+                        ? { hass: { locale: { language } } }
+                        : null,
+            };
+            try {
+                return run();
+            } finally {
+                globalThis.document = previous;
+            }
+        };
+
+        it('translates the editor labels', () => {
+            const label = withFrontend('de', () =>
+                SugarTvCard.getConfigForm().computeLabel({
+                    name: 'relative_time',
+                }),
+            );
+
+            expect(label).toBe(
+                getLocalizer({ locale: 'de' }, {})('editor.relative_time'),
+            );
+            expect(label).not.toBe('Show reading age instead of the clock');
+        });
+
+        it('translates the expandable section title too', () => {
+            const form = withFrontend('de', () => SugarTvCard.getConfigForm());
+            const section = form.schema.find((f) => f.name === 'thresholds');
+
+            expect(section.title).toBe(
+                getLocalizer({ locale: 'de' }, {})('editor.thresholds_title'),
+            );
+        });
+
+        /*
+         * The load-bearing half. window.customCards is filled at module load,
+         * so a plain string would be resolved before Home Assistant has a
+         * language at all; only a property read at render time can be right.
+         */
+        it('resolves the picker entry when it is read, not when registered', () => {
+            const entry = window.customCards.find(
+                (c) =>
+                    c.type === 'custom:sugartv-card' ||
+                    c.type === 'sugartv-card',
+            );
+
+            const german = withFrontend('de', () => entry.description);
+            const french = withFrontend('fr', () => entry.description);
+
+            expect(german).toBe(
+                getLocalizer({ locale: 'de' }, {})('card.description'),
+            );
+            expect(french).toBe(
+                getLocalizer({ locale: 'fr' }, {})('card.description'),
+            );
+            expect(german).not.toBe(french);
+        });
+
+        it('falls back to English when the frontend has no language yet', () => {
+            const label = SugarTvCard.getConfigForm().computeLabel({
+                name: 'relative_time',
+            });
+
+            expect(label).toBe('Show reading age instead of the clock');
+        });
+    });
+
     describe('the age ticker', () => {
         // Nothing about the card changes as a minute passes, so without a timer
         // the age would sit frozen at whatever it read when the value arrived.
