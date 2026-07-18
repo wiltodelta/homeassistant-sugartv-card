@@ -218,7 +218,7 @@ the glucose sensor, point the card at it with `timestamp_attribute`.
 On a wall display a clock reading is one subtraction away from the thing you
 actually want to know, and next to a real clock it reads as a second clock. Set
 `relative_time: true` and the card shows how old the reading is in that spot
-instead: "14 min. ago", "14 мин. назад", "vor 14 Min.". Under a minute it reads
+instead: "14 min ago", "14 мин назад", "vor 14 Min". Under a minute it reads
 "now", past an hour it counts in hours.
 
 It is one or the other, not both. Every word comes from the browser's own locale
@@ -230,7 +230,7 @@ rather than carrying a full stop in some languages and not others. Hebrew is
 spelled out instead, since the mark it abbreviates with is what makes the word
 an abbreviation at all.
 
-Languages differ a lot in how long this runs: "14 min. ago" fits anywhere, "14
+Languages differ a lot in how long this runs: "14 min ago" fits anywhere, "14
 perccel ezelőtt" is nearly three times the width of the clock it replaces. Since
 the line cannot wrap, the card measures the phrase and scales it down when it
 would not fit beside the reading. The time gives way rather than the number,
