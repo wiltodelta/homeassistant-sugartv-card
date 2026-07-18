@@ -89,6 +89,32 @@ check Developer Tools, States and match the patterns in the table above. Dexcom,
 for example, builds the id from your account username, so it is
 `sensor.<username>_glucose_value`, with no `dexcom_` prefix.
 
+### Layout
+
+There is no layout option, on purpose. The card reads the shape of the slot it
+is given and picks the arrangement that fills it, so it stays right when you
+rearrange a dashboard instead of needing to be told again.
+
+| Slot              | Layout                                     |
+| ----------------- | ------------------------------------------ |
+| Wider than 5:3    | Row: time, reading and trend on one line   |
+| Narrower than 5:3 | Column: the reading stacked over its trend |
+
+The type scales to fill either one, which is why there are no font sizes to
+set. 5:3 is not a taste call: it is the point where the column starts giving a
+larger reading than the row.
+
+**To get the vertical layout**, give the card a slot taller than it is wide:
+
+- **Sections view** is where this works, because it gives the card a definite
+  size. The card starts at 6 columns by 1 row, which is wide and short; open its
+  layout options and raise the rows or drop the columns until the slot is
+  narrower than 5:3, and it turns vertical. It goes down to 3 columns.
+- **Masonry view** never sets a card height, so the card keeps its own
+  proportions there and always lays out as a row.
+- **Panel and full-screen views** follow the same rule as any other slot: a tall
+  narrow panel gets the column, a wide one gets the row.
+
 ### Reading time
 
 The time on the card is when the reading was last confirmed, and it drives the
