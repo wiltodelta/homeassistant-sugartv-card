@@ -540,7 +540,7 @@ describe('SugarTvCard', () => {
         it('shows the age when the option is on', () => {
             const card = createCard({ relative_time: true, locale: 'en' });
 
-            expect(card._formatTime(ago(2 * MIN))).toBe('2 min. ago');
+            expect(card._formatTime(ago(2 * MIN))).toBe('2 min ago');
         });
 
         it('says now under a minute, rather than "in 0 minutes"', () => {
@@ -561,7 +561,7 @@ describe('SugarTvCard', () => {
         it('switches to hours once minutes stop being readable', () => {
             const card = createCard({ relative_time: true, locale: 'en' });
 
-            expect(card._formatTime(ago(150 * MIN))).toBe('3 hr. ago');
+            expect(card._formatTime(ago(150 * MIN))).toBe('3 hr ago');
         });
 
         /*
@@ -578,14 +578,14 @@ describe('SugarTvCard', () => {
          * narrow slot; these hold inside 1.4x.
          */
         it.each([
-            ['en', '2 min. ago', '3 hr. ago'],
-            ['de', 'vor 2 Min.', 'vor 3 Std.'],
+            ['en', '2 min ago', '3 hr ago'],
             ['ja', '2 分前', '3 時間前'],
             ['uk', '2 хв тому', '3 год тому'],
-            ['ru', '2 мин. назад', '3 ч назад'],
+            ['ru', '2 мин назад', '3 ч назад'],
             ['fr', 'il y a 2 min', 'il y a 3 h'],
             ['sv', 'för 2 min sen', 'för 3 tim sedan'],
             ['nb', 'for 2 min siden', 'for 3 t siden'],
+            ['nl', '2 min geleden', '3 uur geleden'],
         ])('says how long ago, in %s', (locale, minutes, hours) => {
             const card = createCard({ relative_time: true, locale });
 
@@ -649,9 +649,38 @@ describe('SugarTvCard', () => {
         it('drops the tense only where every phrasing is signed', () => {
             expect(SugarTvCard.formatAgo('gsw', 3, 'minute')).toBe('3 min');
             expect(SugarTvCard.formatAgo('ru', 3, 'minute')).toBe(
-                '3 мин. назад',
+                '3 мин назад',
             );
         });
+
+        /*
+         * The stop after an abbreviated unit is dropped, since "14 min ago" is
+         * the ordinary form and Russian's own standard writes "мин" bare. Not
+         * everywhere: in German and its neighbours the abbreviation is a
+         * clipped word rather than a symbol, and "vor 14 Min" misspells it.
+         */
+        it.each([
+            ['en', '14 min ago'],
+            ['ru', '14 мин назад'],
+            ['nl', '14 min geleden'],
+            ['tr', '14 dk önce'],
+        ])('drops the abbreviation stop in %s', (locale, expected) => {
+            expect(SugarTvCard.formatAgo(locale, 14, 'minute')).toBe(expected);
+        });
+
+        it.each([
+            ['de', 'vor 14 Min.'],
+            ['is', 'fyrir 14 mín.'],
+            ['el', 'πριν από 14 λεπ.'],
+            ['lb', 'viru(n) 14 Min.'],
+        ])(
+            'keeps the stop where it spells the word, in %s',
+            (locale, expected) => {
+                expect(SugarTvCard.formatAgo(locale, 14, 'minute')).toBe(
+                    expected,
+                );
+            },
+        );
 
         it.each([
             ['en', true],

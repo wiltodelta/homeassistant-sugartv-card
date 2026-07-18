@@ -98,7 +98,7 @@ for example, builds the id from your account username, so it is
 | `glucose_trend`       | entity id | auto-detected        | Point at the trend entity when the card cannot find it. YAML only.                |
 | `timestamp_attribute` | string    | auto-detected        | Attribute holding the measurement time, for an integration not listed above.      |
 | `show_prediction`     | boolean   | `true`               | The line of text under the reading.                                               |
-| `relative_time`       | boolean   | `false`              | Show the reading's age ("14 min. ago") in place of the clock.                     |
+| `relative_time`       | boolean   | `false`              | Show the reading's age ("14 min ago") in place of the clock.                      |
 | `color_thresholds`    | boolean   | `true`               | Colour the reading by zone.                                                       |
 | `thresholds`          | object    | AGP/TIR for the unit | `urgent_low`, `low`, `high`, `urgent_high`, in whatever unit your sensor reports. |
 | `locale`              | string    | your HA language     | Formats the clock and the number, for example `en-GB` or `ru-RU`. YAML only.      |
@@ -224,7 +224,9 @@ instead: "14 min. ago", "14 мин. назад", "vor 14 Min.". Under a minute i
 It is one or the other, not both. Every word comes from the browser's own locale
 data rather than from anything the card ships, so it is right in every language
 Home Assistant runs in, and it is the same phrasing Home Assistant uses
-elsewhere in its interface.
+elsewhere in its interface. The full stop that CLDR puts after an abbreviated
+unit is dropped, since "14 min ago" is the ordinary form, except in the handful
+of languages where the abbreviation is a clipped word and the stop spells it.
 
 Languages differ a lot in how long this runs: "14 min. ago" fits anywhere, "14
 perccel ezelőtt" is nearly three times the width of the clock it replaces. Since

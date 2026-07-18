@@ -1111,7 +1111,7 @@ class SugarTvCard extends LitElement {
     }
 
     /**
-     * "3 min. ago" in the language's own words.
+     * "3 min ago" in the language's own words.
      *
      * The tensed phrasing, not a bare "3 min", because this replaces a
      * timestamp on a card full of numbers and a count with no tense reads as a
@@ -1138,16 +1138,45 @@ class SugarTvCard extends LitElement {
                     style,
                 }).format(-amount, unit);
                 // ASCII hyphen, U+2212 minus, U+2013 en dash.
-                if (!/^[-−–+]/.test(text.trim())) return text;
+                if (!/^[-−–+]/.test(text.trim())) {
+                    return SugarTvCard.trimAbbreviationDots(locale, text);
+                }
             }
-            return new Intl.NumberFormat(locale || undefined, {
-                style: 'unit',
-                unit,
-                unitDisplay: 'short',
-            }).format(amount);
+            return SugarTvCard.trimAbbreviationDots(
+                locale,
+                new Intl.NumberFormat(locale || undefined, {
+                    style: 'unit',
+                    unit,
+                    unitDisplay: 'short',
+                }).format(amount),
+            );
         } catch (e) {
             return null;
         }
+    }
+
+    /**
+     * Drop the full stop CLDR puts after an abbreviated unit, so the card reads
+     * "14 min ago" rather than "14 min. ago".
+     *
+     * 26 of the 64 languages carry one. In most it marks a unit symbol and is
+     * optional: Russian's own standard writes "мин" without it, and "14 min
+     * ago" is the ordinary English form.
+     *
+     * DOTTED_ABBREVIATIONS is the exception list. In German, Luxembourgish,
+     * Icelandic and Greek the abbreviation is a clipped word rather than a
+     * symbol, and the stop is part of its spelling: "vor 14 Min" is a
+     * misspelling in a way "14 min ago" is not. Those keep theirs.
+     */
+    static DOTTED_ABBREVIATIONS = ['de', 'gsw', 'lb', 'is', 'el'];
+
+    static trimAbbreviationDots(locale, text) {
+        const base = String(locale || 'en')
+            .split('-')[0]
+            .toLowerCase();
+        if (SugarTvCard.DOTTED_ABBREVIATIONS.includes(base)) return text;
+        // Only a stop that ends a word, never one inside a number.
+        return text.replace(/\.(?=\s|$)/g, '');
     }
 
     _calculateDelta() {
