@@ -126,6 +126,13 @@ They are deliberately not separate card options. A card showing 15:12 beside 8.1
 is half German and half English, so the clock, the decimal separator and the
 digits are decided together or the card contradicts itself.
 
+The card is translated into all 64 languages Home Assistant ships, and a test
+fails when Home Assistant adds one the card has not caught up with. Only English
+and Russian are maintainer-written; the rest are machine-assisted and have not
+been checked by a native speaker, so corrections are genuinely welcome.
+`src/localize.js` holds all of it, one block per language, and
+`test/localize.test.js` will tell you if a key or a `{0}` slot goes missing.
+
 ### The forecast line
 
 `show_prediction` puts a line like "Expected to rise 30-45 mg/dL in 15 minutes"
