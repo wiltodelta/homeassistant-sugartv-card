@@ -1333,6 +1333,31 @@ class SugarTvCard extends LitElement {
         return age > this._staleThresholdMs();
     }
 
+    /**
+     * The trend in words, for the screen reader.
+     *
+     * This used to print the card's internal key with the underscores taken
+     * out, so a Russian or Japanese user heard "rising quickly" in English. The
+     * key was never a translation, it was an identifier that happened to read
+     * as English.
+     *
+     * Home Assistant already has these seven, translated by its own
+     * translators, under the Dexcom integration's glucose trend sensor. Asking
+     * for them costs nothing and keeps the card saying what the rest of Home
+     * Assistant says about the same sensor. The humanised key remains the
+     * fallback, for an install without that integration's strings loaded.
+     */
+    static TREND_STATE_KEY =
+        'component.dexcom.entity.sensor.glucose_trend.state.';
+
+    _trendLabel(trend) {
+        if (!trend || trend === 'unknown') return '';
+        const translated = this.hass?.localize?.(
+            SugarTvCard.TREND_STATE_KEY + trend,
+        );
+        return translated || trend.replace(/_/g, ' ');
+    }
+
     _handleTap() {
         const entityId = this.config.glucose_value;
         if (!entityId) return;
@@ -1413,10 +1438,13 @@ class SugarTvCard extends LitElement {
             .filter(Boolean)
             .join(' ');
 
+        const localize = getLocalizer(this.config, this.hass);
         const ariaLabel = [
             this._formatValue(value),
-            unit,
-            trend && trend !== 'unknown' ? trend.replace(/_/g, ' ') : '',
+            unit === SugarTvCard.UNITS.MMOLL
+                ? localize('units.mmoll')
+                : localize('units.mgdl'),
+            this._trendLabel(trend),
             this._calculateDelta(),
         ]
             .filter(Boolean)

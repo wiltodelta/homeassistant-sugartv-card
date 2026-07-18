@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import haLanguages from './ha-languages.json';
+import { getLocalizer } from '../src/localize.js';
 
 // ── Mock LitElement before importing the card ──────────────────────────
 vi.mock('lit', () => {
@@ -1679,5 +1680,66 @@ describe('SugarTvCard', () => {
                 expect(SugarTvCard.TREND_MAP[t]).toBeDefined();
             }
         });
+    });
+});
+
+/*
+ * The screen-reader label. It is user-visible text that never went through the
+ * translation file, so the review of that file could not have caught it: the
+ * trend came out as the card's internal key with the underscores removed, which
+ * reads as English by accident rather than by translation.
+ */
+describe('the screen-reader label', () => {
+    const cardWith = (hass = {}) => {
+        const card = new SugarTvCard();
+        card.hass = { language: 'ru', states: {}, ...hass };
+        card.config = { glucose_value: 'sensor.jane_glucose_value' };
+        card._data = {
+            ...card._getInitialDataState(),
+            unit: 'mmol/L',
+            value: '8.1',
+        };
+        return card;
+    };
+
+    it('asks Home Assistant for the trend, which it already translates', () => {
+        const localize = vi.fn(() => 'Быстро растёт');
+        const card = cardWith({ localize });
+
+        expect(card._trendLabel('rising_quickly')).toBe('Быстро растёт');
+        expect(localize).toHaveBeenCalledWith(
+            'component.dexcom.entity.sensor.glucose_trend.state.rising_quickly',
+        );
+    });
+
+    // An install without the Dexcom strings loaded gets nothing back.
+    it('falls back to the humanised key when that returns nothing', () => {
+        const card = cardWith({ localize: () => '' });
+
+        expect(card._trendLabel('rising_quickly')).toBe('rising quickly');
+    });
+
+    it('survives a Home Assistant that has no localize at all', () => {
+        const card = cardWith({});
+
+        expect(card._trendLabel('falling')).toBe('falling');
+    });
+
+    it('says nothing rather than "unknown" when the trend is unknown', () => {
+        const card = cardWith({ localize: () => 'x' });
+
+        expect(card._trendLabel('unknown')).toBe('');
+        expect(card._trendLabel(null)).toBe('');
+    });
+
+    // The unit was read straight off the sensor, so a Russian card announced
+    // "mmol/L" while the rest of it spoke Russian.
+    it('announces the unit in the local language', () => {
+        const card = cardWith({});
+
+        expect(card._formatValue('8.1')).toBe('8,1');
+        expect(getLocalizer(card.config, card.hass)('units.mmoll')).toBe(
+            'ммоль/л',
+        );
     });
 });
