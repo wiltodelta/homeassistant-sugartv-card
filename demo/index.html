@@ -35,7 +35,6 @@
             }
             .demo-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(560px, 1fr));
                 gap: 32px;
             }
             .demo-card {
@@ -45,9 +44,27 @@
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
             sugartv-card {
+                display: block;
+            }
+            /*
+             * The two shapes a dashboard actually hands the card. The card has
+             * no layout setting: it reads the box and picks the orientation, so
+             * these are container sizes, not card options.
+             */
+            .demo-grid.horizontal {
+                grid-template-columns: repeat(auto-fill, minmax(560px, 1fr));
+            }
+            .demo-grid.horizontal sugartv-card {
                 width: 100%;
                 height: 200px;
-                display: block;
+            }
+            .demo-grid.vertical {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            }
+            .demo-grid.vertical sugartv-card {
+                width: 240px;
+                height: 360px;
+                margin: 0 auto;
             }
         </style>
     </head>
@@ -66,10 +83,15 @@
                     <option value="mg/dL">mg/dL</option>
                     <option value="mmol/L">mmol/L</option>
                 </select>
+                <label for="layout-select">Layout:</label>
+                <select id="layout-select">
+                    <option value="horizontal">Horizontal (wide slot)</option>
+                    <option value="vertical">Vertical (tall slot)</option>
+                </select>
                 <label for="prediction-toggle">Show Prediction:</label>
                 <input type="checkbox" id="prediction-toggle" checked />
             </div>
-            <div class="demo-grid" id="card-grid">
+            <div class="demo-grid horizontal" id="card-grid">
                 <!-- All cards will be dynamically injected here -->
             </div>
         </div>
@@ -78,7 +100,8 @@
         <script type="module" src="/dist/sugartv-card.js"></script>
         <script>
             // --- Helper Functions ---
-            function createHass(value, trend, unit, date) {
+            function createHass(value, trend, unit, date, prev) {
+                const curSec = Math.floor(date.getTime() / 1000);
                 return {
                     states: {
                         'sensor.dexcom_glucose_value': {
@@ -88,12 +111,33 @@
                         },
                         'sensor.dexcom_glucose_trend': { state: trend },
                     },
+                    // The card reads the previous reading from the history
+                    // WebSocket API, so the mock has to answer callWS or the
+                    // delta never resolves and shows the waiting clock.
+                    callWS: async ({ entity_ids }) => ({
+                        [entity_ids[0]]: [
+                            {
+                                s: String(prev === undefined ? value : prev),
+                                lu: curSec - 300,
+                            },
+                            { s: String(value), lu: curSec },
+                        ],
+                    }),
                 };
             }
+            // A reading five minutes earlier, so scenarios show a real delta.
+            function previousOf(value, unit) {
+                const n = parseFloat(value);
+                if (isNaN(n)) return value; // unavailable stays unavailable
+                return unit === 'mg/dL' ? n - 5 : (n - 0.3).toFixed(1);
+            }
+
+            // Lovelace order: setConfig runs before hass is assigned. Keep it
+            // that way here so the demo exercises the path a dashboard takes.
             function setupCard(card, config, hass) {
                 if (!card) return;
-                card.hass = hass;
                 card.setConfig(config);
+                card.hass = hass;
             }
             function setupCardWithDelta(
                 card,
@@ -101,13 +145,11 @@
                 { val1, val2, trend, unit },
             ) {
                 if (!card) return;
-                card.setConfig(config);
-                const time1 = new Date(),
-                    time2 = new Date(time1.getTime() + 300000);
-                card.hass = createHass(val1, trend, unit, time1);
-                setTimeout(() => {
-                    card.hass = createHass(val2, trend, unit, time2);
-                }, 100);
+                setupCard(
+                    card,
+                    config,
+                    createHass(val2, trend, unit, new Date(), val1),
+                );
             }
 
             // --- Main Render Function ---
@@ -308,6 +350,7 @@
                                 scenario.trend,
                                 selectedUnit,
                                 staleDate,
+                                previousOf(value, selectedUnit),
                             ),
                         );
                     } else {
@@ -330,6 +373,7 @@
                                 scenario.trend,
                                 selectedUnit,
                                 new Date(),
+                                previousOf(value, selectedUnit),
                             ),
                         );
                     }
@@ -347,8 +391,20 @@
                 document
                     .getElementById('locale-select')
                     .addEventListener('change', renderAllCards);
+                document
+                    .getElementById('layout-select')
+                    .addEventListener('change', applyLayout);
+                applyLayout();
                 renderAllCards();
             });
+
+            // Only the container's shape changes; the card decides the rest.
+            function applyLayout() {
+                const mode = document.getElementById('layout-select').value;
+                const grid = document.getElementById('card-grid');
+                grid.classList.toggle('horizontal', mode === 'horizontal');
+                grid.classList.toggle('vertical', mode === 'vertical');
+            }
         </script>
     </body>
 </html>

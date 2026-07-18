@@ -52,6 +52,17 @@ class SugarTvCard extends LitElement {
         return foreign ? {} : thresholds;
     }
 
+    // Must match the stylesheet: .value is sized at 20u and .container is
+    // padded by 5u a side. _measureValueWidth uses both to turn a measured
+    // pixel width back into units.
+    static VALUE_UNITS = 20;
+    static PADDING_UNITS = 5;
+
+    // The longest reading each unit can render: "400" and "22.2". The width
+    // budget is sized for these so the number keeps one size across readings.
+    static WIDEST_MGDL_CHARS = 3;
+    static WIDEST_MMOL_CHARS = 4;
+
     // Set by both core glucose integrations, and by nothing else in core.
     static GLUCOSE_DEVICE_CLASS = 'blood_glucose_concentration';
 
@@ -403,6 +414,65 @@ class SugarTvCard extends LitElement {
         if (changedProperties.has('hass') || changedProperties.has('config')) {
             this._updateData();
         }
+    }
+
+    updated() {
+        this._measureValueWidth();
+    }
+
+    /*
+     * The column sizes --u from a width budget, and a budget wide enough for the
+     * widest reading anyone might see wastes about a fifth of the width on an
+     * ordinary mg/dL number. Measuring is the only way to know the real figure:
+     * it depends on the font and the theme, neither of which CSS can be asked
+     * about, and hard-coding a per-character constant is exactly the kind of
+     * magic number that keeps going stale.
+     *
+     * Text width scales linearly with font-size, so width-per-unit is a property
+     * of the string alone. One measurement gives it and the budget follows: a
+     * new --u changes the measured width and the font-size by the same factor,
+     * so the ratio comes out identical and nothing oscillates.
+     *
+     * The budget is sized for the widest reading the CURRENT UNIT can produce,
+     * not for the reading on screen. Sizing it per reading would fill the card
+     * slightly better, but the number would jump a quarter of its size the
+     * moment a reading crossed 99 to 100, which is the same restlessness
+     * tabular figures were added to remove.
+     */
+    _measureValueWidth() {
+        const wrapper = this.renderRoot?.querySelector?.('.wrapper');
+        const value = this.renderRoot?.querySelector?.('.value');
+        if (!wrapper || !value) return;
+
+        const text = value.textContent?.trim();
+        if (!text) return;
+
+        // .value is defined as 20u, which is how --u is recovered: the custom
+        // property itself reads back as the unresolved min() expression.
+        const fontSize = parseFloat(getComputedStyle(value).fontSize);
+        const width = value.getBoundingClientRect().width;
+        if (!fontSize || !width) return;
+
+        // Tabular figures give every glyph the same advance, so a per-character
+        // width taken from whatever is on screen holds for any other reading.
+        const perChar =
+            width / text.length / (fontSize / SugarTvCard.VALUE_UNITS);
+        const widest =
+            this._data.unit === SugarTvCard.UNITS.MMOLL
+                ? SugarTvCard.WIDEST_MMOL_CHARS
+                : SugarTvCard.WIDEST_MGDL_CHARS;
+        const widthInUnits = perChar * widest;
+        if (!Number.isFinite(widthInUnits) || widthInUnits <= 0) return;
+
+        // Container padding is 5u a side, plus a unit of slack so a subpixel
+        // measurement can never push the glyphs into the padding.
+        const budget =
+            Math.ceil((widthInUnits + 2 * SugarTvCard.PADDING_UNITS + 1) * 10) /
+            10;
+        if (budget === this._valueWidthBudget) return;
+
+        this._valueWidthBudget = budget;
+        wrapper.style.setProperty('--tall-w', String(budget));
     }
 
     _updateData() {
@@ -825,21 +895,23 @@ class SugarTvCard extends LitElement {
                 aria-label="${ariaLabel}"
             >
                 <div class="container">
-                    <div class="main-row">
+                    <div class="line">
                         <div class="time">
                             ${this._formatTime(reading_time)}
                         </div>
                         <div class="value">${this._formatValue(value)}</div>
-                        <div class="trend">
-                            <ha-icon icon="${trendIcon}"></ha-icon>
-                        </div>
-                        <div class="delta">
-                            ${
-                                this._calculateDelta() ||
-                                html`<ha-icon
-                                    icon="mdi:progress-clock"
-                                ></ha-icon>`
-                            }
+                        <div class="tail">
+                            <div class="trend" data-icon="${trendIcon}">
+                                <ha-icon icon="${trendIcon}"></ha-icon>
+                            </div>
+                            <div class="delta">
+                                ${
+                                    this._calculateDelta() ||
+                                    html`<ha-icon
+                                        icon="mdi:progress-clock"
+                                    ></ha-icon>`
+                                }
+                            </div>
                         </div>
                     </div>
                     ${

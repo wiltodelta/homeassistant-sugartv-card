@@ -56,6 +56,28 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
   a safe failure (live sensor looks stale) into an unsafe one (dead sensor
   looks live). The fix belongs upstream: `pydexcom` already exposes
   `GlucoseReading.datetime`, and the integration drops it.
+- **A glyph's box is not its ink, and the eye measures ink.** Every spacing
+  complaint on this card traced back to this, never to the margins. Three
+  offsets, all neutralised in the stylesheet: a font reserves room above the cap
+  line and below the baseline, so the descent under a big number read as double
+  the gap above it (`text-box: trim-both cap alphabetic`); proportional digits
+  have uneven side bearings, so "145" leans 1.8px right of centre and "111"
+  4.9px left, which reads as the time being off-centre and shifted the number on
+  every new reading (`font-variant-numeric: tabular-nums`); an MDI glyph inks
+  about two thirds of its box, and the fraction is per-icon, so plain arrows,
+  double chevrons and the help circle each carry their own measured `--icon-trim`.
+  Measure ink, not boxes: `getBoundingClientRect()` on the SVG `path` for icons,
+  `measureText().actualBoundingBox*` for text. Equal box gaps prove nothing.
+- **Width-per-unit is scale-invariant, so one measurement sizes the type.** The
+  column budget has to know how wide a reading renders, which depends on the
+  font and theme; CSS cannot ask. Text width scales linearly with font-size, so
+  `width / --u` is a property of the string alone: measure once, set the budget,
+  and a new `--u` changes measurement and font-size by the same factor, so it
+  cannot oscillate. Recover `--u` from `.value`'s font-size (it is 20u) because
+  the custom property reads back as the unresolved `min()` expression. Size the
+  budget for the widest string the CURRENT UNIT allows, not the reading on
+  screen: per-reading fills marginally better but jumps the number a quarter of
+  its size crossing 99 to 100.
 - **Sections view: row height 56px, gap 8px, so `rows: N` is `N*64-8` px.** The
   height is only definite when `getGridOptions()` returns a numeric `rows`.
   Masonry never sets a card height, so `cqh`/`height: 100%` do not resolve

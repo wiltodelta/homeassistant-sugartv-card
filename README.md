@@ -16,7 +16,9 @@ A custom Lovelace card for Home Assistant that displays CGM (Continuous Glucose 
 - Stale data indicator — card fades when data is older than 15 minutes
 - Tap to open HA more-info dialog with history graph
 - Automatic local time format and unit support (mmol/L and mg/dL)
-- Responsive card sizing
+- Adapts to the space it is given: a wide slot lays the reading out in a row, a
+  tall or square one stacks it into a column, and the type scales to fill either.
+  No layout option and no font sizes to set.
 - Visual configuration editor
 
 ## Supported integrations
