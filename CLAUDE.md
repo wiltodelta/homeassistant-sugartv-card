@@ -11,6 +11,16 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
 
 ## Home Assistant facts worth not re-deriving
 
+- **Lovelace calls `setConfig` before it assigns `hass`, so nothing about the
+  entity is knowable there.** Anything derived from the entity's state or
+  attributes at config time is a guess. Deriving the unit there and baking the
+  matching thresholds into the config meant a mmol card carried mg/dL numbers
+  for good, so 8.1 read as urgent low and a dangerous 14.0 read as urgent low
+  too. Resolve unit-dependent defaults when the value is read, not when the
+  config is normalized, and treat thresholds that exactly equal another unit's
+  defaults as a stale guess rather than a choice. The test helper hid this for
+  years by assigning `card.config` directly instead of going through
+  `setConfig`; two tests even asserted the broken behaviour.
 - **Entity ids come from an integration's entity NAMES, not its internal keys.**
   Carelink's `last_sg_mgdl` key is published as "Last glucose level mg/dl", so
   the entity is `sensor.*last_glucose_level_mg_dl`. Trend auto-detection was

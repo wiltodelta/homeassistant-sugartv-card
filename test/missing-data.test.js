@@ -1288,16 +1288,29 @@ describe('Missing data scenarios', () => {
     // 18. setConfig with sensor that doesn't exist yet
     // ────────────────────────────────────────────────────────────────
     describe('setConfig before hass is set', () => {
-        it('sets default mg/dL thresholds when hass is not yet available', () => {
+        it('leaves thresholds unset when hass is not yet available', () => {
             const card = new SugarTvCard();
-            // hass not set yet
+            // hass not set yet, so the unit is unknown. Baking mg/dL numbers
+            // here is what made a mmol card read every value as urgent low.
             card.setConfig({ glucose_value: 'sensor.test' });
-            expect(card.config.thresholds).toEqual({
-                urgent_low: 54,
-                low: 70,
-                high: 180,
-                urgent_high: 250,
-            });
+            expect(card.config.thresholds).toBeUndefined();
+        });
+
+        it('still zones a mmol entity correctly once hass arrives', () => {
+            const card = new SugarTvCard();
+            card.setConfig({ glucose_value: 'sensor.test' });
+            card.hass = {
+                states: {
+                    'sensor.test': {
+                        state: '8.1',
+                        attributes: { unit_of_measurement: 'mmol/L' },
+                    },
+                },
+            };
+            card._data = card._getInitialDataState();
+            card._data.unit = 'mmol/L';
+            expect(card._getGlucoseZone('8.1')).toBe('');
+            expect(card._getGlucoseZone('14.0')).toBe('zone-urgent-high');
         });
 
         it('does not throw when hass.states is undefined', () => {

@@ -558,6 +558,72 @@ describe('SugarTvCard', () => {
         });
     });
 
+    // ── zone thresholds vs the entity's unit ────────────────────────
+    // Lovelace calls setConfig before it assigns hass, so the unit is not
+    // knowable while the config is being normalized. Defaults must therefore
+    // follow the unit at read time, or every in-range mmol reading is compared
+    // against mg/dL numbers and paints the card as urgent low.
+    describe('_getGlucoseZone default thresholds follow the unit', () => {
+        const ENTITY = 'sensor.jane_glucose_value';
+        const mmolHass = {
+            language: 'en',
+            states: {
+                [ENTITY]: {
+                    state: '8.1',
+                    attributes: { unit_of_measurement: 'mmol/L' },
+                },
+            },
+        };
+
+        function configuredCard(hassBeforeConfig) {
+            const card = new SugarTvCard();
+            if (hassBeforeConfig) card.hass = mmolHass;
+            card.setConfig({ glucose_value: ENTITY });
+            if (!hassBeforeConfig) card.hass = mmolHass;
+            card._data = card._getInitialDataState();
+            card._data.unit = 'mmol/L';
+            return card;
+        }
+
+        it('an in-range mmol reading is not a zone when hass arrives after setConfig', () => {
+            const card = configuredCard(false);
+            expect(card._getGlucoseZone('8.1')).toBe('');
+        });
+
+        it('an in-range mmol reading is not a zone when hass arrives first', () => {
+            const card = configuredCard(true);
+            expect(card._getGlucoseZone('8.1')).toBe('');
+        });
+
+        it('still flags a genuinely low mmol reading', () => {
+            const card = configuredCard(false);
+            expect(card._getGlucoseZone('2.5')).toBe('zone-urgent-low');
+        });
+
+        it('still flags a genuinely high mmol reading', () => {
+            const card = configuredCard(false);
+            expect(card._getGlucoseZone('14.0')).toBe('zone-urgent-high');
+        });
+
+        it('an explicit threshold from the user still wins', () => {
+            const card = new SugarTvCard();
+            card.setConfig({
+                glucose_value: ENTITY,
+                thresholds: {
+                    urgent_low: 4.0,
+                    low: 4.5,
+                    high: 9,
+                    urgent_high: 12,
+                },
+            });
+            card.hass = mmolHass;
+            card._data = card._getInitialDataState();
+            card._data.unit = 'mmol/L';
+            expect(card._getGlucoseZone('3.5')).toBe('zone-urgent-low');
+            expect(card._getGlucoseZone('9.5')).toBe('zone-high');
+        });
+    });
+
     // ── _calculateDelta ─────────────────────────────────────────────
     describe('_calculateDelta', () => {
         let card;
@@ -800,8 +866,24 @@ describe('SugarTvCard', () => {
             expect(card.config.color_thresholds).toBe(false);
         });
 
-        it('populates default mg/dL thresholds when not provided', () => {
+        it('leaves thresholds unset while the entity cannot be read', () => {
             const card = new SugarTvCard();
+            card.setConfig({ glucose_value: 'sensor.test' });
+            // Lovelace assigns hass after setConfig, so the unit is unknown
+            // here. Guessing mg/dL would bake those numbers into a mmol card;
+            // leaving it unset lets the defaults follow the live unit instead.
+            expect(card.config.thresholds).toBeUndefined();
+        });
+
+        it('populates default mg/dL thresholds from a mg/dL entity', () => {
+            const card = new SugarTvCard();
+            card.hass = {
+                states: {
+                    'sensor.test': {
+                        attributes: { unit_of_measurement: 'mg/dL' },
+                    },
+                },
+            };
             card.setConfig({ glucose_value: 'sensor.test' });
             expect(card.config.thresholds).toEqual({
                 urgent_low: 54,

@@ -32,6 +32,26 @@ class SugarTvCard extends LitElement {
         );
     }
 
+    /*
+     * Thresholds that are exactly another unit's defaults are not a choice
+     * anyone made: they were filled in before the unit was known, either by an
+     * older setConfig or by getStubConfig when the card was added through the
+     * UI. Honouring them would compare a mmol reading against mg/dL numbers, so
+     * a normal 8.1 shows as urgent low and a dangerous 14.0 shows as urgent low
+     * too. Drop them and let this unit's defaults apply.
+     */
+    static thresholdsForUnit(thresholds, unit) {
+        if (!thresholds) return {};
+        const isDefaultsOf = (candidate) =>
+            Object.entries(SugarTvCard.DEFAULT_THRESHOLDS[candidate]).every(
+                ([key, value]) => Number(thresholds[key]) === value,
+            );
+        const foreign = Object.keys(SugarTvCard.DEFAULT_THRESHOLDS).some(
+            (candidate) => candidate !== unit && isDefaultsOf(candidate),
+        );
+        return foreign ? {} : thresholds;
+    }
+
     // Set by both core glucose integrations, and by nothing else in core.
     static GLUCOSE_DEVICE_CLASS = 'blood_glucose_concentration';
 
@@ -116,17 +136,15 @@ class SugarTvCard extends LitElement {
     }
 
     static getStubConfig() {
+        // No thresholds here on purpose. A stub is created before the user has
+        // picked their sensor, so its unit is unknowable; writing mg/dL numbers
+        // would save them into every new card, including mmol ones. setConfig
+        // fills the right defaults in once the entity is readable.
         return {
             type: 'custom:sugartv-card',
             glucose_value: 'sensor.jane_glucose_value',
             show_prediction: true,
             color_thresholds: true,
-            thresholds: {
-                urgent_low: 54,
-                low: 70,
-                high: 180,
-                urgent_high: 250,
-            },
         };
     }
 
@@ -361,10 +379,14 @@ class SugarTvCard extends LitElement {
             config = { ...config, color_thresholds: true };
         }
 
-        if (!config.thresholds) {
+        // Only fill the defaults in once the entity can actually be read.
+        // Lovelace calls setConfig before it assigns hass, and guessing mg/dL
+        // there bakes those numbers into a mmol card permanently, which makes
+        // every in-range reading compare as urgent low.
+        const glucoseState = this.hass?.states?.[config.glucose_value];
+        if (!config.thresholds && glucoseState) {
             const unit = SugarTvCard.normalizeUnit(
-                this.hass?.states?.[config.glucose_value]?.attributes
-                    ?.unit_of_measurement,
+                glucoseState.attributes?.unit_of_measurement,
             );
             config = {
                 ...config,
@@ -753,7 +775,10 @@ class SugarTvCard extends LitElement {
         const defaults =
             SugarTvCard.DEFAULT_THRESHOLDS[unit] ||
             SugarTvCard.DEFAULT_THRESHOLDS[SugarTvCard.UNITS.MGDL];
-        const t = { ...defaults, ...(this.config.thresholds || {}) };
+        const t = {
+            ...defaults,
+            ...SugarTvCard.thresholdsForUnit(this.config.thresholds, unit),
+        };
 
         if (numValue < t.urgent_low) return 'zone-urgent-low';
         if (numValue < t.low) return 'zone-low';
