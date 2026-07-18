@@ -576,6 +576,7 @@ class SugarTvCard extends LitElement {
 
     updated() {
         this._measureValueWidth();
+        this._measureValueDescent();
     }
 
     /*
@@ -631,6 +632,72 @@ class SugarTvCard extends LitElement {
 
         this._valueWidthBudget = budget;
         wrapper.style.setProperty('--tall-w', String(budget));
+    }
+
+    /**
+     * How far the reading's ink drops below its own box, in units.
+     *
+     * The stylesheet trims .value to the alphabetic baseline so that the space
+     * above the number matches the space below it. Digits sit on that baseline,
+     * so for a mg/dL reading the trim is exact. A decimal comma does not: it
+     * hangs below the baseline, outside the trimmed box, and in a locale that
+     * writes 11,4 it dropped far enough to land on the forecast line under it.
+     * Measured on a wide card, the ink ran 26px past the box against a 13px
+     * gap, so the comma sat on the text.
+     *
+     * Measure the ink, not the box, and measure it with canvas. A Range looks
+     * like the tool for this and is not: its rect is the font's line box, which
+     * reports the same 4.86u under "205" as under "11,4" because it describes
+     * the font rather than the glyphs. measureText's actualBoundingBoxDescent
+     * is the ink, and it separates them properly: 0.2u for digits, 2.84u once a
+     * comma is there.
+     *
+     * Reading it off the glyphs rather than testing for a comma means it holds
+     * for whatever separator a locale writes, and costs nothing on the cards
+     * that have no descender, which is every mg/dL one.
+     *
+     * Like the width budget this is scale-invariant, because the ink and the
+     * font size grow together, so expressing it in units cannot oscillate.
+     */
+    _measureValueDescent() {
+        const wrapper = this.renderRoot?.querySelector?.('.wrapper');
+        const value = this.renderRoot?.querySelector?.('.value');
+        const text = value?.textContent?.trim();
+        if (!wrapper || !text) return;
+
+        const style = getComputedStyle(value);
+        const fontSize = parseFloat(style.fontSize);
+        if (!fontSize) return;
+
+        const context = SugarTvCard.measuringContext();
+        if (!context) return;
+        context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+
+        const ink = context.measureText(text).actualBoundingBoxDescent;
+        if (!Number.isFinite(ink)) return;
+
+        const unit = fontSize / SugarTvCard.VALUE_UNITS;
+        const descent = Math.round(Math.max(0, ink / unit) * 100) / 100;
+        if (descent === this._valueDescent) return;
+
+        this._valueDescent = descent;
+        wrapper.style.setProperty('--value-descent', String(descent));
+    }
+
+    // One canvas for the life of the page. Measuring is cheap; allocating a
+    // canvas per render is not, and this runs on every update.
+    static measuringContext() {
+        if (SugarTvCard._measuringContext !== undefined) {
+            return SugarTvCard._measuringContext;
+        }
+        try {
+            SugarTvCard._measuringContext = document
+                .createElement('canvas')
+                .getContext('2d');
+        } catch (e) {
+            SugarTvCard._measuringContext = null;
+        }
+        return SugarTvCard._measuringContext;
     }
 
     _updateData() {
@@ -1062,12 +1129,21 @@ class SugarTvCard extends LitElement {
         });
 
         // Exact equality: drop the sign so "no change" is visually distinct
-        // from sub-unit drift (＋0 / －0 still preserve direction).
+        // from sub-unit drift (+0 / -0 still preserve direction).
         if (delta === 0) {
             return absFormatted;
         }
 
-        const sign = delta > 0 ? '＋' : '－';
+        /*
+         * An ASCII plus and a real minus, not the fullwidth ＋ and － this used
+         * to draw. Those are CJK-width glyphs: measured against the card's own
+         * font they advance 29.9px where a digit advances 16.6, so "＋0,3" ran
+         * wide enough to wrap between the sign and its number in a narrow slot,
+         * leaving the sign stranded on a line of its own. U+2212 is the minus
+         * proper rather than a hyphen, and it matches the digit advance, which
+         * is what keeps the sign optically attached under tabular figures.
+         */
+        const sign = delta > 0 ? '+' : '\u2212';
         return `${sign}${absFormatted}`;
     }
 

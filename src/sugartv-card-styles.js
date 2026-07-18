@@ -130,6 +130,16 @@ export const cardStyles = css`
 
     .time {
         font-size: calc(6 * var(--u));
+    }
+
+    /*
+     * A sign must never part from its number, and a reading must never break
+     * mid-figure. Both used to rely on there being room; in a narrow slot the
+     * delta wrapped and left its plus stranded on a line of its own.
+     */
+    .time,
+    .value,
+    .delta {
         white-space: nowrap;
     }
 
@@ -185,8 +195,16 @@ export const cardStyles = css`
         margin: calc(-6 * var(--icon-trim) * var(--u));
     }
 
+    /*
+     * Clear the reading's descender. .value is trimmed to the alphabetic
+     * baseline so its box ends where the digits do, but a decimal comma hangs
+     * below that and would otherwise print on this line. --value-descent is
+     * measured from the rendered glyphs, and is zero whenever the reading has
+     * no descender, which is every mg/dL card.
+     */
     .prediction {
         font-size: calc(2.7 * var(--u));
+        margin-top: calc(var(--value-descent, 0) * var(--u));
         max-width: 100%;
         opacity: 0.7;
         text-align: center;
