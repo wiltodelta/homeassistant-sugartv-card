@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import haLanguages from './ha-languages.json';
+import { getLocalizer } from '../src/localize.js';
 
 // ── Mock LitElement before importing the card ──────────────────────────
 vi.mock('lit', () => {
@@ -349,6 +351,48 @@ describe('SugarTvCard', () => {
             );
         });
 
+        // The same three id shapes the reading-time lookup is pinned against in
+        // timestamp.test.js. Trend and time resolve through one helper, so both
+        // ends have to be held or a fix to one can quietly regress the other.
+        it.each([
+            [
+                'pre-2026-02 Carelink',
+                'sensor.last_glucose_level_mg_dl',
+                'sensor.last_glucose_trend',
+            ],
+            [
+                'patient-named',
+                'sensor.carelink_john_doe_last_glucose_level_mg_dl',
+                'sensor.carelink_john_doe_last_glucose_trend',
+            ],
+            [
+                'HA 2026.4+ device-prefixed',
+                'sensor.john_doe_carelink_john_doe_last_glucose_level_mg_dl',
+                'sensor.john_doe_carelink_john_doe_last_glucose_trend',
+            ],
+        ])(
+            'detects the Carelink trend on the %s id shape',
+            (_name, value, trend) => {
+                const card = createCard(
+                    {},
+                    {
+                        states: {
+                            [value]: {
+                                state: '150',
+                                attributes: { unit_of_measurement: 'mg/dL' },
+                            },
+                            [trend]: { state: 'UP' },
+                        },
+                    },
+                );
+                card.config.glucose_value = value;
+
+                expect(card._resolveTrend(value, card.hass.states[value])).toBe(
+                    'rising',
+                );
+            },
+        );
+
         it('detects Nightscout direction attribute', () => {
             const card = createCard(
                 {},
@@ -477,6 +521,554 @@ describe('SugarTvCard', () => {
             expect(card._isStale(null)).toBe(true);
             expect(card._isStale('unknown')).toBe(true);
             expect(card._isStale('unavailable')).toBe(true);
+        });
+    });
+
+    // ── relative reading time (#94, point 1) ────────────────────────
+    describe('_formatTime with relative_time', () => {
+        const MIN = 60 * 1000;
+        const ago = (ms) => new Date(Date.now() - ms).toISOString();
+
+        // The option exists because the default has to stay put: an installed
+        // card must not change what it shows when the user updates.
+        it('shows a clock reading unless asked otherwise', () => {
+            const card = createCard();
+
+            expect(card._formatTime(ago(2 * MIN))).toMatch(/\d/);
+            expect(card._formatTime(ago(2 * MIN))).not.toMatch(/ago/);
+        });
+
+        it('shows the age when the option is on', () => {
+            const card = createCard({ relative_time: true, locale: 'en' });
+
+            expect(card._formatTime(ago(2 * MIN))).toBe('2 min ago');
+        });
+
+        it('says now under a minute, rather than "in 0 minutes"', () => {
+            const card = createCard({ relative_time: true, locale: 'en' });
+
+            expect(card._formatTime(ago(20 * 1000))).toBe('now');
+        });
+
+        // A sensor clock running ahead of the browser dates a reading in the
+        // future. "in 2 minutes" on a glucose card reads as a malfunction.
+        it('treats a future reading as fresh rather than counting forward', () => {
+            const card = createCard({ relative_time: true, locale: 'en' });
+            const ahead = new Date(Date.now() + 2 * MIN).toISOString();
+
+            expect(card._formatTime(ahead)).toBe('now');
+        });
+
+        it('switches to hours once minutes stop being readable', () => {
+            const card = createCard({ relative_time: true, locale: 'en' });
+
+            expect(card._formatTime(ago(150 * MIN))).toBe('3 hr ago');
+        });
+
+        /*
+         * CLDR separates the number from its unit with a no-break space in some
+         * locales and an ordinary one in others, and which it picks is not the
+         * card's business. Compare the wording, not the byte.
+         */
+        const words = (s) => s.replace(/[\s\u00a0\u202f]+/g, ' ');
+
+        /*
+         * Each language's own abbreviation, not an English one borrowed. The
+         * full phrasing ("for 14 min siden", "14 мин. назад") runs up to 2.9
+         * times the width of the clock it replaces and crowds the reading in a
+         * narrow slot; these hold inside 1.4x.
+         */
+        it.each([
+            ['en', '2 min ago', '3 hr ago'],
+            ['ja', '2 分前', '3 時間前'],
+            ['uk', '2 хв тому', '3 год тому'],
+            ['ru', '2 мин назад', '3 ч назад'],
+            ['fr', 'il y a 2 min', 'il y a 3 h'],
+            ['sv', 'för 2 min sen', 'för 3 tim sedan'],
+            ['nb', 'for 2 min siden', 'for 3 t siden'],
+            ['nl', '2 min geleden', '3 uur geleden'],
+        ])('says how long ago, in %s', (locale, minutes, hours) => {
+            const card = createCard({ relative_time: true, locale });
+
+            expect(words(card._formatTime(ago(2 * MIN)))).toBe(minutes);
+            expect(words(card._formatTime(ago(180 * MIN)))).toBe(hours);
+        });
+
+        /*
+         * Why the unit abbreviation rather than Intl.RelativeTimeFormat, which
+         * was the obvious tool. Its narrow style is a signed number in several
+         * languages, and a minus beside a glucose reading looks like a negative
+         * value rather than elapsed time. These are the languages that broke.
+         */
+        it.each(['ru', 'fr', 'sv', 'nb', 'ro', 'bs', 'gsw'])(
+            'never renders %s as a signed number',
+            (locale) => {
+                const card = createCard({ relative_time: true, locale });
+
+                for (const age of [1, 5, 14, 59, 90, 300]) {
+                    expect(card._formatTime(ago(age * MIN))).not.toMatch(
+                        /^[-−–+]/,
+                    );
+                }
+            },
+        );
+
+        it.each(haLanguages)(
+            'never starts %s with a sign, at any age',
+            (locale) => {
+                const card = createCard({ relative_time: true, locale });
+
+                for (const age of [0.1, 1, 5, 59, 90, 300]) {
+                    expect(
+                        card._formatTime(ago(age * MIN)),
+                        `${locale} at ${age} min`,
+                    ).not.toMatch(/^[-−–+]/);
+                }
+            },
+        );
+
+        /*
+         * Intl answers in English rather than failing when its build has no
+         * data for a language. The card is translated into all of Home
+         * Assistant's languages, so an English phrase sitting in an otherwise
+         * Georgian card reads as a bug. The clock is the honest degradation.
+         */
+        it('shows the clock, not English, when Intl cannot phrase an age', () => {
+            const card = createCard({ relative_time: true, locale: 'tlh' });
+
+            const shown = card._formatTime(ago(3 * MIN));
+
+            expect(shown).not.toMatch(/ago/);
+            expect(shown).toMatch(/\d/);
+        });
+
+        /*
+         * Swiss German is signed in every tensed style CLDR has for it, and a
+         * minus beside a glucose reading looks like a negative value. It is the
+         * one language that drops to the untensed count.
+         */
+        it('drops the tense only where every phrasing is signed', () => {
+            expect(SugarTvCard.formatAgo('gsw', 3, 'minute')).toBe('3 min');
+            expect(SugarTvCard.formatAgo('ru', 3, 'minute')).toBe(
+                '3 мин назад',
+            );
+        });
+
+        /*
+         * The stop after an abbreviated unit is dropped, since "14 min ago" is
+         * the ordinary form and Russian's own standard writes "мин" bare. Not
+         * everywhere: in German and its neighbours the abbreviation is a
+         * clipped word rather than a symbol, and "vor 14 Min" misspells it.
+         */
+        it.each([
+            ['en', '14 min ago'],
+            ['ru', '14 мин назад'],
+            ['nl', '14 min geleden'],
+            ['tr', '14 dk önce'],
+        ])('drops the abbreviation stop in %s', (locale, expected) => {
+            expect(SugarTvCard.formatAgo(locale, 14, 'minute')).toBe(expected);
+        });
+
+        it.each([
+            ['de', 'vor 14 Min'],
+            ['is', 'fyrir 14 mín'],
+            ['el', 'πριν από 14 λεπ'],
+            ['lb', 'viru(n) 14 Min'],
+        ])('drops it in %s too, for an even look', (locale, expected) => {
+            expect(SugarTvCard.formatAgo(locale, 14, 'minute')).toBe(expected);
+        });
+
+        // Hindi marks an abbreviation with U+0970 rather than a full stop, and
+        // it reads as a dot, so a strip that only knew about "." would leave it.
+        it('drops the Devanagari abbreviation sign as well', () => {
+            expect(SugarTvCard.formatAgo('hi', 14, 'minute')).toBe(
+                '14 मि पहले',
+            );
+        });
+
+        // Nothing may touch a decimal point inside a number.
+        it('leaves a stop that is not ending a word', () => {
+            expect(SugarTvCard.trimAbbreviationDots('1.5 min ago')).toBe(
+                '1.5 min ago',
+            );
+        });
+
+        /*
+         * Hebrew marks an abbreviation with a geresh, and the geresh is what
+         * makes it one: strip it from "דק׳" and "דק" is a different Hebrew
+         * word. So Hebrew is spelled out instead of abbreviated, which needs no
+         * mark at all.
+         */
+        it('spells Hebrew out rather than stripping its geresh', () => {
+            const shown = SugarTvCard.formatAgo('he', 14, 'minute');
+
+            expect(shown).toBe('לפני 14 דקות');
+            expect(shown).not.toContain('׳');
+        });
+
+        /*
+         * Hebrew's singular comes back as "לפני דקה (1)" from every style, and
+         * a one-minute age is on screen constantly.
+         */
+        it.each([
+            [1, 'minute', 'לפני דקה'],
+            [1, 'hour', 'לפני שעה'],
+        ])(
+            'drops the bracketed numeral Hebrew adds to %s %s',
+            (n, unit, expected) => {
+                expect(SugarTvCard.formatAgo('he', n, unit)).toBe(expected);
+            },
+        );
+
+        it('leaves brackets that are part of the phrasing alone', () => {
+            // Luxembourgish really does write "viru(n)".
+            expect(SugarTvCard.formatAgo('lb', 14, 'minute')).toBe(
+                'viru(n) 14 Min',
+            );
+        });
+
+        it.each([
+            ['en', true],
+            ['ru', true],
+            ['zh-Hans', true],
+            ['tlh', false],
+        ])('reports relative-time support for %s', (locale, supported) => {
+            expect(SugarTvCard.hasRelativeTimeData(locale)).toBe(supported);
+        });
+
+        it('says now in the local language, with no string of its own', () => {
+            expect(
+                createCard({ relative_time: true, locale: 'ru' })._formatTime(
+                    ago(10 * 1000),
+                ),
+            ).toBe('сейчас');
+        });
+
+        it('still reports no data rather than an age', () => {
+            const card = createCard({ relative_time: true, locale: 'en' });
+
+            expect(card._formatTime(null)).toBe('00:00');
+            expect(card._formatTime('unavailable')).toBe('00:00');
+        });
+    });
+
+    describe('the age ticker', () => {
+        // Nothing about the card changes as a minute passes, so without a timer
+        // the age would sit frozen at whatever it read when the value arrived.
+        it('runs only when an age is on screen', () => {
+            vi.useFakeTimers();
+
+            const plain = createCard();
+            plain.isConnected = true;
+            plain._syncAgeTicker();
+            expect(plain._ageTicker).toBeFalsy();
+
+            const relative = createCard({ relative_time: true });
+            relative.isConnected = true;
+            relative._syncAgeTicker();
+            expect(relative._ageTicker).toBeTruthy();
+
+            relative.requestUpdate = vi.fn();
+            vi.advanceTimersByTime(60000);
+            expect(relative.requestUpdate).toHaveBeenCalled();
+
+            relative._stopAgeTicker();
+            vi.useRealTimers();
+        });
+
+        it('stops on disconnect, so a removed card leaves no timer behind', () => {
+            vi.useFakeTimers();
+            const card = createCard({ relative_time: true });
+            card.isConnected = true;
+            card._syncAgeTicker();
+
+            card.disconnectedCallback();
+
+            expect(card._ageTicker).toBeFalsy();
+            vi.useRealTimers();
+        });
+    });
+
+    // ── one locale for the whole card ───────────────────────────────
+    describe('locale resolution', () => {
+        const mmolCard = (config, hass) => {
+            const card = createCard(config, hass);
+            card._data = {
+                ...card._getInitialDataState(),
+                unit: 'mmol/L',
+                value: '8.1',
+                previous_value: '7.6',
+                reading_time: new Date().toISOString(),
+                previous_ingest_time: new Date(
+                    Date.now() - 300000,
+                ).toISOString(),
+            };
+            return card;
+        };
+
+        /*
+         * The regression this exists for. The clock read the Home Assistant
+         * language while the number stopped at config.locale and fell through
+         * to the browser, so a German install with no explicit locale drew
+         * 15:10 next to 8.1 instead of 8,1.
+         */
+        it.each(['de', 'ru', 'fr'])(
+            'takes the decimal separator from the %s Home Assistant language',
+            (language) => {
+                const card = mmolCard({}, { language });
+
+                expect(card._formatValue('8.1')).toBe('8,1');
+                expect(card._calculateDelta()).toContain(',');
+            },
+        );
+
+        it('lets an explicit locale override the Home Assistant language', () => {
+            const card = mmolCard({ locale: 'en' }, { language: 'de' });
+
+            expect(card._formatValue('8.1')).toBe('8.1');
+        });
+
+        // Found by reviewing the diff, not by a failure: the forecast formatted
+        // its numbers against the language while the reading beside it used the
+        // number format, so one card could read 8.1 above "rise 1,7-2,5".
+        it('writes the forecast numbers the same way as the reading', () => {
+            const card = createCard(
+                {},
+                {
+                    language: 'en',
+                    locale: { language: 'en', number_format: 'decimal_comma' },
+                },
+            );
+            card._data = { ...card._getInitialDataState(), unit: 'mmol/L' };
+
+            const forecast =
+                card._getTrendDescriptions('mmol/L').rising.prediction;
+
+            expect(card._formatValue('8.1')).toBe('8,1');
+            expect(forecast).toContain('1,7');
+            expect(forecast).not.toContain('1.7');
+        });
+
+        it('formats the clock and the number against the same locale', () => {
+            const card = mmolCard({}, { language: 'de' });
+
+            // 24-hour clock and a decimal comma both mean "German".
+            expect(card._formatTime(new Date().toISOString())).not.toMatch(
+                /M$/,
+            );
+            expect(card._formatValue('8.1')).toBe('8,1');
+        });
+    });
+
+    /*
+     * Home Assistant carries a Time format and a Number format in each user's
+     * profile, separate from the language. The card used to read neither, so a
+     * user in the UK on `en` who had chosen 24 hours still got 03:12 PM: `en`
+     * alone means American English to Intl.
+     */
+    describe('the Home Assistant format settings', () => {
+        const at = (card, iso = '2023-01-01T15:12:00') =>
+            card._formatTime(new Date(iso).toISOString());
+
+        it.each([
+            ['12', true],
+            ['24', false],
+        ])(
+            'honours a time_format of %s over the language',
+            (format, isAmPm) => {
+                // German gives 24 hours on its own and American English gives 12,
+                // so each case here is the setting overriding the language rather
+                // than quietly agreeing with it.
+                const language = isAmPm ? 'de' : 'en-US';
+                const card = createCard(
+                    {},
+                    { language, locale: { language, time_format: format } },
+                );
+
+                expect(/[AP]M/.test(at(card))).toBe(isAmPm);
+            },
+        );
+
+        it('auto-detects from the language when no format is set', () => {
+            const german = createCard(
+                {},
+                { language: 'de', locale: { language: 'de' } },
+            );
+            const american = createCard(
+                {},
+                { language: 'en-US', locale: { language: 'en-US' } },
+            );
+
+            expect(at(german)).not.toMatch(/M$/);
+            expect(at(american)).toMatch(/M$/);
+        });
+
+        it('still works against a Home Assistant too old to send locale', () => {
+            expect(() => at(createCard({}, { language: 'de' }))).not.toThrow();
+        });
+
+        /*
+         * number_format names a style, not a language: someone reading Home
+         * Assistant in English can still ask for 1.234,56.
+         */
+        it.each([
+            ['comma_decimal', '8.1'],
+            ['decimal_comma', '8,1'],
+            ['space_comma', '8,1'],
+            ['none', '8.1'],
+        ])('honours a number_format of %s', (numberFormat, expected) => {
+            const card = createCard(
+                {},
+                {
+                    language: 'en',
+                    locale: { language: 'en', number_format: numberFormat },
+                },
+            );
+            card._data = { ...card._getInitialDataState(), unit: 'mmol/L' };
+
+            expect(card._formatValue('8.1')).toBe(expected);
+        });
+
+        it('drops the thousands separator when the format is none', () => {
+            const card = createCard(
+                {},
+                {
+                    language: 'en',
+                    locale: { language: 'en', number_format: 'none' },
+                },
+            );
+
+            expect(card._formatValue('1234')).toBe('1234');
+        });
+
+        /*
+         * One precedence rule for both, which is the whole point of pinning it:
+         * a format Home Assistant was explicitly told to use beats a language
+         * tag. Letting `locale` win for the number but not for the clock would
+         * put a 24-hour clock beside an English decimal point on one card.
+         */
+        it('keeps a chosen profile format ahead of an explicit locale', () => {
+            const card = createCard(
+                { locale: 'en-US' },
+                {
+                    language: 'de',
+                    locale: {
+                        language: 'de',
+                        time_format: '24',
+                        number_format: 'decimal_comma',
+                    },
+                },
+            );
+            card._data = { ...card._getInitialDataState(), unit: 'mmol/L' };
+
+            expect(card._formatValue('8.1')).toBe('8,1');
+            expect(at(card)).not.toMatch(/M$/);
+        });
+
+        // With the profile on auto, which is where it ships, `locale` is what
+        // decides. This is how an English install gets a 24-hour clock.
+        it('lets locale decide when the profile is left on auto', () => {
+            const card = createCard(
+                { locale: 'en-GB' },
+                { language: 'en', locale: { language: 'en' } },
+            );
+            card._data = { ...card._getInitialDataState(), unit: 'mmol/L' };
+
+            expect(at(card)).not.toMatch(/M$/);
+            expect(card._formatValue('8.1')).toBe('8.1');
+        });
+    });
+
+    // ── staleness derived from the sensor's own cadence (#94, point 3) ──
+    describe('cadenceFromHistory', () => {
+        const MIN = 60 * 1000;
+        const at = (...minutes) => minutes.map((m) => m * MIN);
+
+        it('reads the interval off evenly spaced readings', () => {
+            expect(SugarTvCard.cadenceFromHistory(at(0, 5, 10, 15))).toBe(
+                5 * MIN,
+            );
+        });
+
+        /*
+         * The reason this takes the smallest gap rather than an average. HA
+         * writes no history entry when a reading repeats, so a flat stretch
+         * leaves a double-width hole. An average would report 7.5 minutes for
+         * this 5 minute sensor and stretch the stale window by half again.
+         */
+        it('is not fooled by a gap where a repeated reading was dropped', () => {
+            expect(SugarTvCard.cadenceFromHistory(at(0, 5, 15, 20))).toBe(
+                5 * MIN,
+            );
+        });
+
+        // A rewrite lands seconds after the reading it repeats, so it does not
+        // sit on the cadence grid and the gap it leaves behind is not a round
+        // interval. What matters is only that the 12 second gap itself is never
+        // mistaken for the cadence, which would collapse the stale window.
+        it('ignores sub-minute gaps, which are rewrites and not a cadence', () => {
+            const times = [0, 0.2 * MIN, 5 * MIN, 10 * MIN];
+
+            expect(
+                SugarTvCard.cadenceFromHistory(times),
+            ).toBeGreaterThanOrEqual(MIN);
+        });
+
+        it.each([
+            ['nothing', []],
+            ['a single reading', at(0)],
+            ['only duplicates', [0, 0]],
+            ['only sub-minute gaps', [0, 100, 200]],
+        ])('returns null given %s', (_label, times) => {
+            expect(SugarTvCard.cadenceFromHistory(times)).toBeNull();
+        });
+    });
+
+    describe('_staleThresholdMs', () => {
+        const MIN = 60 * 1000;
+
+        it('falls back to 15 minutes before history has been read', () => {
+            expect(createCard()._staleThresholdMs()).toBe(15 * MIN);
+        });
+
+        // The point of the whole exercise: 15 minutes is three missed polls on
+        // a 5 minute sensor but fifteen on a 1 minute one, so the fixed number
+        // meant two very different things.
+        it('gives a 1 minute sensor a 3 minute window, not 15', () => {
+            const card = createCard();
+            card._cadenceMs = 1 * MIN;
+
+            expect(card._staleThresholdMs()).toBe(3 * MIN);
+        });
+
+        it('keeps the familiar 15 minutes for a 5 minute sensor', () => {
+            const card = createCard();
+            card._cadenceMs = 5 * MIN;
+
+            expect(card._staleThresholdMs()).toBe(15 * MIN);
+        });
+
+        /*
+         * A derived cadence may only tighten the window. Trusting a slow
+         * cadence outright would let a 15 minute sensor go 45 minutes without
+         * dimming, turning a safe failure (live sensor looks stale) into an
+         * unsafe one (dead sensor looks live).
+         */
+        it('never waits longer than the fallback, however slow the sensor', () => {
+            const card = createCard();
+            card._cadenceMs = 15 * MIN;
+
+            expect(card._staleThresholdMs()).toBe(15 * MIN);
+        });
+
+        it('drives _isStale, so a fast sensor dims sooner', () => {
+            const card = createCard();
+            card._cadenceMs = 1 * MIN;
+            const fiveMinutesAgo = new Date(Date.now() - 5 * MIN).toISOString();
+
+            // The same timestamp is fresh under the 15 minute fallback.
+            expect(card._isStale(fiveMinutesAgo)).toBe(true);
+            expect(createCard()._isStale(fiveMinutesAgo)).toBe(false);
         });
     });
 
@@ -644,7 +1236,7 @@ describe('SugarTvCard', () => {
                 previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
-            expect(card._calculateDelta()).toBe('＋10');
+            expect(card._calculateDelta()).toBe('+10');
         });
 
         it('calculates negative delta in mg/dL', () => {
@@ -660,7 +1252,7 @@ describe('SugarTvCard', () => {
                 previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
-            expect(card._calculateDelta()).toBe('－20');
+            expect(card._calculateDelta()).toBe('−20');
         });
 
         it('calculates delta in mmol/L with 1 decimal', () => {
@@ -677,7 +1269,7 @@ describe('SugarTvCard', () => {
                 unit: 'mmol/L',
             };
             const delta = card._calculateDelta();
-            expect(delta).toMatch(/＋0[.,]7/);
+            expect(delta).toMatch(/\+0[.,]7/);
         });
 
         it('returns null when same timestamps', () => {
@@ -754,7 +1346,7 @@ describe('SugarTvCard', () => {
             expect(card._calculateDelta()).toMatch(/^0[.,]0$/);
         });
 
-        it('keeps "＋0" for positive sub-integer drift in mg/dL', () => {
+        it('keeps "+0" for positive sub-integer drift in mg/dL', () => {
             // 120.4 - 120 = 0.4 rounds to 0, but direction is preserved.
             const now = new Date().toISOString();
             const fiveMinAgo = new Date(
@@ -768,10 +1360,10 @@ describe('SugarTvCard', () => {
                 previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
-            expect(card._calculateDelta()).toBe('＋0');
+            expect(card._calculateDelta()).toBe('+0');
         });
 
-        it('keeps "－0" for negative sub-integer drift in mg/dL', () => {
+        it('keeps "−0" for negative sub-integer drift in mg/dL', () => {
             const now = new Date().toISOString();
             const fiveMinAgo = new Date(
                 Date.now() - 5 * 60 * 1000,
@@ -784,7 +1376,7 @@ describe('SugarTvCard', () => {
                 previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
-            expect(card._calculateDelta()).toBe('－0');
+            expect(card._calculateDelta()).toBe('−0');
         });
 
         it('handles comma-separated decimals (European locale)', () => {
@@ -802,7 +1394,7 @@ describe('SugarTvCard', () => {
             };
             const delta = card._calculateDelta();
             expect(delta).not.toBeNull();
-            expect(delta).toMatch(/＋0[.,]7/);
+            expect(delta).toMatch(/\+0[.,]7/);
         });
     });
 
@@ -1088,5 +1680,66 @@ describe('SugarTvCard', () => {
                 expect(SugarTvCard.TREND_MAP[t]).toBeDefined();
             }
         });
+    });
+});
+
+/*
+ * The screen-reader label. It is user-visible text that never went through the
+ * translation file, so the review of that file could not have caught it: the
+ * trend came out as the card's internal key with the underscores removed, which
+ * reads as English by accident rather than by translation.
+ */
+describe('the screen-reader label', () => {
+    const cardWith = (hass = {}) => {
+        const card = new SugarTvCard();
+        card.hass = { language: 'ru', states: {}, ...hass };
+        card.config = { glucose_value: 'sensor.jane_glucose_value' };
+        card._data = {
+            ...card._getInitialDataState(),
+            unit: 'mmol/L',
+            value: '8.1',
+        };
+        return card;
+    };
+
+    it('asks Home Assistant for the trend, which it already translates', () => {
+        const localize = vi.fn(() => 'Быстро растёт');
+        const card = cardWith({ localize });
+
+        expect(card._trendLabel('rising_quickly')).toBe('Быстро растёт');
+        expect(localize).toHaveBeenCalledWith(
+            'component.dexcom.entity.sensor.glucose_trend.state.rising_quickly',
+        );
+    });
+
+    // An install without the Dexcom strings loaded gets nothing back.
+    it('falls back to the humanised key when that returns nothing', () => {
+        const card = cardWith({ localize: () => '' });
+
+        expect(card._trendLabel('rising_quickly')).toBe('rising quickly');
+    });
+
+    it('survives a Home Assistant that has no localize at all', () => {
+        const card = cardWith({});
+
+        expect(card._trendLabel('falling')).toBe('falling');
+    });
+
+    it('says nothing rather than "unknown" when the trend is unknown', () => {
+        const card = cardWith({ localize: () => 'x' });
+
+        expect(card._trendLabel('unknown')).toBe('');
+        expect(card._trendLabel(null)).toBe('');
+    });
+
+    // The unit was read straight off the sensor, so a Russian card announced
+    // "mmol/L" while the rest of it spoke Russian.
+    it('announces the unit in the local language', () => {
+        const card = cardWith({});
+
+        expect(card._formatValue('8.1')).toBe('8,1');
+        expect(getLocalizer(card.config, card.hass)('units.mmoll')).toBe(
+            'ммоль/л',
+        );
     });
 });

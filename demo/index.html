@@ -71,12 +71,14 @@
     <body>
         <div class="container">
             <div class="controls">
-                <label for="locale-select">Locale:</label>
+                <label for="locale-select">HA language:</label>
+                <!--
+                  Filled from test/ha-languages.json so the demo offers exactly
+                  the languages Home Assistant does, and cannot drift from what
+                  the tests cover.
+                -->
                 <select id="locale-select">
-                    <option value="">Browser Default</option>
-                    <option value="en-US">English (en-US)</option>
-                    <option value="en-GB">English (en-GB)</option>
-                    <option value="ru-RU">Russian (ru-RU)</option>
+                    <option value="en">English (en)</option>
                 </select>
                 <label for="unit-select">Unit:</label>
                 <select id="unit-select">
@@ -90,6 +92,28 @@
                 </select>
                 <label for="prediction-toggle">Show Prediction:</label>
                 <input type="checkbox" id="prediction-toggle" checked />
+                <label for="relative-toggle">Relative Time:</label>
+                <input type="checkbox" id="relative-toggle" />
+                <!--
+                  The two Home Assistant profile settings the card inherits.
+                  "Auto" is how Home Assistant ships them, and means the
+                  language decides.
+                -->
+                <label for="time-format-select">HA time format:</label>
+                <select id="time-format-select">
+                    <option value="">Auto (from language)</option>
+                    <option value="12">12 hour</option>
+                    <option value="24">24 hour</option>
+                </select>
+                <label for="number-format-select">HA number format:</label>
+                <select id="number-format-select">
+                    <option value="">Auto (from language)</option>
+                    <option value="comma_decimal">1,234.56</option>
+                    <option value="decimal_comma">1.234,56</option>
+                    <option value="space_comma">1 234,56</option>
+                    <option value="quote_decimal">1'234.56</option>
+                    <option value="none">No formatting</option>
+                </select>
             </div>
             <div class="demo-grid horizontal" id="card-grid">
                 <!-- All cards will be dynamically injected here -->
@@ -100,9 +124,35 @@
         <script type="module" src="/dist/sugartv-card.js"></script>
         <script>
             // --- Helper Functions ---
+            /*
+             * Home Assistant hands a card its own `locale` block, separate from
+             * the language: Time format and Number format are per-user profile
+             * settings. The card inherits both, so the mock has to supply them
+             * or the demo cannot show that behaviour at all.
+             */
+            function haLocale() {
+                const language =
+                    document.getElementById('locale-select').value || 'en';
+                const time_format =
+                    document.getElementById('time-format-select').value;
+                const number_format = document.getElementById(
+                    'number-format-select',
+                ).value;
+                return {
+                    language,
+                    // Omitted rather than empty: Home Assistant sends
+                    // 'language' for auto, and the card treats absent the same.
+                    ...(time_format ? { time_format } : {}),
+                    ...(number_format ? { number_format } : {}),
+                };
+            }
+
             function createHass(value, trend, unit, date, prev) {
                 const curSec = Math.floor(date.getTime() / 1000);
+                const locale = haLocale();
                 return {
+                    language: locale.language,
+                    locale,
                     states: {
                         'sensor.dexcom_glucose_value': {
                             state: String(value),
@@ -161,14 +211,20 @@
                     document.getElementById('unit-select').value;
                 const showPrediction =
                     document.getElementById('prediction-toggle').checked;
-                const selectedLocale =
-                    document.getElementById('locale-select').value;
+                const relativeTime =
+                    document.getElementById('relative-toggle').checked;
 
+                /*
+                 * No `locale` here on purpose. The picker sets Home Assistant's
+                 * language instead, so the demo exercises the path almost every
+                 * real install is on: the card inheriting its language and
+                 * formats rather than being told them per card.
+                 */
                 const config = {
                     glucose_value: 'sensor.dexcom_glucose_value',
                     glucose_trend: 'sensor.dexcom_glucose_trend',
                     show_prediction: showPrediction,
-                    locale: selectedLocale || undefined,
+                    relative_time: relativeTime,
                 };
 
                 const scenarios = [
@@ -300,7 +356,7 @@
                     },
                 ];
 
-                scenarios.forEach((scenario) => {
+                scenarios.forEach((scenario, index) => {
                     const cardId = `card-${scenario.id}`;
                     const cardWrapper = document.createElement('div');
                     cardWrapper.className = 'demo-card';
@@ -365,6 +421,14 @@
                         ) {
                             value = (parseFloat(value) / 18).toFixed(1);
                         }
+                        /*
+                         * Stagger the reading times across the gallery. With
+                         * every card reading "now" the relative-time mode has
+                         * nothing to show, and a real dashboard never has two
+                         * sensors in lockstep anyway. Stays well under the
+                         * staleness threshold so the zone colours still read.
+                         */
+                        const minutesOld = index % 8;
                         setupCard(
                             cardElement,
                             config,
@@ -372,7 +436,7 @@
                                 value,
                                 scenario.trend,
                                 selectedUnit,
-                                new Date(),
+                                new Date(Date.now() - minutesOld * 60 * 1000),
                                 previousOf(value, selectedUnit),
                             ),
                         );
@@ -380,13 +444,51 @@
                 });
             }
 
+            /*
+             * The same list the tests use, so the demo can never offer fewer
+             * languages than the card claims to support. Intl names each one in
+             * itself, which is how a language picker should read.
+             */
+            async function fillLocales() {
+                const select = document.getElementById('locale-select');
+                const codes = await fetch('/test/ha-languages.json').then((r) =>
+                    r.json(),
+                );
+                for (const code of codes) {
+                    if (code === 'en') continue; // already the seed option
+                    const option = document.createElement('option');
+                    option.value = code;
+                    let name = code;
+                    try {
+                        name =
+                            new Intl.DisplayNames([code], {
+                                type: 'language',
+                            }).of(code) || code;
+                    } catch (e) {
+                        // Intl has no name for it; the code alone will do.
+                    }
+                    option.textContent = `${name} (${code})`;
+                    select.appendChild(option);
+                }
+            }
+
             // --- Initial Setup ---
-            customElements.whenDefined('sugartv-card').then(() => {
+            customElements.whenDefined('sugartv-card').then(async () => {
+                await fillLocales();
                 document
                     .getElementById('unit-select')
                     .addEventListener('change', renderAllCards);
                 document
                     .getElementById('prediction-toggle')
+                    .addEventListener('change', renderAllCards);
+                document
+                    .getElementById('relative-toggle')
+                    .addEventListener('change', renderAllCards);
+                document
+                    .getElementById('time-format-select')
+                    .addEventListener('change', renderAllCards);
+                document
+                    .getElementById('number-format-select')
                     .addEventListener('change', renderAllCards);
                 document
                     .getElementById('locale-select')

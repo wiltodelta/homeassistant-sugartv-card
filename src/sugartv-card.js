@@ -57,6 +57,10 @@ class SugarTvCard extends LitElement {
     // pixel width back into units.
     static VALUE_UNITS = 20;
     static PADDING_UNITS = 5;
+    // .time is 6u in the stylesheet, and may shrink to this fraction of it
+    // before the card would rather clip than go on shrinking.
+    static TIME_UNITS = 6;
+    static MIN_TIME_SCALE = 0.6;
 
     // The longest reading each unit can render: "400" and "22.2". The width
     // budget is sized for these so the number keeps one size across readings.
@@ -100,6 +104,23 @@ class SugarTvCard extends LitElement {
     // from others. Anything below this bound is too small to be a modern
     // millisecond value, so treat it as seconds.
     static EPOCH_SECONDS_BOUND = 1e11;
+
+    // A reading is stale once this many polling intervals have been missed.
+    // Three is the ratio the hard-coded 15 minutes already encoded for a 5
+    // minute sensor; deriving the interval is what makes it mean the same
+    // thing on a 1 minute one (#94, point 3).
+    static STALE_INTERVALS = 3;
+
+    // The fallback, used when history cannot be read (recorder disabled) and as
+    // the ceiling on a derived threshold. It is also the widest the card will
+    // ever wait, so a derived cadence can only tighten staleness, never loosen
+    // it: a wrong cadence must not let a dead sensor keep looking live.
+    static STALE_FALLBACK_MS = 15 * 60 * 1000;
+
+    // No CGM reports faster than once a minute, so a shorter gap is two writes
+    // of one reading rather than a cadence. Without this floor a single
+    // duplicate would collapse the threshold and flag every reading stale.
+    static MIN_CADENCE_MS = 60 * 1000;
 
     static parseTimestamp(raw) {
         if (raw === null || raw === undefined) return null;
@@ -177,6 +198,10 @@ class SugarTvCard extends LitElement {
                     selector: { boolean: {} },
                 },
                 {
+                    name: 'relative_time',
+                    selector: { boolean: {} },
+                },
+                {
                     name: 'color_thresholds',
                     selector: { boolean: {} },
                 },
@@ -249,6 +274,7 @@ class SugarTvCard extends LitElement {
                     glucose_trend: localize('editor.glucose_trend'),
                     timestamp_attribute: localize('editor.timestamp_attribute'),
                     show_prediction: localize('editor.show_prediction'),
+                    relative_time: localize('editor.relative_time'),
                     color_thresholds: localize('editor.color_thresholds'),
                     urgent_low: localize('editor.urgent_low'),
                     low: localize('editor.low'),
@@ -276,6 +302,40 @@ class SugarTvCard extends LitElement {
                 'https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap';
             document.head.appendChild(link);
         }
+        this._syncAgeTicker();
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback?.();
+        this._stopAgeTicker();
+    }
+
+    /**
+     * An age has to be redrawn as it grows, since nothing about the card
+     * changes when a minute passes. A clock reading does not, so the timer only
+     * runs when the age is what is on screen.
+     *
+     * Called from both connectedCallback and setConfig because their order is
+     * not fixed: Lovelace configures a card before attaching it, the editor
+     * reconfigures one already attached.
+     */
+    _syncAgeTicker() {
+        const wanted = Boolean(this.config?.relative_time && this.isConnected);
+        if (wanted === Boolean(this._ageTicker)) return;
+
+        if (!wanted) {
+            this._stopAgeTicker();
+            return;
+        }
+        // Half the displayed granularity, so the number is never more than
+        // thirty seconds behind the truth.
+        this._ageTicker = setInterval(() => this.requestUpdate(), 30000);
+    }
+
+    _stopAgeTicker() {
+        if (!this._ageTicker) return;
+        clearInterval(this._ageTicker);
+        this._ageTicker = null;
     }
 
     _getInitialDataState() {
@@ -293,19 +353,118 @@ class SugarTvCard extends LitElement {
         };
     }
 
+    /**
+     * The language the card's own words are in, and the fallback for anything
+     * Home Assistant has no explicit preference about.
+     *
+     * Everything that renders a number or a time has to agree on this, and it
+     * used to be resolved in four places under three different rules. Two of
+     * them stopped at `config.locale` and fell through to the browser, so a
+     * Home Assistant running in German with no explicit locale drew the clock
+     * as 15:10 from its own language while the reading next to it read 8.1
+     * rather than 8,1, taking the decimal separator from the browser. One card,
+     * two conventions.
+     */
+    _locale() {
+        return (
+            this.config?.locale ||
+            this.hass?.locale?.language ||
+            this.hass?.language ||
+            undefined // let Intl pick the runtime default
+        );
+    }
+
+    /**
+     * Whether to draw the clock as AM/PM.
+     *
+     * The language does not decide this. Home Assistant has a Time format
+     * setting in each user's profile, and its default is "auto-detect from
+     * language", which is only a default: someone in the UK running Home
+     * Assistant in English is on `en`, and `en` alone means American English to
+     * Intl, so the card drew 03:12 PM at a user who had set 24 hours.
+     *
+     * Mirrors the frontend's own useAmPm, including its sniff: format a 22:00
+     * date and see whether a "10" comes out. That is a strange way to ask, but
+     * matching it is the point. A card that disagrees with the clock in the
+     * Home Assistant header is worse than one that is merely wrong.
+     */
+    _useAmPm() {
+        const format = this.hass?.locale?.time_format;
+        if (format === '12') return true;
+        if (format === '24') return false;
+
+        // 'system' asks the browser rather than the chosen language; anything
+        // else, including a missing setting, follows the language.
+        const probeLocale =
+            format === 'system'
+                ? undefined
+                : this.config?.locale || this._locale();
+        try {
+            return new Date('January 1, 2023 22:00:00')
+                .toLocaleString(probeLocale)
+                .includes('10');
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * The locale to format numbers against.
+     *
+     * Also a separate Home Assistant profile setting, and it does not name a
+     * language: it names a style, "1.234.567,89". Mirrors the frontend's
+     * numberFormatToLocale, which reaches for a language that happens to write
+     * numbers that way.
+     *
+     * A chosen style is read before `config.locale`, matching _useAmPm. One
+     * rule covers both: a format Home Assistant was explicitly told to use wins
+     * over a language tag, and `locale` decides everything left on auto. The
+     * alternative, letting `locale` win here but not for the clock, would draw
+     * a 24-hour clock beside an English decimal point on the same card.
+     */
+    _numberLocale() {
+        switch (this.hass?.locale?.number_format) {
+            case 'comma_decimal':
+                return ['en-US', 'en'];
+            case 'decimal_comma':
+                return ['de', 'es', 'it'];
+            case 'space_comma':
+                return ['fr', 'sv', 'cs'];
+            case 'quote_decimal':
+                return ['de-CH'];
+            // 'none' means plain digits with no grouping at all.
+            case 'none':
+                return 'en-US';
+            case 'system':
+                return undefined;
+            default:
+                return this._locale();
+        }
+    }
+
+    // Home Assistant's "none" number format means no thousands separator at
+    // all. Glucose readings never reach four digits, so this only shows up on
+    // a misconfigured sensor, but the setting is cheap to honour.
+    _groupingOption() {
+        return this.hass?.locale?.number_format === 'none'
+            ? { useGrouping: false }
+            : {};
+    }
+
     _getTrendDescriptions(unit) {
         const isMgdl = unit === SugarTvCard.UNITS.MGDL;
         const localize = getLocalizer(this.config, this.hass);
         const u = isMgdl ? localize('units.mgdl') : localize('units.mmoll');
-        const locale =
-            (this.config && this.config.locale) ||
-            (this.hass && this.hass.language) ||
-            'en';
 
+        // The number locale, not the language one. These are the same numbers
+        // the reading is written in, one line apart, so a profile asking for
+        // 1.234,56 has to reach the forecast too or the card shows 8.1 above
+        // "rise 1,7-2,5" and contradicts itself within one card.
         const nf = (val) =>
-            val.toLocaleString(locale, {
+            val.toLocaleString(this._numberLocale(), {
                 minimumFractionDigits: 1,
                 maximumFractionDigits: 1,
+                ...this._groupingOption(),
             });
 
         const formatMmol = (val1, val2) =>
@@ -408,6 +567,9 @@ class SugarTvCard extends LitElement {
         this.config = config;
         this._data = this._data || this._getInitialDataState();
         this._lastHistoryFetch = this._lastHistoryFetch || 0;
+        // Null until history has been read; _staleThresholdMs falls back.
+        this._cadenceMs = this._cadenceMs || null;
+        this._syncAgeTicker();
     }
 
     willUpdate(changedProperties) {
@@ -418,6 +580,68 @@ class SugarTvCard extends LitElement {
 
     updated() {
         this._measureValueWidth();
+        this._measureValueDescent();
+        this._measureTimeFit();
+    }
+
+    /**
+     * Shrink the reading time when its phrasing will not fit beside the number.
+     *
+     * "14 min. ago" fits anywhere. "14 perccel ezelőtt" and "for 14 min siden"
+     * do not: at 420px they overran the card by 68 and 51 pixels, and since the
+     * line may not wrap, the overflow was clipped on both edges, taking the
+     * first digit of the reading with it.
+     *
+     * The time gives way rather than the reading. Sizing the whole card down
+     * would let a wordy timestamp shrink the number the card exists to show,
+     * and the number is the point; the time is context.
+     *
+     * Computed from the string's natural width rather than its rendered one, so
+     * the result does not depend on the scale currently applied and cannot
+     * oscillate: measure what the phrase would take unscaled, subtract what
+     * everything else on the line needs, and scale to what is left.
+     */
+    _measureTimeFit() {
+        const wrapper = this.renderRoot?.querySelector?.('.wrapper');
+        const container = this.renderRoot?.querySelector?.('.container');
+        const line = this.renderRoot?.querySelector?.('.line');
+        const time = this.renderRoot?.querySelector?.('.time');
+        const value = this.renderRoot?.querySelector?.('.value');
+        const text = time?.textContent?.trim();
+        if (!wrapper || !container || !line || !value || !text) return;
+
+        const valueFont = parseFloat(getComputedStyle(value).fontSize);
+        const available =
+            container.clientWidth -
+            2 *
+                SugarTvCard.PADDING_UNITS *
+                (valueFont / SugarTvCard.VALUE_UNITS);
+        const others =
+            line.getBoundingClientRect().width -
+            time.getBoundingClientRect().width;
+        if (!valueFont || !(available > 0)) return;
+
+        const context = SugarTvCard.measuringContext();
+        if (!context) return;
+        const style = getComputedStyle(time);
+        const unscaled =
+            SugarTvCard.TIME_UNITS * (valueFont / SugarTvCard.VALUE_UNITS);
+        context.font = `${style.fontWeight} ${unscaled}px ${style.fontFamily}`;
+        const natural = context.measureText(text).width;
+        if (!natural) return;
+
+        const scale = Math.min(
+            1,
+            Math.max(
+                SugarTvCard.MIN_TIME_SCALE,
+                (available - others) / natural,
+            ),
+        );
+        const rounded = Math.round(scale * 100) / 100;
+        if (rounded === this._timeScale) return;
+
+        this._timeScale = rounded;
+        wrapper.style.setProperty('--time-scale', String(rounded));
     }
 
     /*
@@ -473,6 +697,72 @@ class SugarTvCard extends LitElement {
 
         this._valueWidthBudget = budget;
         wrapper.style.setProperty('--tall-w', String(budget));
+    }
+
+    /**
+     * How far the reading's ink drops below its own box, in units.
+     *
+     * The stylesheet trims .value to the alphabetic baseline so that the space
+     * above the number matches the space below it. Digits sit on that baseline,
+     * so for a mg/dL reading the trim is exact. A decimal comma does not: it
+     * hangs below the baseline, outside the trimmed box, and in a locale that
+     * writes 11,4 it dropped far enough to land on the forecast line under it.
+     * Measured on a wide card, the ink ran 26px past the box against a 13px
+     * gap, so the comma sat on the text.
+     *
+     * Measure the ink, not the box, and measure it with canvas. A Range looks
+     * like the tool for this and is not: its rect is the font's line box, which
+     * reports the same 4.86u under "205" as under "11,4" because it describes
+     * the font rather than the glyphs. measureText's actualBoundingBoxDescent
+     * is the ink, and it separates them properly: 0.2u for digits, 2.84u once a
+     * comma is there.
+     *
+     * Reading it off the glyphs rather than testing for a comma means it holds
+     * for whatever separator a locale writes, and costs nothing on the cards
+     * that have no descender, which is every mg/dL one.
+     *
+     * Like the width budget this is scale-invariant, because the ink and the
+     * font size grow together, so expressing it in units cannot oscillate.
+     */
+    _measureValueDescent() {
+        const wrapper = this.renderRoot?.querySelector?.('.wrapper');
+        const value = this.renderRoot?.querySelector?.('.value');
+        const text = value?.textContent?.trim();
+        if (!wrapper || !text) return;
+
+        const style = getComputedStyle(value);
+        const fontSize = parseFloat(style.fontSize);
+        if (!fontSize) return;
+
+        const context = SugarTvCard.measuringContext();
+        if (!context) return;
+        context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+
+        const ink = context.measureText(text).actualBoundingBoxDescent;
+        if (!Number.isFinite(ink)) return;
+
+        const unit = fontSize / SugarTvCard.VALUE_UNITS;
+        const descent = Math.round(Math.max(0, ink / unit) * 100) / 100;
+        if (descent === this._valueDescent) return;
+
+        this._valueDescent = descent;
+        wrapper.style.setProperty('--value-descent', String(descent));
+    }
+
+    // One canvas for the life of the page. Measuring is cheap; allocating a
+    // canvas per render is not, and this runs on every update.
+    static measuringContext() {
+        if (SugarTvCard._measuringContext !== undefined) {
+            return SugarTvCard._measuringContext;
+        }
+        try {
+            SugarTvCard._measuringContext = document
+                .createElement('canvas')
+                .getContext('2d');
+        } catch (e) {
+            SugarTvCard._measuringContext = null;
+        }
+        return SugarTvCard._measuringContext;
     }
 
     _updateData() {
@@ -669,12 +959,14 @@ class SugarTvCard extends LitElement {
             const targetTime = currentTime - 5 * 60; // 5 min before current reading
             let previousState = null;
             let bestDiff = Infinity;
+            const seenTimes = [];
 
             for (const state of states) {
                 if (!this._isValidValue(state.s)) continue;
 
                 const stateTime = state.lu || state.lc || state.t; // Support HA versions
                 if (!stateTime) continue;
+                seenTimes.push(stateTime * 1000);
 
                 // Skip the current state — we need a different reading
                 if (Math.abs(stateTime - currentTime) < 1) continue;
@@ -684,6 +976,16 @@ class SugarTvCard extends LitElement {
                     bestDiff = diff;
                     previousState = state;
                 }
+            }
+
+            // Keep the last known cadence when this window was too sparse to
+            // measure one: a flat stretch is exactly when the reading is most
+            // likely to look stuck, and reverting to the 15 minute fallback
+            // there would widen the window at the worst moment.
+            const cadence = SugarTvCard.cadenceFromHistory(seenTimes);
+            if (cadence) {
+                this._cadenceMs = cadence;
+                this.requestUpdate();
             }
 
             if (previousState) {
@@ -712,16 +1014,198 @@ class SugarTvCard extends LitElement {
             return localize('common.default_time');
         }
 
+        const locale = this._locale();
+
+        // A null age means this engine cannot phrase one in this language. Fall
+        // through to the clock rather than to English: the rest of the card is
+        // translated, and one English phrase among it reads as a bug.
+        if (this.config?.relative_time) {
+            const age = this._formatAge(timestamp, locale);
+            if (age) return age;
+        }
+
+        // hour12 has to be stated: left to Intl it follows the locale, which
+        // is exactly the assumption Home Assistant's own setting overrides.
         const options = {
             hour: '2-digit',
             minute: '2-digit',
+            hour12: this._useAmPm(),
         };
 
-        const locale =
-            (this.config && this.config.locale) ||
-            (this.hass && this.hass.language);
+        return new Date(timestamp).toLocaleTimeString(locale, options);
+    }
 
-        return new Date(timestamp).toLocaleTimeString(locale || [], options);
+    /**
+     * How old the reading is, in place of a clock reading, for a card read at a
+     * glance across a room where the absolute time is one subtraction away from
+     * the answer the user actually wants (#94, point 1).
+     *
+     * The wording is each language's own abbreviated phrasing, "3 min. ago",
+     * "3 мин. назад", "vor 3 Min.". Anything under a minute reads "now" in the
+     * local language.
+     *
+     * Returns null when this engine cannot phrase an age in this language, so
+     * the caller can show the clock instead.
+     */
+    _formatAge(timestamp, locale) {
+        const ms = Date.now() - new Date(timestamp).getTime();
+        if (!Number.isFinite(ms)) return null;
+        if (!SugarTvCard.hasRelativeTimeData(locale)) return null;
+
+        // Everything below a minute lands here, including the negative age a
+        // sensor clock running ahead of the browser produces. Both want the
+        // same answer: "in 2 minutes" on a glucose card reads as a malfunction.
+        const minutes = Math.round(ms / 60000);
+        if (minutes < 1) {
+            return new Intl.RelativeTimeFormat(locale || undefined, {
+                numeric: 'auto',
+            }).format(0, 'second');
+        }
+
+        // Past the hour mark the minute count stops being readable at a glance,
+        // and an age that long only happens on a sensor that has stopped.
+        return minutes < 60
+            ? SugarTvCard.formatAgo(locale, minutes, 'minute')
+            : SugarTvCard.formatAgo(locale, Math.round(minutes / 60), 'hour');
+    }
+
+    /**
+     * Whether this engine actually has age wording for this language.
+     *
+     * Intl never fails: asked for a language its build has no data for, it
+     * quietly answers in English. That is worse than it sounds here, because
+     * the card ships its own translations for all of Home Assistant's
+     * languages, so the result is a Georgian card with one English phrase in
+     * it. What gives the miss away is resolvedOptions, which reports the locale
+     * Intl actually fell back to.
+     *
+     * Both formatters have to be asked, because the card uses both: the unit
+     * abbreviation for a count of minutes, and RelativeTimeFormat for the "now"
+     * under a minute. Their data sets are separate, so one can be present
+     * without the other.
+     *
+     * This is a property of the running engine, not of the language: a browser
+     * built with the full ICU data set has all of these, a trimmed one does
+     * not. So ask at runtime rather than carrying a list.
+     */
+    static hasRelativeTimeData(locale) {
+        if (!locale) return true;
+        const base = (tag) => String(tag).split('-')[0].toLowerCase();
+        const speaks = (resolved) => base(resolved) === base(locale);
+        try {
+            return (
+                speaks(
+                    new Intl.RelativeTimeFormat(locale).resolvedOptions()
+                        .locale,
+                ) &&
+                speaks(
+                    new Intl.NumberFormat(locale, {
+                        style: 'unit',
+                        unit: 'minute',
+                    }).resolvedOptions().locale,
+                )
+            );
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * "3 min ago" in the language's own words.
+     *
+     * The tensed phrasing, not a bare "3 min", because this replaces a
+     * timestamp on a card full of numbers and a count with no tense reads as a
+     * duration rather than an age. Home Assistant's own relativeTime helper
+     * offers both and this is its default; the bare form is what it produces
+     * only when a caller passes includeTense: false.
+     *
+     * Short rather than long: "3 minutes ago" runs to nearly three times the
+     * width of the clock it replaces, and this sits beside the reading. Short
+     * also turns out to be the style CLDR keeps unsigned. It is `narrow` that
+     * renders as "-3 мин" in several languages, where a minus beside a glucose
+     * value reads as a negative number, and that trap is what this chain
+     * guards: widen to long if short comes back signed, and fall back to the
+     * untensed count if even long is (Swiss German, alone among the 64).
+     *
+     * numeric: 'auto' matches Home Assistant, so the card and the rest of the
+     * interface phrase an age the same way.
+     */
+    static formatAgo(locale, amount, unit) {
+        try {
+            for (const style of SugarTvCard.stylesFor(locale)) {
+                const text = new Intl.RelativeTimeFormat(locale || undefined, {
+                    numeric: 'auto',
+                    style,
+                }).format(-amount, unit);
+                // ASCII hyphen, U+2212 minus, U+2013 en dash.
+                if (!/^[-−–+]/.test(text.trim())) {
+                    return SugarTvCard.trimAbbreviationDots(text);
+                }
+            }
+            return SugarTvCard.trimAbbreviationDots(
+                new Intl.NumberFormat(locale || undefined, {
+                    style: 'unit',
+                    unit,
+                    unitDisplay: 'short',
+                }).format(amount),
+            );
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
+     * Which phrasings to try, shortest first.
+     *
+     * Short everywhere except where the abbreviation is marked by something
+     * that cannot be dropped. Hebrew abbreviates with a geresh, "דק׳", and the
+     * geresh is what says it is an abbreviation at all: strip it and "דק" is a
+     * different Hebrew word. So Hebrew asks for the full "דקות" instead, which
+     * needs no mark. Longer, but the card scales the phrase to fit anyway, and
+     * the alternative is a word that means something else.
+     */
+    static SPELLED_OUT = ['he'];
+
+    static stylesFor(locale) {
+        const base = String(locale || 'en')
+            .split('-')[0]
+            .toLowerCase();
+        return SugarTvCard.SPELLED_OUT.includes(base)
+            ? ['long']
+            : ['short', 'long'];
+    }
+
+    /**
+     * Drop the stop CLDR puts after an abbreviated unit, so the card reads
+     * "14 min ago" rather than "14 min. ago".
+     *
+     * 26 of the 64 languages carry one, and they do not all spell it with a
+     * full stop: Hindi uses U+0970, the Devanagari abbreviation sign, which
+     * reads as a dot and would otherwise survive a naive strip.
+     *
+     * Applied to every language, including the few where the abbreviation is a
+     * clipped word and the stop is part of its spelling, so German renders
+     * "vor 14 Min". That is a deliberate call for an even look across the card,
+     * not an oversight.
+     */
+    static ABBREVIATION_STOPS = /[.\u0970\u2024\u06d4](?=\s|$)/g;
+
+    /*
+     * Hebrew's singular comes back as "לפני דקה (1)", the word followed by the
+     * numeral in brackets, in every style and both numeric modes. It is the
+     * only language that does it, and since the card shows a one-minute age
+     * constantly it would be on screen most of the time. "לפני דקה" already
+     * says "a minute ago"; the bracketed 1 adds nothing.
+     */
+    static TRAILING_NUMERAL = /\s*\(\d+\)\s*$/;
+
+    static trimAbbreviationDots(text) {
+        return (
+            text
+                // Only a mark that ends a word, never one inside a number.
+                .replace(SugarTvCard.ABBREVIATION_STOPS, '')
+                .replace(SugarTvCard.TRAILING_NUMERAL, '')
+        );
     }
 
     _calculateDelta() {
@@ -757,7 +1241,7 @@ class SugarTvCard extends LitElement {
         }
 
         const delta = currentValue - previousValue;
-        const locale = this.config.locale || [];
+        const locale = this._locale();
         const isMmol = this._data.unit === SugarTvCard.UNITS.MMOLL;
 
         const roundedAbs = isMmol
@@ -766,15 +1250,27 @@ class SugarTvCard extends LitElement {
         const formatOpts = isMmol
             ? { minimumFractionDigits: 1, maximumFractionDigits: 1 }
             : {};
-        const absFormatted = roundedAbs.toLocaleString(locale, formatOpts);
+        const absFormatted = roundedAbs.toLocaleString(this._numberLocale(), {
+            ...formatOpts,
+            ...this._groupingOption(),
+        });
 
         // Exact equality: drop the sign so "no change" is visually distinct
-        // from sub-unit drift (＋0 / －0 still preserve direction).
+        // from sub-unit drift (+0 / -0 still preserve direction).
         if (delta === 0) {
             return absFormatted;
         }
 
-        const sign = delta > 0 ? '＋' : '－';
+        /*
+         * An ASCII plus and a real minus, not the fullwidth ＋ and － this used
+         * to draw. Those are CJK-width glyphs: measured against the card's own
+         * font they advance 29.9px where a digit advances 16.6, so "＋0,3" ran
+         * wide enough to wrap between the sign and its number in a narrow slot,
+         * leaving the sign stranded on a line of its own. U+2212 is the minus
+         * proper rather than a hyphen, and it matches the digit advance, which
+         * is what keeps the sign optically attached under tabular figures.
+         */
+        const sign = delta > 0 ? '+' : '\u2212';
         return `${sign}${absFormatted}`;
     }
 
@@ -787,6 +1283,44 @@ class SugarTvCard extends LitElement {
         return SugarTvCard.isValidValue(value);
     }
 
+    /**
+     * Recover the sensor's polling interval from the gaps between its history
+     * entries.
+     *
+     * Take the SMALLEST gap, not the average or the median. Home Assistant only
+     * writes a history entry when the state actually changes, so a CGM that
+     * reports the same number twice leaves no entry and the gap around it comes
+     * out double. That error runs one way only: a missing entry can inflate a
+     * gap, never shrink one. The smallest observed gap is therefore the closest
+     * thing to the true cadence, and averaging would drag it upward on exactly
+     * the flat stretches where a stuck sensor most needs catching.
+     */
+    static cadenceFromHistory(timestampsMs) {
+        const sorted = [...new Set(timestampsMs)].sort((a, b) => a - b);
+        if (sorted.length < 2) return null;
+
+        let smallest = Infinity;
+        for (let i = 1; i < sorted.length; i++) {
+            const gap = sorted[i] - sorted[i - 1];
+            if (gap >= SugarTvCard.MIN_CADENCE_MS && gap < smallest) {
+                smallest = gap;
+            }
+        }
+        return Number.isFinite(smallest) ? smallest : null;
+    }
+
+    // The window after which a reading stops being trustworthy. Derived from
+    // the sensor's own cadence where history allows, so that "stale" means the
+    // same number of missed polls on a 1 minute sensor as on a 5 minute one.
+    _staleThresholdMs() {
+        const cadence = this._cadenceMs;
+        if (!cadence) return SugarTvCard.STALE_FALLBACK_MS;
+        return Math.min(
+            cadence * SugarTvCard.STALE_INTERVALS,
+            SugarTvCard.STALE_FALLBACK_MS,
+        );
+    }
+
     _isStale(timestamp) {
         if (
             !timestamp ||
@@ -795,7 +1329,33 @@ class SugarTvCard extends LitElement {
         ) {
             return true;
         }
-        return Date.now() - new Date(timestamp).getTime() > 900000; // 15 minutes
+        const age = Date.now() - new Date(timestamp).getTime();
+        return age > this._staleThresholdMs();
+    }
+
+    /**
+     * The trend in words, for the screen reader.
+     *
+     * This used to print the card's internal key with the underscores taken
+     * out, so a Russian or Japanese user heard "rising quickly" in English. The
+     * key was never a translation, it was an identifier that happened to read
+     * as English.
+     *
+     * Home Assistant already has these seven, translated by its own
+     * translators, under the Dexcom integration's glucose trend sensor. Asking
+     * for them costs nothing and keeps the card saying what the rest of Home
+     * Assistant says about the same sensor. The humanised key remains the
+     * fallback, for an install without that integration's strings loaded.
+     */
+    static TREND_STATE_KEY =
+        'component.dexcom.entity.sensor.glucose_trend.state.';
+
+    _trendLabel(trend) {
+        if (!trend || trend === 'unknown') return '';
+        const translated = this.hass?.localize?.(
+            SugarTvCard.TREND_STATE_KEY + trend,
+        );
+        return translated || trend.replace(/_/g, ' ');
     }
 
     _handleTap() {
@@ -822,12 +1382,13 @@ class SugarTvCard extends LitElement {
             return localize('common.not_available');
         }
 
-        const locale = this.config.locale || [];
+        const locale = this._locale();
         const isMmol = this._data.unit === SugarTvCard.UNITS.MMOLL;
 
-        return numValue.toLocaleString(locale, {
+        return numValue.toLocaleString(this._numberLocale(), {
             minimumFractionDigits: isMmol ? 1 : 0,
             maximumFractionDigits: isMmol ? 1 : 0,
+            ...this._groupingOption(),
         });
     }
 
@@ -877,10 +1438,13 @@ class SugarTvCard extends LitElement {
             .filter(Boolean)
             .join(' ');
 
+        const localize = getLocalizer(this.config, this.hass);
         const ariaLabel = [
             this._formatValue(value),
-            unit,
-            trend && trend !== 'unknown' ? trend.replace(/_/g, ' ') : '',
+            unit === SugarTvCard.UNITS.MMOLL
+                ? localize('units.mmoll')
+                : localize('units.mgdl'),
+            this._trendLabel(trend),
             this._calculateDelta(),
         ]
             .filter(Boolean)

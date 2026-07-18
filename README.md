@@ -13,7 +13,8 @@ One card and one config in two slots: it takes the shape it is given.
 - **Multi-sensor support** — Dexcom, Nightscout, LibreView, LibreLink, Carelink (auto-detected)
 - Displays: current glucose, delta from previous reading, trend direction, last update time, glucose prediction
 - Color-coded glucose zones (AGP/TIR standard thresholds)
-- Stale data indicator — card fades when data is older than 15 minutes
+- Stale data indicator — the card fades once three polls have been missed,
+  measured against the sensor's own update interval
 - Tap to open HA more-info dialog with history graph
 - Automatic local time format and unit support (mmol/L and mg/dL)
 - Adapts to the space it is given: a wide slot lays the reading out in a row, a
@@ -97,12 +98,40 @@ for example, builds the id from your account username, so it is
 | `glucose_trend`       | entity id | auto-detected        | Point at the trend entity when the card cannot find it. YAML only.                |
 | `timestamp_attribute` | string    | auto-detected        | Attribute holding the measurement time, for an integration not listed above.      |
 | `show_prediction`     | boolean   | `true`               | The line of text under the reading.                                               |
+| `relative_time`       | boolean   | `false`              | Show the reading's age ("14 min ago") in place of the clock.                      |
 | `color_thresholds`    | boolean   | `true`               | Colour the reading by zone.                                                       |
 | `thresholds`          | object    | AGP/TIR for the unit | `urgent_low`, `low`, `high`, `urgent_high`, in whatever unit your sensor reports. |
 | `locale`              | string    | your HA language     | Formats the clock and the number, for example `en-GB` or `ru-RU`. YAML only.      |
 
 `glucose_trend` and `locale` are the two you have to write by hand; the rest are
-in the visual editor. The card's own text is available in English and Russian.
+in the visual editor.
+
+#### Where the clock format and the decimal separator come from
+
+The card takes both from Home Assistant, in this order.
+
+1. **Your Home Assistant profile**, if you have set Time format or Number format
+   there. Those are explicit choices about clocks and digits, so they win. Both
+   ship set to "auto-detect from language", in which case they defer.
+2. **The card's `locale`**, if you set one.
+3. **Your Home Assistant language**.
+
+The order matters for one common case. Home Assistant's language list has `en`
+and `en-GB`, and `en` on its own means American English to a browser, so a
+24-hour country running Home Assistant in plain English gets an AM/PM clock
+unless something says otherwise. Setting Time format to 24 hours in your profile
+is that something; `locale: en-GB` on the card is another.
+
+They are deliberately not separate card options. A card showing 15:12 beside 8.1
+is half German and half English, so the clock, the decimal separator and the
+digits are decided together or the card contradicts itself.
+
+The card is translated into all 64 languages Home Assistant ships, and a test
+fails when Home Assistant adds one the card has not caught up with. Only English
+and Russian are maintainer-written; the rest are machine-assisted and have not
+been checked by a native speaker, so corrections are genuinely welcome.
+`src/localize.js` holds all of it, one block per language, and
+`test/localize.test.js` will tell you if a key or a `{0}` slot goes missing.
 
 ### The forecast line
 
@@ -183,6 +212,53 @@ the card only trusts an age below the staleness threshold. Past it, the age and
 
 If your integration reports the measurement time under some other attribute of
 the glucose sensor, point the card at it with `timestamp_attribute`.
+
+#### Showing the age instead of the clock
+
+On a wall display a clock reading is one subtraction away from the thing you
+actually want to know, and next to a real clock it reads as a second clock. Set
+`relative_time: true` and the card shows how old the reading is in that spot
+instead: "14 min ago", "14 мин назад", "vor 14 Min". Under a minute it reads
+"now", past an hour it counts in hours.
+
+It is one or the other, not both. Every word comes from the browser's own locale
+data rather than from anything the card ships, so it is right in every language
+Home Assistant runs in, and it is the same phrasing Home Assistant uses
+elsewhere in its interface. The stop CLDR puts after an abbreviated unit is
+dropped in every language, so the card reads "14 min ago" and "vor 14 Min"
+rather than carrying a full stop in some languages and not others. Hebrew is
+spelled out instead, since the mark it abbreviates with is what makes the word
+an abbreviation at all.
+
+Languages differ a lot in how long this runs: "14 min ago" fits anywhere, "14
+perccel ezelőtt" is nearly three times the width of the clock it replaces. Since
+the line cannot wrap, the card measures the phrase and scales it down when it
+would not fit beside the reading. The time gives way rather than the number,
+which is the one thing the card exists to show.
+
+Some browsers are built with a trimmed locale data set and have no wording for
+every language. Rather than dropping to English in the middle of an otherwise
+translated card, the card keeps showing the clock for those. If you turn this on
+and still see a clock, that is why.
+
+#### When the card calls a reading stale
+
+The card dims once three polls have gone missing. Three of what depends on your
+sensor, so the card measures rather than assumes: it reads the gaps between your
+own readings in the recorder history and takes the smallest one as the update
+interval. A one minute CGM therefore dims after three minutes, a five minute one
+after fifteen.
+
+There is no setting for this, and the interval is not asked for. The card
+already reads history to compute the delta, so the answer is in data it holds.
+
+Two deliberate limits. It takes the smallest gap rather than an average, because
+Home Assistant writes no history entry when a reading repeats, and averaging
+would stretch the window on exactly the flat stretches where a stuck sensor most
+needs catching. And a measured interval can only shorten the window, never
+extend it past fifteen minutes: a live sensor that looks stale is a harmless
+failure, a dead one that looks live is not. With the recorder disabled, fifteen
+minutes is what you get.
 
 ### Glucose zone thresholds
 
