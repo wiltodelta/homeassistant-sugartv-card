@@ -540,7 +540,7 @@ describe('SugarTvCard', () => {
         it('shows the age when the option is on', () => {
             const card = createCard({ relative_time: true, locale: 'en' });
 
-            expect(card._formatTime(ago(2 * MIN))).toBe('2 min');
+            expect(card._formatTime(ago(2 * MIN))).toBe('2 min. ago');
         });
 
         it('says now under a minute, rather than "in 0 minutes"', () => {
@@ -561,7 +561,7 @@ describe('SugarTvCard', () => {
         it('switches to hours once minutes stop being readable', () => {
             const card = createCard({ relative_time: true, locale: 'en' });
 
-            expect(card._formatTime(ago(150 * MIN))).toBe('3 hr');
+            expect(card._formatTime(ago(150 * MIN))).toBe('3 hr. ago');
         });
 
         /*
@@ -578,15 +578,15 @@ describe('SugarTvCard', () => {
          * narrow slot; these hold inside 1.4x.
          */
         it.each([
-            ['en', '2 min', '3 hr'],
-            ['de', '2 Min.', '3 Std.'],
-            ['ja', '2 分', '3 時間'],
-            ['uk', '2 хв', '3 год'],
-            ['ru', '2 мин', '3 ч'],
-            ['fr', '2 min', '3 h'],
-            ['sv', '2 min', '3 tim'],
-            ['nb', '2 min', '3 t'],
-        ])('reads natively and briefly in %s', (locale, minutes, hours) => {
+            ['en', '2 min. ago', '3 hr. ago'],
+            ['de', 'vor 2 Min.', 'vor 3 Std.'],
+            ['ja', '2 分前', '3 時間前'],
+            ['uk', '2 хв тому', '3 год тому'],
+            ['ru', '2 мин. назад', '3 ч назад'],
+            ['fr', 'il y a 2 min', 'il y a 3 h'],
+            ['sv', 'för 2 min sen', 'för 3 tim sedan'],
+            ['nb', 'for 2 min siden', 'for 3 t siden'],
+        ])('says how long ago, in %s', (locale, minutes, hours) => {
             const card = createCard({ relative_time: true, locale });
 
             expect(words(card._formatTime(ago(2 * MIN)))).toBe(minutes);
@@ -642,13 +642,14 @@ describe('SugarTvCard', () => {
         });
 
         /*
-         * Swiss German had no usable relative-time phrasing at all: every style
-         * came back signed. The unit abbreviation gives it one, which is a
-         * second reason for the switch beyond width.
+         * Swiss German is signed in every tensed style CLDR has for it, and a
+         * minus beside a glucose reading looks like a negative value. It is the
+         * one language that drops to the untensed count.
          */
-        it('gives Swiss German a phrasing it previously had none for', () => {
-            expect(SugarTvCard.formatDuration('gsw', 3, 'minute')).toBe(
-                '3 min',
+        it('drops the tense only where every phrasing is signed', () => {
+            expect(SugarTvCard.formatAgo('gsw', 3, 'minute')).toBe('3 min');
+            expect(SugarTvCard.formatAgo('ru', 3, 'minute')).toBe(
+                '3 мин. назад',
             );
         });
 

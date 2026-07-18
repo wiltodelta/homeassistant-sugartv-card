@@ -404,3 +404,170 @@ describe('descender clearance under the reading', () => {
         expect(() => card._measureValueDescent()).not.toThrow();
     });
 });
+
+/*
+ * The reading time may not wrap, so a wordy phrasing has to be scaled down or
+ * it runs off the card. "14 perccel ezelőtt" overran a 420px card by 68px and
+ * was clipped at both edges, taking the first digit of the reading with it.
+ */
+describe('fitting the reading time beside the reading', () => {
+    let realGetComputedStyle;
+
+    beforeEach(() => {
+        realGetComputedStyle = globalThis.getComputedStyle;
+        SugarTvCard._measuringContext = undefined;
+    });
+
+    afterEach(() => {
+        globalThis.getComputedStyle = realGetComputedStyle;
+        SugarTvCard._measuringContext = undefined;
+    });
+
+    /*
+     * containerWidth is the card, lineWidth what the row currently occupies,
+     * timeWidth the part of it the time takes, and naturalTime what the phrase
+     * wants at full size. Everything the method needs, and nothing that needs
+     * a real layout engine.
+     */
+    function stubLine(
+        card,
+        {
+            containerWidth,
+            lineWidth,
+            timeWidth,
+            naturalTime,
+            text = '14 min. ago',
+            valueFont = 80,
+        },
+    ) {
+        const setProperty = vi.fn();
+        const wrapper = { style: { setProperty } };
+        const container = { clientWidth: containerWidth };
+        const line = { getBoundingClientRect: () => ({ width: lineWidth }) };
+        const time = {
+            textContent: text,
+            getBoundingClientRect: () => ({ width: timeWidth }),
+        };
+        const value = { textContent: '11,4' };
+        card.renderRoot = {
+            querySelector: (sel) =>
+                ({
+                    '.wrapper': wrapper,
+                    '.container': container,
+                    '.line': line,
+                    '.time': time,
+                    '.value': value,
+                })[sel] ?? null,
+        };
+        globalThis.getComputedStyle = (el) =>
+            el === value
+                ? { fontSize: `${valueFont}px` }
+                : { fontWeight: '400', fontFamily: 'Roboto' };
+        SugarTvCard._measuringContext = {
+            font: '',
+            measureText: () => ({ width: naturalTime }),
+        };
+        return { setProperty };
+    }
+
+    // The LAST write, not the first: the settling test measures twice and it is
+    // the second answer that says whether the result is stable.
+    const scaleOf = (setProperty) => {
+        const calls = setProperty.mock.calls.filter(
+            ([name]) => name === '--time-scale',
+        );
+        return calls.length ? Number(calls[calls.length - 1][1]) : null;
+    };
+
+    it('leaves a phrase that fits alone', () => {
+        const card = new SugarTvCard();
+        // 400px of card, 40px of padding, 200px taken by everything else,
+        // and the phrase wants 120 of the 160 left.
+        const { setProperty } = stubLine(card, {
+            containerWidth: 400,
+            lineWidth: 320,
+            timeWidth: 120,
+            naturalTime: 120,
+        });
+
+        card._measureTimeFit();
+
+        expect(scaleOf(setProperty)).toBe(1);
+    });
+
+    it('scales a phrase that would overrun the card', () => {
+        const card = new SugarTvCard();
+        // The same card, but the phrase wants 200 where only 160 is free.
+        const { setProperty } = stubLine(card, {
+            containerWidth: 400,
+            lineWidth: 400,
+            timeWidth: 200,
+            naturalTime: 200,
+        });
+
+        card._measureTimeFit();
+
+        expect(scaleOf(setProperty)).toBeCloseTo(0.8, 2);
+    });
+
+    /*
+     * Measured from the phrase's natural width rather than its rendered one, so
+     * applying a scale does not change the next answer. Were it otherwise the
+     * card would shrink the time a little more on every update.
+     */
+    it('settles rather than shrinking further each pass', () => {
+        const card = new SugarTvCard();
+        const { setProperty } = stubLine(card, {
+            containerWidth: 400,
+            lineWidth: 400,
+            timeWidth: 200,
+            naturalTime: 200,
+        });
+
+        card._measureTimeFit();
+        const first = scaleOf(setProperty);
+        /*
+         * A second pass sees the already-scaled row: the time now renders at
+         * 0.8 of its size, so the line is narrower, but the phrase's natural
+         * width has not moved. Re-stubbing hands the card a fresh wrapper, so
+         * the second pass has to be read from the second mock.
+         */
+        const second = stubLine(card, {
+            containerWidth: 400,
+            lineWidth: 360,
+            timeWidth: 160,
+            naturalTime: 200,
+        });
+        card._timeScale = undefined; // force a write rather than the no-op guard
+        card._measureTimeFit();
+
+        expect(scaleOf(second.setProperty)).toBe(first);
+    });
+
+    it('stops shrinking before the phrase becomes unreadable', () => {
+        const card = new SugarTvCard();
+        const { setProperty } = stubLine(card, {
+            containerWidth: 400,
+            lineWidth: 900,
+            timeWidth: 700,
+            naturalTime: 700,
+        });
+
+        card._measureTimeFit();
+
+        expect(scaleOf(setProperty)).toBe(SugarTvCard.MIN_TIME_SCALE);
+    });
+
+    it('survives an environment with no canvas', () => {
+        const card = new SugarTvCard();
+        stubLine(card, {
+            containerWidth: 400,
+            lineWidth: 520,
+            timeWidth: 320,
+            naturalTime: 320,
+        });
+        SugarTvCard._measuringContext = null;
+
+        expect(() => card._measureTimeFit()).not.toThrow();
+    });
+});

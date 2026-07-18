@@ -128,8 +128,13 @@ export const cardStyles = css`
         display: contents;
     }
 
+    /*
+     * --time-scale is measured, and is 1 unless the phrasing is too wide to sit
+     * beside the reading. Wordier languages ("14 perccel ezelőtt") would
+     * otherwise overrun the card, and the line cannot wrap.
+     */
     .time {
-        font-size: calc(6 * var(--u));
+        font-size: calc(6 * var(--u) * var(--time-scale, 1));
     }
 
     /*
