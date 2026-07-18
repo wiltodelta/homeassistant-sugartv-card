@@ -692,6 +692,40 @@ describe('SugarTvCard', () => {
             );
         });
 
+        /*
+         * Hebrew marks an abbreviation with a geresh, and the geresh is what
+         * makes it one: strip it from "דק׳" and "דק" is a different Hebrew
+         * word. So Hebrew is spelled out instead of abbreviated, which needs no
+         * mark at all.
+         */
+        it('spells Hebrew out rather than stripping its geresh', () => {
+            const shown = SugarTvCard.formatAgo('he', 14, 'minute');
+
+            expect(shown).toBe('לפני 14 דקות');
+            expect(shown).not.toContain('׳');
+        });
+
+        /*
+         * Hebrew's singular comes back as "לפני דקה (1)" from every style, and
+         * a one-minute age is on screen constantly.
+         */
+        it.each([
+            [1, 'minute', 'לפני דקה'],
+            [1, 'hour', 'לפני שעה'],
+        ])(
+            'drops the bracketed numeral Hebrew adds to %s %s',
+            (n, unit, expected) => {
+                expect(SugarTvCard.formatAgo('he', n, unit)).toBe(expected);
+            },
+        );
+
+        it('leaves brackets that are part of the phrasing alone', () => {
+            // Luxembourgish really does write "viru(n)".
+            expect(SugarTvCard.formatAgo('lb', 14, 'minute')).toBe(
+                'viru(n) 14 Min',
+            );
+        });
+
         it.each([
             ['en', true],
             ['ru', true],
