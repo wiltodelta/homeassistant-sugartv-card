@@ -57,6 +57,10 @@ class SugarTvCard extends LitElement {
     // pixel width back into units.
     static VALUE_UNITS = 20;
     static PADDING_UNITS = 5;
+    // .time is 6u in the stylesheet, and may shrink to this fraction of it
+    // before the card would rather clip than go on shrinking.
+    static TIME_UNITS = 6;
+    static MIN_TIME_SCALE = 0.6;
 
     // The longest reading each unit can render: "400" and "22.2". The width
     // budget is sized for these so the number keeps one size across readings.
@@ -577,6 +581,67 @@ class SugarTvCard extends LitElement {
     updated() {
         this._measureValueWidth();
         this._measureValueDescent();
+        this._measureTimeFit();
+    }
+
+    /**
+     * Shrink the reading time when its phrasing will not fit beside the number.
+     *
+     * "14 min. ago" fits anywhere. "14 perccel ezelőtt" and "for 14 min siden"
+     * do not: at 420px they overran the card by 68 and 51 pixels, and since the
+     * line may not wrap, the overflow was clipped on both edges, taking the
+     * first digit of the reading with it.
+     *
+     * The time gives way rather than the reading. Sizing the whole card down
+     * would let a wordy timestamp shrink the number the card exists to show,
+     * and the number is the point; the time is context.
+     *
+     * Computed from the string's natural width rather than its rendered one, so
+     * the result does not depend on the scale currently applied and cannot
+     * oscillate: measure what the phrase would take unscaled, subtract what
+     * everything else on the line needs, and scale to what is left.
+     */
+    _measureTimeFit() {
+        const wrapper = this.renderRoot?.querySelector?.('.wrapper');
+        const container = this.renderRoot?.querySelector?.('.container');
+        const line = this.renderRoot?.querySelector?.('.line');
+        const time = this.renderRoot?.querySelector?.('.time');
+        const value = this.renderRoot?.querySelector?.('.value');
+        const text = time?.textContent?.trim();
+        if (!wrapper || !container || !line || !value || !text) return;
+
+        const valueFont = parseFloat(getComputedStyle(value).fontSize);
+        const available =
+            container.clientWidth -
+            2 *
+                SugarTvCard.PADDING_UNITS *
+                (valueFont / SugarTvCard.VALUE_UNITS);
+        const others =
+            line.getBoundingClientRect().width -
+            time.getBoundingClientRect().width;
+        if (!valueFont || !(available > 0)) return;
+
+        const context = SugarTvCard.measuringContext();
+        if (!context) return;
+        const style = getComputedStyle(time);
+        const unscaled =
+            SugarTvCard.TIME_UNITS * (valueFont / SugarTvCard.VALUE_UNITS);
+        context.font = `${style.fontWeight} ${unscaled}px ${style.fontFamily}`;
+        const natural = context.measureText(text).width;
+        if (!natural) return;
+
+        const scale = Math.min(
+            1,
+            Math.max(
+                SugarTvCard.MIN_TIME_SCALE,
+                (available - others) / natural,
+            ),
+        );
+        const rounded = Math.round(scale * 100) / 100;
+        if (rounded === this._timeScale) return;
+
+        this._timeScale = rounded;
+        wrapper.style.setProperty('--time-scale', String(rounded));
     }
 
     /*
@@ -975,17 +1040,9 @@ class SugarTvCard extends LitElement {
      * glance across a room where the absolute time is one subtraction away from
      * the answer the user actually wants (#94, point 1).
      *
-     * The wording is CLDR's abbreviated unit, "14 min", "14 мин", "14 Min.",
-     * rather than a full "14 minutes ago". Measured across the 49 languages
-     * this engine can phrase, the full form runs from 1.2 to 2.9 times the
-     * width of the clock it replaces, and the worst of them ("for 14 min
-     * siden") leaves five pixels of slack in a narrow slot before it starts
-     * crowding the reading. The abbreviation holds every language inside 1.4x
-     * and is still each language's own, not an English one borrowed.
-     *
-     * The pastness is carried by the position rather than by a word: this sits
-     * where the reading time has always sat, and anything under a minute reads
-     * "now" in the local language, which anchors the rest as time since.
+     * The wording is each language's own abbreviated phrasing, "3 min. ago",
+     * "3 мин. назад", "vor 3 Min.". Anything under a minute reads "now" in the
+     * local language.
      *
      * Returns null when this engine cannot phrase an age in this language, so
      * the caller can show the clock instead.
@@ -1008,12 +1065,8 @@ class SugarTvCard extends LitElement {
         // Past the hour mark the minute count stops being readable at a glance,
         // and an age that long only happens on a sensor that has stopped.
         return minutes < 60
-            ? SugarTvCard.formatDuration(locale, minutes, 'minute')
-            : SugarTvCard.formatDuration(
-                  locale,
-                  Math.round(minutes / 60),
-                  'hour',
-              );
+            ? SugarTvCard.formatAgo(locale, minutes, 'minute')
+            : SugarTvCard.formatAgo(locale, Math.round(minutes / 60), 'hour');
     }
 
     /**
@@ -1058,19 +1111,35 @@ class SugarTvCard extends LitElement {
     }
 
     /**
-     * A count of minutes or hours in the language's own abbreviation.
+     * "3 min. ago" in the language's own words.
      *
-     * This replaces Intl.RelativeTimeFormat, which was the obvious tool and the
-     * wrong one. Its narrow style renders as a signed number in several
-     * languages ("-3 мин", where a minus beside a glucose number reads as a
-     * negative value), its wider styles run to "for 14 min siden", and which
-     * style is signed differs between engines, so choosing among them meant a
-     * fallback chain that still left Bosnian with nothing usable. The unit
-     * abbreviation has one form, is never signed, and is shorter in every
-     * language measured.
+     * The tensed phrasing, not a bare "3 min", because this replaces a
+     * timestamp on a card full of numbers and a count with no tense reads as a
+     * duration rather than an age. Home Assistant's own relativeTime helper
+     * offers both and this is its default; the bare form is what it produces
+     * only when a caller passes includeTense: false.
+     *
+     * Short rather than long: "3 minutes ago" runs to nearly three times the
+     * width of the clock it replaces, and this sits beside the reading. Short
+     * also turns out to be the style CLDR keeps unsigned. It is `narrow` that
+     * renders as "-3 мин" in several languages, where a minus beside a glucose
+     * value reads as a negative number, and that trap is what this chain
+     * guards: widen to long if short comes back signed, and fall back to the
+     * untensed count if even long is (Swiss German, alone among the 64).
+     *
+     * numeric: 'auto' matches Home Assistant, so the card and the rest of the
+     * interface phrase an age the same way.
      */
-    static formatDuration(locale, amount, unit) {
+    static formatAgo(locale, amount, unit) {
         try {
+            for (const style of ['short', 'long']) {
+                const text = new Intl.RelativeTimeFormat(locale || undefined, {
+                    numeric: 'auto',
+                    style,
+                }).format(-amount, unit);
+                // ASCII hyphen, U+2212 minus, U+2013 en dash.
+                if (!/^[-−–+]/.test(text.trim())) return text;
+            }
             return new Intl.NumberFormat(locale || undefined, {
                 style: 'unit',
                 unit,

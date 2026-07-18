@@ -98,7 +98,7 @@ for example, builds the id from your account username, so it is
 | `glucose_trend`       | entity id | auto-detected        | Point at the trend entity when the card cannot find it. YAML only.                |
 | `timestamp_attribute` | string    | auto-detected        | Attribute holding the measurement time, for an integration not listed above.      |
 | `show_prediction`     | boolean   | `true`               | The line of text under the reading.                                               |
-| `relative_time`       | boolean   | `false`              | Show the reading's age ("14 min") in place of the clock.                          |
+| `relative_time`       | boolean   | `false`              | Show the reading's age ("14 min. ago") in place of the clock.                     |
 | `color_thresholds`    | boolean   | `true`               | Colour the reading by zone.                                                       |
 | `thresholds`          | object    | AGP/TIR for the unit | `urgent_low`, `low`, `high`, `urgent_high`, in whatever unit your sensor reports. |
 | `locale`              | string    | your HA language     | Formats the clock and the number, for example `en-GB` or `ru-RU`. YAML only.      |
@@ -218,20 +218,19 @@ the glucose sensor, point the card at it with `timestamp_attribute`.
 On a wall display a clock reading is one subtraction away from the thing you
 actually want to know, and next to a real clock it reads as a second clock. Set
 `relative_time: true` and the card shows how old the reading is in that spot
-instead: "14 min", "14 мин", "14 Min.", "14 分". Under a minute it reads "now",
-past an hour it counts in hours.
+instead: "14 min. ago", "14 мин. назад", "vor 14 Min.". Under a minute it reads
+"now", past an hour it counts in hours.
 
-It is one or the other, not both. The wording is each language's own
-abbreviation, taken from the browser's locale data rather than from anything the
-card ships, so it is right in every language Home Assistant runs in.
+It is one or the other, not both. Every word comes from the browser's own locale
+data rather than from anything the card ships, so it is right in every language
+Home Assistant runs in, and it is the same phrasing Home Assistant uses
+elsewhere in its interface.
 
-It is an abbreviation rather than a full "14 minutes ago" because this stands in
-the slot the clock occupied, beside the reading. Measured across every language,
-the full phrasing runs up to nearly three times the width of a clock reading,
-and the longest of them crowd the number on a narrow card. The abbreviations all
-fit inside about 1.4 times. What carries the meaning is the position, which is
-where the reading time has always been, plus the "now" at the bottom of the
-range.
+Languages differ a lot in how long this runs: "14 min. ago" fits anywhere, "14
+perccel ezelőtt" is nearly three times the width of the clock it replaces. Since
+the line cannot wrap, the card measures the phrase and scales it down when it
+would not fit beside the reading. The time gives way rather than the number,
+which is the one thing the card exists to show.
 
 Some browsers are built with a trimmed locale data set and have no wording for
 every language. Rather than dropping to English in the middle of an otherwise
