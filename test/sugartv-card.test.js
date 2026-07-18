@@ -1161,7 +1161,7 @@ describe('SugarTvCard', () => {
                 previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
-            expect(card._calculateDelta()).toBe('＋10');
+            expect(card._calculateDelta()).toBe('+10');
         });
 
         it('calculates negative delta in mg/dL', () => {
@@ -1177,7 +1177,7 @@ describe('SugarTvCard', () => {
                 previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
-            expect(card._calculateDelta()).toBe('－20');
+            expect(card._calculateDelta()).toBe('−20');
         });
 
         it('calculates delta in mmol/L with 1 decimal', () => {
@@ -1194,7 +1194,7 @@ describe('SugarTvCard', () => {
                 unit: 'mmol/L',
             };
             const delta = card._calculateDelta();
-            expect(delta).toMatch(/＋0[.,]7/);
+            expect(delta).toMatch(/\+0[.,]7/);
         });
 
         it('returns null when same timestamps', () => {
@@ -1271,7 +1271,7 @@ describe('SugarTvCard', () => {
             expect(card._calculateDelta()).toMatch(/^0[.,]0$/);
         });
 
-        it('keeps "＋0" for positive sub-integer drift in mg/dL', () => {
+        it('keeps "+0" for positive sub-integer drift in mg/dL', () => {
             // 120.4 - 120 = 0.4 rounds to 0, but direction is preserved.
             const now = new Date().toISOString();
             const fiveMinAgo = new Date(
@@ -1285,10 +1285,10 @@ describe('SugarTvCard', () => {
                 previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
-            expect(card._calculateDelta()).toBe('＋0');
+            expect(card._calculateDelta()).toBe('+0');
         });
 
-        it('keeps "－0" for negative sub-integer drift in mg/dL', () => {
+        it('keeps "−0" for negative sub-integer drift in mg/dL', () => {
             const now = new Date().toISOString();
             const fiveMinAgo = new Date(
                 Date.now() - 5 * 60 * 1000,
@@ -1301,7 +1301,7 @@ describe('SugarTvCard', () => {
                 previous_ingest_time: fiveMinAgo,
                 unit: 'mg/dL',
             };
-            expect(card._calculateDelta()).toBe('－0');
+            expect(card._calculateDelta()).toBe('−0');
         });
 
         it('handles comma-separated decimals (European locale)', () => {
@@ -1319,7 +1319,7 @@ describe('SugarTvCard', () => {
             };
             const delta = card._calculateDelta();
             expect(delta).not.toBeNull();
-            expect(delta).toMatch(/＋0[.,]7/);
+            expect(delta).toMatch(/\+0[.,]7/);
         });
     });
 

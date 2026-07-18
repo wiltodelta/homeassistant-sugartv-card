@@ -298,3 +298,109 @@ describe('the contract with Home Assistant', () => {
         expect(dispatch).not.toHaveBeenCalled();
     });
 });
+
+/*
+ * The reading is trimmed to the alphabetic baseline so the space above it
+ * matches the space below. Digits sit on that baseline; a decimal comma does
+ * not, and in a locale that writes 11,4 it hung far enough below to print on
+ * the forecast line. The card reserves exactly the ink that hangs over.
+ */
+describe('descender clearance under the reading', () => {
+    let realGetComputedStyle;
+
+    beforeEach(() => {
+        realGetComputedStyle = globalThis.getComputedStyle;
+        SugarTvCard._measuringContext = undefined;
+    });
+
+    afterEach(() => {
+        globalThis.getComputedStyle = realGetComputedStyle;
+        SugarTvCard._measuringContext = undefined;
+    });
+
+    // Stand in for the canvas, which the test environment has no real one of.
+    // The numbers are what Roboto actually reports at this size.
+    function stubMeasuring(descentByText) {
+        SugarTvCard._measuringContext = {
+            font: '',
+            measureText: (text) => ({
+                actualBoundingBoxDescent: descentByText[text] ?? 0,
+            }),
+        };
+    }
+
+    const descentFor = (text, descentPx) => {
+        const card = new SugarTvCard();
+        card._data = { unit: 'mmol/L' };
+        const { setProperty } = stubRenderRoot(card, { text, fontSize: 80 });
+        stubMeasuring({ [text]: descentPx });
+
+        card._measureValueDescent();
+
+        const call = setProperty.mock.calls.find(
+            ([name]) => name === '--value-descent',
+        );
+        return call ? Number(call[1]) : null;
+    };
+
+    it('reserves room for a comma, which hangs below the baseline', () => {
+        // 80px over a 20u value is 4px a unit, so 11.36px of ink is 2.84u.
+        expect(descentFor('11,4', 11.36)).toBe(2.84);
+    });
+
+    it('reserves almost nothing for digits, which sit on it', () => {
+        expect(descentFor('205', 0.8)).toBe(0.2);
+    });
+
+    it('does not pay for a comma the locale did not write', () => {
+        expect(descentFor('11.4', 0.48)).toBeLessThan(
+            descentFor('11,4', 11.36),
+        );
+    });
+
+    /*
+     * The property that lets one measurement stand for every size: the ink and
+     * the font grow together, so a card that re-measures after resizing gets
+     * the same answer and cannot oscillate.
+     */
+    it('is scale invariant', () => {
+        const single = new SugarTvCard();
+        single._data = { unit: 'mmol/L' };
+        const a = stubRenderRoot(single, { text: '11,4', fontSize: 80 });
+        stubMeasuring({ '11,4': 11.36 });
+        single._measureValueDescent();
+
+        const doubled = new SugarTvCard();
+        doubled._data = { unit: 'mmol/L' };
+        const b = stubRenderRoot(doubled, { text: '11,4', fontSize: 160 });
+        stubMeasuring({ '11,4': 22.72 });
+        doubled._measureValueDescent();
+
+        const read = (s) =>
+            s.mock.calls.find(([n]) => n === '--value-descent')[1];
+        expect(read(b.setProperty)).toBe(read(a.setProperty));
+    });
+
+    it('does not rewrite an unchanged value', () => {
+        const card = new SugarTvCard();
+        card._data = { unit: 'mmol/L' };
+        const { setProperty } = stubRenderRoot(card, { text: '11,4' });
+        stubMeasuring({ '11,4': 11.36 });
+
+        card._measureValueDescent();
+        card._measureValueDescent();
+
+        expect(
+            setProperty.mock.calls.filter(([n]) => n === '--value-descent'),
+        ).toHaveLength(1);
+    });
+
+    it('survives an environment with no canvas at all', () => {
+        const card = new SugarTvCard();
+        card._data = { unit: 'mmol/L' };
+        stubRenderRoot(card, { text: '11,4' });
+        SugarTvCard._measuringContext = null;
+
+        expect(() => card._measureValueDescent()).not.toThrow();
+    });
+});

@@ -951,7 +951,7 @@ describe('Missing data scenarios', () => {
                 ).toISOString(),
                 unit: 'mg/dL',
             };
-            expect(card._calculateDelta()).toBe('＋10');
+            expect(card._calculateDelta()).toBe('+10');
         });
 
         it('returns null when time gap is exactly 9 minutes (540000ms)', () => {
@@ -980,7 +980,7 @@ describe('Missing data scenarios', () => {
                 ).toISOString(),
                 unit: 'mg/dL',
             };
-            expect(card._calculateDelta()).toBe('＋10');
+            expect(card._calculateDelta()).toBe('+10');
         });
 
         it('returns null for zero delta when timestamps are the same', () => {
