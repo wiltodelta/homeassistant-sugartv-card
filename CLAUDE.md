@@ -173,6 +173,14 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
   budget for the widest string the CURRENT UNIT allows, not the reading on
   screen: per-reading fills marginally better but jumps the number a quarter of
   its size crossing 99 to 100.
+- **Colour is spent on this card; new signals get loudness instead.** Orange
+  (`--sugartv-warning-text`) means "out of range" and red means "urgent", so any
+  second axis reaching for orange paints two unrelated meanings the same colour
+  and lands on red in the urgent zones, where nothing shows. The freshness
+  tiering (#94, point 2) is opacity only for that reason. Before adding a
+  colour, check the zone rules; before adding a tier, check whether opacity says
+  it. Related: a tier whose text never changes still needs the age ticker, since
+  only the tier moves, and a frozen card then looks correct rather than stuck.
 - **Sections view: row height 56px, gap 8px, so `rows: N` is `N*64-8` px.** The
   height is only definite when `getGridOptions()` returns a numeric `rows`.
   Masonry never sets a card height, so `cqh`/`height: 100%` do not resolve

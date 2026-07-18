@@ -135,6 +135,22 @@ export const cardStyles = css`
      */
     .time {
         font-size: calc(6 * var(--u) * var(--time-scale, 1));
+        transition: opacity 0.4s ease;
+    }
+
+    /*
+     * The time is only worth reading when it has something to say. While the
+     * reading is current it stays legible but quiet, and it comes up to full
+     * strength once a poll has been missed, before the whole card dims.
+     *
+     * Opacity alone, deliberately. The obvious second signal is orange, and
+     * orange already means "out of range" here (--sugartv-warning-text on the
+     * low and high zones), so an aging time on a high reading would paint two
+     * different meanings the same colour; on the urgent zones it would land on
+     * red. Whatever the zone, the tier has to read as loudness, not as hue.
+     */
+    .time.fresh {
+        opacity: 0.45;
     }
 
     /*
