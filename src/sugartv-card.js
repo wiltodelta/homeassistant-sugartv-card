@@ -1139,11 +1139,10 @@ class SugarTvCard extends LitElement {
                 }).format(-amount, unit);
                 // ASCII hyphen, U+2212 minus, U+2013 en dash.
                 if (!/^[-−–+]/.test(text.trim())) {
-                    return SugarTvCard.trimAbbreviationDots(locale, text);
+                    return SugarTvCard.trimAbbreviationDots(text);
                 }
             }
             return SugarTvCard.trimAbbreviationDots(
-                locale,
                 new Intl.NumberFormat(locale || undefined, {
                     style: 'unit',
                     unit,
@@ -1156,27 +1155,23 @@ class SugarTvCard extends LitElement {
     }
 
     /**
-     * Drop the full stop CLDR puts after an abbreviated unit, so the card reads
+     * Drop the stop CLDR puts after an abbreviated unit, so the card reads
      * "14 min ago" rather than "14 min. ago".
      *
-     * 26 of the 64 languages carry one. In most it marks a unit symbol and is
-     * optional: Russian's own standard writes "мин" without it, and "14 min
-     * ago" is the ordinary English form.
+     * 26 of the 64 languages carry one, and they do not all spell it with a
+     * full stop: Hindi uses U+0970, the Devanagari abbreviation sign, which
+     * reads as a dot and would otherwise survive a naive strip.
      *
-     * DOTTED_ABBREVIATIONS is the exception list. In German, Luxembourgish,
-     * Icelandic and Greek the abbreviation is a clipped word rather than a
-     * symbol, and the stop is part of its spelling: "vor 14 Min" is a
-     * misspelling in a way "14 min ago" is not. Those keep theirs.
+     * Applied to every language, including the few where the abbreviation is a
+     * clipped word and the stop is part of its spelling, so German renders
+     * "vor 14 Min". That is a deliberate call for an even look across the card,
+     * not an oversight.
      */
-    static DOTTED_ABBREVIATIONS = ['de', 'gsw', 'lb', 'is', 'el'];
+    static ABBREVIATION_STOPS = /[.\u0970\u2024\u06d4](?=\s|$)/g;
 
-    static trimAbbreviationDots(locale, text) {
-        const base = String(locale || 'en')
-            .split('-')[0]
-            .toLowerCase();
-        if (SugarTvCard.DOTTED_ABBREVIATIONS.includes(base)) return text;
-        // Only a stop that ends a word, never one inside a number.
-        return text.replace(/\.(?=\s|$)/g, '');
+    static trimAbbreviationDots(text) {
+        // Only a mark that ends a word, never one inside a number.
+        return text.replace(SugarTvCard.ABBREVIATION_STOPS, '');
     }
 
     _calculateDelta() {
