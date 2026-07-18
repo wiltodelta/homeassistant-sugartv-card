@@ -224,9 +224,9 @@ instead: "14 min. ago", "14 мин. назад", "vor 14 Min.". Under a minute i
 It is one or the other, not both. Every word comes from the browser's own locale
 data rather than from anything the card ships, so it is right in every language
 Home Assistant runs in, and it is the same phrasing Home Assistant uses
-elsewhere in its interface. The full stop that CLDR puts after an abbreviated
-unit is dropped, since "14 min ago" is the ordinary form, except in the handful
-of languages where the abbreviation is a clipped word and the stop spells it.
+elsewhere in its interface. The stop CLDR puts after an abbreviated unit is
+dropped in every language, so the card reads "14 min ago" and "vor 14 Min"
+rather than carrying a full stop in some languages and not others.
 
 Languages differ a lot in how long this runs: "14 min. ago" fits anywhere, "14
 perccel ezelőtt" is nearly three times the width of the clock it replaces. Since

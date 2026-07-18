@@ -669,18 +669,28 @@ describe('SugarTvCard', () => {
         });
 
         it.each([
-            ['de', 'vor 14 Min.'],
-            ['is', 'fyrir 14 mín.'],
-            ['el', 'πριν από 14 λεπ.'],
-            ['lb', 'viru(n) 14 Min.'],
-        ])(
-            'keeps the stop where it spells the word, in %s',
-            (locale, expected) => {
-                expect(SugarTvCard.formatAgo(locale, 14, 'minute')).toBe(
-                    expected,
-                );
-            },
-        );
+            ['de', 'vor 14 Min'],
+            ['is', 'fyrir 14 mín'],
+            ['el', 'πριν από 14 λεπ'],
+            ['lb', 'viru(n) 14 Min'],
+        ])('drops it in %s too, for an even look', (locale, expected) => {
+            expect(SugarTvCard.formatAgo(locale, 14, 'minute')).toBe(expected);
+        });
+
+        // Hindi marks an abbreviation with U+0970 rather than a full stop, and
+        // it reads as a dot, so a strip that only knew about "." would leave it.
+        it('drops the Devanagari abbreviation sign as well', () => {
+            expect(SugarTvCard.formatAgo('hi', 14, 'minute')).toBe(
+                '14 मि पहले',
+            );
+        });
+
+        // Nothing may touch a decimal point inside a number.
+        it('leaves a stop that is not ending a word', () => {
+            expect(SugarTvCard.trimAbbreviationDots('1.5 min ago')).toBe(
+                '1.5 min ago',
+            );
+        });
 
         it.each([
             ['en', true],
