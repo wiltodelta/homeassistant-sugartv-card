@@ -64,6 +64,47 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
   has three live shapes, from `sensor.last_glucose_level_mg_dl` to
   `sensor.john_doe_carelink_john_doe_last_glucose_level_mg_dl`. Use
   `siblingEntityId()`, never a prefix assumption or a bare `endsWith`.
+- **`hass.locale` is not `hass.language`, and the card must read both.** Each
+  user's profile carries a `FrontendLocaleData`: `language`, plus `time_format`
+  (`language` / `system` / `12` / `24`) and `number_format` (`comma_decimal`,
+  `decimal_comma`, `space_comma`, `quote_decimal`, `system`, `none`). Those are
+  explicit choices about clocks and digits and they outrank any language tag,
+  including the card's own `locale`. Reading only the language meant a UK user
+  on `en` who had set 24 hours still saw `03:12 PM`, because `en` alone is
+  American English to Intl. Mirror the frontend's own `useAmPm` (it sniffs by
+  formatting a 22:00 date and looking for "10") and `numberFormatToLocale` (a
+  format names a style, so it maps to a language that writes numbers that way) —
+  a card that disagrees with the clock in the HA header is worse than one that
+  is merely wrong. Resolve the locale in ONE place: it used to be derived in
+  four spots under three rules, and two of them stopped at `config.locale` and
+  fell through to the browser, drawing `15:10` beside `8.1` on one card.
+- **Intl never fails; it answers in English.** Asked for a language its ICU build
+  lacks, every `Intl.*` constructor silently falls back, so a card translated
+  into 64 languages shows one English phrase inside an otherwise Georgian
+  layout. `resolvedOptions().locale` is what gives the miss away — compare its
+  base tag to the requested one and degrade deliberately (this card shows the
+  clock). This is a property of the running engine, not of the language: Node
+  and Chrome disagree today, so ask at runtime and never carry a list. Ask each
+  formatter you actually use, since their data sets are separate.
+- **`Intl.RelativeTimeFormat` is the obvious tool for an age and the wrong one.**
+  Its `narrow` style renders as a signed number in several languages (`-3 мин`),
+  and a minus beside a glucose reading reads as a negative value; which locales
+  sign which style differs between engines, and Bosnian signs all three, so no
+  fallback chain fixes it. Its wider styles run long: measured across every
+  language, the full phrasing reaches 2.9x the width of the clock it replaces,
+  and `for 14 min siden` left five pixels of slack before crowding the reading.
+  `Intl.NumberFormat` with `style: 'unit'`, `unitDisplay: 'short'` gives each
+  language's own abbreviation (`14 min`, `14 мин`, `14 Min.`), is never signed,
+  and holds every language inside 1.4x. Pastness comes from the slot, plus the
+  `now` that `RelativeTimeFormat(numeric: 'auto').format(0, 'second')` yields
+  free in every language.
+- **HA ships 64 languages; `test/ha-languages.json` is the snapshot.** Taken from
+  the frontend's own `translationMetadata.json`, and a test compares the card's
+  tables against it so a new HA language turns the suite red instead of silently
+  falling back. Several tags only exist qualified (`zh-Hans`, `sr-Latn`,
+  `pt-BR`, `es-419`), so match the exact tag BEFORE the part before the hyphen:
+  `zh-Hans`.split('-')[0] is `zh`, which no table has, and Simplified Chinese
+  would read English with a good translation sitting right there.
 - **`last_updated` is not "when the sensor was last polled."** HA only advances
   it when the state or an attribute actually changes; an identical rewrite
   early-returns and bumps `last_reported`, which the websocket never sends to
@@ -92,6 +133,24 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
   double chevrons and the help circle each carry their own measured `--icon-trim`.
   Measure ink, not boxes: `getBoundingClientRect()` on the SVG `path` for icons,
   `measureText().actualBoundingBox*` for text. Equal box gaps prove nothing.
+- **A `Range` rect is a box, not ink, and it looks exactly like the right tool.**
+  `text-box: trim-both cap alphabetic` ends `.value` at the baseline, which is
+  exact for digits and wrong for a decimal comma: in a mmol locale writing
+  `11,4` the comma hung 26px past a 13px gap and printed on the forecast line.
+  The first fix measured `Range.getBoundingClientRect()` and reported the same
+  `4.86u` under `205` as under `11,4`, because that rect describes the font's
+  line box. `measureText(text).actualBoundingBoxDescent` is the ink and
+  separates them: `0.2u` for digits, `2.84u` once a comma is there. Reserve that
+  as `--value-descent` (scale-invariant, same argument as the width budget) so
+  the ink-to-ink gap is identical whatever separator the locale writes.
+- **Fullwidth `＋` and `－` (U+FF0B/U+FF0D) are CJK-width glyphs.** They advance
+  29.9px where a digit advances 16.6, so the delta ran wide enough to wrap
+  between the sign and its number and strand the sign on its own line. Use ASCII
+  `+` and U+2212 `−`: both match the digit advance, which is what keeps the sign
+  optically attached under `tabular-nums`. `white-space: nowrap` belongs on
+  `.value` and `.delta` as well as `.time` — a sign must never part from its
+  number, and unit tests against a fake DOM cannot see a wrap, so this one has
+  no automated guard.
 - **Width-per-unit is scale-invariant, so one measurement sizes the type.** The
   column budget has to know how wide a reading renders, which depends on the
   font and theme; CSS cannot ask. Text width scales linearly with font-size, so
