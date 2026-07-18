@@ -752,6 +752,45 @@ describe('SugarTvCard', () => {
         });
     });
 
+    /*
+     * The seam. _isFresh can be perfect and the card still never dim, which is
+     * exactly the failure a unit test on the predicate alone cannot see.
+     */
+    describe('the quiet time tier in the markup', () => {
+        const MIN = 60 * 1000;
+        const rendered = (config, minutesAgo) => {
+            const card = createCard(config);
+            card._data = {
+                ...card._data,
+                value: '120',
+                reading_time: new Date(
+                    Date.now() - minutesAgo * MIN,
+                ).toISOString(),
+                trend: 'steady',
+                unit: 'mg/dL',
+            };
+            return card.render();
+        };
+
+        it('marks the time quiet while the reading is current', () => {
+            expect(rendered({ dim_fresh_time: true }, 1)).toContain(
+                'class="time fresh"',
+            );
+        });
+
+        it('drops the mark once a poll has been missed', () => {
+            expect(rendered({ dim_fresh_time: true }, 7)).not.toContain(
+                'fresh',
+            );
+        });
+
+        // The default has to stay exactly what it was for everyone who never
+        // asked for this, which on a fresh reading is a time at full strength.
+        it('leaves the time alone when the option is off', () => {
+            expect(rendered({}, 1)).not.toContain('fresh');
+        });
+    });
+
     describe('the age ticker', () => {
         // Nothing about the card changes as a minute passes, so without a timer
         // the age would sit frozen at whatever it read when the value arrived.
@@ -773,6 +812,24 @@ describe('SugarTvCard', () => {
             expect(relative.requestUpdate).toHaveBeenCalled();
 
             relative._stopAgeTicker();
+            vi.useRealTimers();
+        });
+
+        /*
+         * A dimmed time needs the timer just as much as an age does, and it is
+         * the easier one to miss: its text never changes, only the tier it
+         * sits in, so a frozen card looks right rather than obviously stuck.
+         */
+        it('runs for a dimmed clock too, whose text never changes', () => {
+            vi.useFakeTimers();
+
+            const card = createCard({ dim_fresh_time: true });
+            card.isConnected = true;
+            card._syncAgeTicker();
+
+            expect(card._ageTicker).toBeTruthy();
+
+            card._stopAgeTicker();
             vi.useRealTimers();
         });
 
@@ -1060,6 +1117,39 @@ describe('SugarTvCard', () => {
 
             expect(card._staleThresholdMs()).toBe(15 * MIN);
         });
+
+        /*
+         * The quiet tier, one missed poll wide, scaled off the same cadence so
+         * the two tiers hold their ratio on any sensor (#94, point 2).
+         */
+        it('gives the quiet tier one interval where staleness gets three', () => {
+            const card = createCard();
+            card._cadenceMs = 5 * MIN;
+            const at = (mins) =>
+                new Date(Date.now() - mins * MIN).toISOString();
+
+            expect(card._isFresh(at(4))).toBe(true);
+            expect(card._isFresh(at(6))).toBe(false);
+            // Still not stale, which is the whole point of a middle tier.
+            expect(card._isStale(at(6))).toBe(false);
+        });
+
+        it('narrows the quiet tier on a 1 minute sensor too', () => {
+            const card = createCard();
+            card._cadenceMs = 1 * MIN;
+            const twoMinutesAgo = new Date(Date.now() - 2 * MIN).toISOString();
+
+            expect(card._isFresh(twoMinutesAgo)).toBe(false);
+            // The same reading is quiet under the 15 minute fallback.
+            expect(createCard()._isFresh(twoMinutesAgo)).toBe(true);
+        });
+
+        it.each([[null], ['unknown'], ['unavailable']])(
+            'treats %s as not fresh, so the time is never quietly wrong',
+            (timestamp) => {
+                expect(createCard()._isFresh(timestamp)).toBe(false);
+            },
+        );
 
         it('drives _isStale, so a fast sensor dims sooner', () => {
             const card = createCard();

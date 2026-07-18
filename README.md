@@ -99,6 +99,7 @@ for example, builds the id from your account username, so it is
 | `timestamp_attribute` | string    | auto-detected        | Attribute holding the measurement time, for an integration not listed above.      |
 | `show_prediction`     | boolean   | `true`               | The line of text under the reading.                                               |
 | `relative_time`       | boolean   | `false`              | Show the reading's age ("14 min ago") in place of the clock.                      |
+| `dim_fresh_time`      | boolean   | `false`              | Keep the time quiet while the reading is current, at full strength once it ages.  |
 | `color_thresholds`    | boolean   | `true`               | Colour the reading by zone.                                                       |
 | `thresholds`          | object    | AGP/TIR for the unit | `urgent_low`, `low`, `high`, `urgent_high`, in whatever unit your sensor reports. |
 | `locale`              | string    | your HA language     | Formats the clock and the number, for example `en-GB` or `ru-RU`. YAML only.      |
@@ -240,6 +241,20 @@ Some browsers are built with a trimmed locale data set and have no wording for
 every language. Rather than dropping to English in the middle of an otherwise
 translated card, the card keeps showing the clock for those. If you turn this on
 and still see a clock, that is why.
+
+#### Letting the time fade into the background
+
+The time is only worth reading when it has something to say. Set
+`dim_fresh_time: true` and it sits at low contrast while the reading is current,
+then comes up to full strength once a poll has been missed, before the card
+dims as a whole. Glance at it and you can tell without reading it that there is
+nothing to read.
+
+The three tiers come off the same measured cadence as staleness, so they mean
+the same thing on any sensor: quiet for one interval, loud for the next two,
+the whole card dimmed after that. It works with either time display, and it
+does not colour anything. Orange already means "out of range" here, so an aging
+time on a high reading would paint two different meanings the same colour.
 
 #### When the card calls a reading stale
 
