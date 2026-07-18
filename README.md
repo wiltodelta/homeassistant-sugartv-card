@@ -95,6 +95,10 @@ There is no layout option, on purpose. The card reads the shape of the slot it
 is given and picks the arrangement that fills it, so it stays right when you
 rearrange a dashboard instead of needing to be told again.
 
+![The same card in a wide slot and in a tall slot](sugartv-card-layouts.png)
+
+Same card, same config, two slots.
+
 | Slot              | Layout                                     |
 | ----------------- | ------------------------------------------ |
 | Wider than 5:3    | Row: time, reading and trend on one line   |

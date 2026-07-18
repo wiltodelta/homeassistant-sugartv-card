@@ -21,7 +21,9 @@ const mimeTypes = {
 
 const server = createServer(async (req, res) => {
     try {
-        let filePath = req.url === '/' ? '/demo/index.html' : req.url;
+        // Strip the query string: it addresses the page, not the file on disk.
+        const url = req.url.split('?')[0];
+        let filePath = url === '/' ? '/demo/index.html' : url;
 
         // Security: prevent directory traversal
         if (filePath.includes('..')) {

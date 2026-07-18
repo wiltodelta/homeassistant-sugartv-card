@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>SugarTV Card layout shot</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                background: #f2f4f7;
+                font-family: 'Roboto', system-ui, sans-serif;
+            }
+            .stage {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 48px;
+                padding: 48px;
+                box-sizing: border-box;
+            }
+            /* Mimic how HA frames a card on a dashboard. */
+            .ha-card {
+                background: #fff;
+                border-radius: 12px;
+                box-shadow:
+                    0 2px 2px rgba(0, 0, 0, 0.07),
+                    0 1px 5px rgba(0, 0, 0, 0.06);
+                overflow: hidden;
+            }
+            sugartv-card {
+                display: block;
+                width: 100%;
+                height: 100%;
+                color: #212121;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="stage" id="stage"></div>
+
+        <script type="module" src="/demo/hass-mock.js"></script>
+        <script type="module" src="/dist/sugartv-card.js"></script>
+        <script>
+            const params = new URLSearchParams(location.search);
+            // shape list: "WxH,WxH"
+            const shapes = (params.get('shapes') || '560x200,260x420')
+                .split(',')
+                .map((s) => s.split('x').map(Number));
+            const VALUE = params.get('value') || '145';
+            const PREV = params.get('prev') || '140';
+            const UNIT = params.get('unit') || 'mg/dL';
+            const TREND = params.get('trend') || 'rising';
+
+            function hass(value, prev, date) {
+                const id = 'sensor.jane_glucose_value';
+                const sec = Math.floor(date.getTime() / 1000);
+                return {
+                    states: {
+                        [id]: {
+                            state: String(value),
+                            attributes: { unit_of_measurement: UNIT },
+                            last_changed: date.toISOString(),
+                        },
+                        'sensor.jane_glucose_trend': { state: TREND },
+                    },
+                    callWS: async ({ entity_ids }) => ({
+                        [entity_ids[0]]: [
+                            { s: String(prev), lu: sec - 300 },
+                            { s: String(value), lu: sec },
+                        ],
+                    }),
+                };
+            }
+
+            customElements.whenDefined('sugartv-card').then(() => {
+                const stage = document.getElementById('stage');
+                shapes.forEach(([w, h]) => {
+                    const frame = document.createElement('div');
+                    frame.className = 'ha-card';
+                    frame.style.width = w + 'px';
+                    frame.style.height = h + 'px';
+                    stage.appendChild(frame);
+                    const card = document.createElement('sugartv-card');
+                    frame.appendChild(card);
+                    card.setConfig({
+                        glucose_value: 'sensor.jane_glucose_value',
+                        glucose_trend: 'sensor.jane_glucose_trend',
+                        show_prediction: true,
+                        locale: 'en-US',
+                    });
+                    // Must be now: the card greys itself out when a reading is
+                    // older than the staleness threshold, so a fixed past date
+                    // would shoot a dimmed card.
+                    card.hass = hass(VALUE, PREV, new Date());
+                });
+                // Signal readiness for the headless capture.
+                Promise.all([
+                    document.fonts.ready,
+                    new Promise((r) => setTimeout(r, 600)),
+                ]).then(() => {
+                    document.title = 'READY';
+                    document.body.dataset.ready = '1';
+                });
+            });
+        </script>
+    </body>
+</html>
