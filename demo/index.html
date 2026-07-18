@@ -90,6 +90,8 @@
                 </select>
                 <label for="prediction-toggle">Show Prediction:</label>
                 <input type="checkbox" id="prediction-toggle" checked />
+                <label for="relative-toggle">Relative Time:</label>
+                <input type="checkbox" id="relative-toggle" />
             </div>
             <div class="demo-grid horizontal" id="card-grid">
                 <!-- All cards will be dynamically injected here -->
@@ -161,14 +163,20 @@
                     document.getElementById('unit-select').value;
                 const showPrediction =
                     document.getElementById('prediction-toggle').checked;
-                const selectedLocale =
-                    document.getElementById('locale-select').value;
+                const relativeTime =
+                    document.getElementById('relative-toggle').checked;
 
+                /*
+                 * No `locale` here on purpose. The picker sets Home Assistant's
+                 * language instead, so the demo exercises the path almost every
+                 * real install is on: the card inheriting its language and
+                 * formats rather than being told them per card.
+                 */
                 const config = {
                     glucose_value: 'sensor.dexcom_glucose_value',
                     glucose_trend: 'sensor.dexcom_glucose_trend',
                     show_prediction: showPrediction,
-                    locale: selectedLocale || undefined,
+                    relative_time: relativeTime,
                 };
 
                 const scenarios = [
@@ -300,7 +308,7 @@
                     },
                 ];
 
-                scenarios.forEach((scenario) => {
+                scenarios.forEach((scenario, index) => {
                     const cardId = `card-${scenario.id}`;
                     const cardWrapper = document.createElement('div');
                     cardWrapper.className = 'demo-card';
@@ -365,6 +373,14 @@
                         ) {
                             value = (parseFloat(value) / 18).toFixed(1);
                         }
+                        /*
+                         * Stagger the reading times across the gallery. With
+                         * every card reading "now" the relative-time mode has
+                         * nothing to show, and a real dashboard never has two
+                         * sensors in lockstep anyway. Stays well under the
+                         * staleness threshold so the zone colours still read.
+                         */
+                        const minutesOld = index % 8;
                         setupCard(
                             cardElement,
                             config,
@@ -372,7 +388,7 @@
                                 value,
                                 scenario.trend,
                                 selectedUnit,
-                                new Date(),
+                                new Date(Date.now() - minutesOld * 60 * 1000),
                                 previousOf(value, selectedUnit),
                             ),
                         );
@@ -387,6 +403,9 @@
                     .addEventListener('change', renderAllCards);
                 document
                     .getElementById('prediction-toggle')
+                    .addEventListener('change', renderAllCards);
+                document
+                    .getElementById('relative-toggle')
                     .addEventListener('change', renderAllCards);
                 document
                     .getElementById('locale-select')

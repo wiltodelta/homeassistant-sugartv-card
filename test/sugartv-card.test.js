@@ -522,6 +522,183 @@ describe('SugarTvCard', () => {
         });
     });
 
+    // ── relative reading time (#94, point 1) ────────────────────────
+    describe('_formatTime with relative_time', () => {
+        const MIN = 60 * 1000;
+        const ago = (ms) => new Date(Date.now() - ms).toISOString();
+
+        // The option exists because the default has to stay put: an installed
+        // card must not change what it shows when the user updates.
+        it('shows a clock reading unless asked otherwise', () => {
+            const card = createCard();
+
+            expect(card._formatTime(ago(2 * MIN))).toMatch(/\d/);
+            expect(card._formatTime(ago(2 * MIN))).not.toMatch(/ago/);
+        });
+
+        it('shows the age when the option is on', () => {
+            const card = createCard({ relative_time: true, locale: 'en' });
+
+            expect(card._formatTime(ago(2 * MIN))).toBe('2 min');
+        });
+
+        it('says now under a minute, rather than "in 0 minutes"', () => {
+            const card = createCard({ relative_time: true, locale: 'en' });
+
+            expect(card._formatTime(ago(20 * 1000))).toBe('now');
+        });
+
+        // A sensor clock running ahead of the browser dates a reading in the
+        // future. "in 2 minutes" on a glucose card reads as a malfunction.
+        it('treats a future reading as fresh rather than counting forward', () => {
+            const card = createCard({ relative_time: true, locale: 'en' });
+            const ahead = new Date(Date.now() + 2 * MIN).toISOString();
+
+            expect(card._formatTime(ahead)).toBe('now');
+        });
+
+        it('switches to hours once minutes stop being readable', () => {
+            const card = createCard({ relative_time: true, locale: 'en' });
+
+            expect(card._formatTime(ago(150 * MIN))).toBe('3 hr');
+        });
+
+        /*
+         * CLDR separates the number from its unit with a no-break space in some
+         * locales and an ordinary one in others, and which it picks is not the
+         * card's business. Compare the wording, not the byte.
+         */
+        const words = (s) => s.replace(/[\s\u00a0\u202f]+/g, ' ');
+
+        /*
+         * Each language's own abbreviation, not an English one borrowed. The
+         * full phrasing ("for 14 min siden", "14 мин. назад") runs up to 2.9
+         * times the width of the clock it replaces and crowds the reading in a
+         * narrow slot; these hold inside 1.4x.
+         */
+        it.each([
+            ['en', '2 min', '3 hr'],
+            ['de', '2 Min.', '3 Std.'],
+            ['ja', '2 分', '3 時間'],
+            ['uk', '2 хв', '3 год'],
+            ['ru', '2 мин', '3 ч'],
+            ['fr', '2 min', '3 h'],
+            ['sv', '2 min', '3 tim'],
+            ['nb', '2 min', '3 t'],
+        ])('reads natively and briefly in %s', (locale, minutes, hours) => {
+            const card = createCard({ relative_time: true, locale });
+
+            expect(words(card._formatTime(ago(2 * MIN)))).toBe(minutes);
+            expect(words(card._formatTime(ago(180 * MIN)))).toBe(hours);
+        });
+
+        /*
+         * Why the unit abbreviation rather than Intl.RelativeTimeFormat, which
+         * was the obvious tool. Its narrow style is a signed number in several
+         * languages, and a minus beside a glucose reading looks like a negative
+         * value rather than elapsed time. These are the languages that broke.
+         */
+        it.each(['ru', 'fr', 'sv', 'nb', 'ro', 'bs', 'gsw'])(
+            'never renders %s as a signed number',
+            (locale) => {
+                const card = createCard({ relative_time: true, locale });
+
+                for (const age of [1, 5, 14, 59, 90, 300]) {
+                    expect(card._formatTime(ago(age * MIN))).not.toMatch(
+                        /^[-−–+]/,
+                    );
+                }
+            },
+        );
+
+        /*
+         * Intl answers in English rather than failing when its build has no
+         * data for a language. The card is translated into all of Home
+         * Assistant's languages, so an English phrase sitting in an otherwise
+         * Georgian card reads as a bug. The clock is the honest degradation.
+         */
+        it('shows the clock, not English, when Intl cannot phrase an age', () => {
+            const card = createCard({ relative_time: true, locale: 'tlh' });
+
+            const shown = card._formatTime(ago(3 * MIN));
+
+            expect(shown).not.toMatch(/ago/);
+            expect(shown).toMatch(/\d/);
+        });
+
+        /*
+         * Swiss German had no usable relative-time phrasing at all: every style
+         * came back signed. The unit abbreviation gives it one, which is a
+         * second reason for the switch beyond width.
+         */
+        it('gives Swiss German a phrasing it previously had none for', () => {
+            expect(SugarTvCard.formatDuration('gsw', 3, 'minute')).toBe(
+                '3 min',
+            );
+        });
+
+        it.each([
+            ['en', true],
+            ['ru', true],
+            ['zh-Hans', true],
+            ['tlh', false],
+        ])('reports relative-time support for %s', (locale, supported) => {
+            expect(SugarTvCard.hasRelativeTimeData(locale)).toBe(supported);
+        });
+
+        it('says now in the local language, with no string of its own', () => {
+            expect(
+                createCard({ relative_time: true, locale: 'ru' })._formatTime(
+                    ago(10 * 1000),
+                ),
+            ).toBe('сейчас');
+        });
+
+        it('still reports no data rather than an age', () => {
+            const card = createCard({ relative_time: true, locale: 'en' });
+
+            expect(card._formatTime(null)).toBe('00:00');
+            expect(card._formatTime('unavailable')).toBe('00:00');
+        });
+    });
+
+    describe('the age ticker', () => {
+        // Nothing about the card changes as a minute passes, so without a timer
+        // the age would sit frozen at whatever it read when the value arrived.
+        it('runs only when an age is on screen', () => {
+            vi.useFakeTimers();
+
+            const plain = createCard();
+            plain.isConnected = true;
+            plain._syncAgeTicker();
+            expect(plain._ageTicker).toBeFalsy();
+
+            const relative = createCard({ relative_time: true });
+            relative.isConnected = true;
+            relative._syncAgeTicker();
+            expect(relative._ageTicker).toBeTruthy();
+
+            relative.requestUpdate = vi.fn();
+            vi.advanceTimersByTime(60000);
+            expect(relative.requestUpdate).toHaveBeenCalled();
+
+            relative._stopAgeTicker();
+            vi.useRealTimers();
+        });
+
+        it('stops on disconnect, so a removed card leaves no timer behind', () => {
+            vi.useFakeTimers();
+            const card = createCard({ relative_time: true });
+            card.isConnected = true;
+            card._syncAgeTicker();
+
+            card.disconnectedCallback();
+
+            expect(card._ageTicker).toBeFalsy();
+            vi.useRealTimers();
+        });
+    });
+
     // ── one locale for the whole card ───────────────────────────────
     describe('locale resolution', () => {
         const mmolCard = (config, hass) => {
