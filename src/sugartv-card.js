@@ -1132,7 +1132,7 @@ class SugarTvCard extends LitElement {
      */
     static formatAgo(locale, amount, unit) {
         try {
-            for (const style of ['short', 'long']) {
+            for (const style of SugarTvCard.stylesFor(locale)) {
                 const text = new Intl.RelativeTimeFormat(locale || undefined, {
                     numeric: 'auto',
                     style,
@@ -1155,6 +1155,27 @@ class SugarTvCard extends LitElement {
     }
 
     /**
+     * Which phrasings to try, shortest first.
+     *
+     * Short everywhere except where the abbreviation is marked by something
+     * that cannot be dropped. Hebrew abbreviates with a geresh, "דק׳", and the
+     * geresh is what says it is an abbreviation at all: strip it and "דק" is a
+     * different Hebrew word. So Hebrew asks for the full "דקות" instead, which
+     * needs no mark. Longer, but the card scales the phrase to fit anyway, and
+     * the alternative is a word that means something else.
+     */
+    static SPELLED_OUT = ['he'];
+
+    static stylesFor(locale) {
+        const base = String(locale || 'en')
+            .split('-')[0]
+            .toLowerCase();
+        return SugarTvCard.SPELLED_OUT.includes(base)
+            ? ['long']
+            : ['short', 'long'];
+    }
+
+    /**
      * Drop the stop CLDR puts after an abbreviated unit, so the card reads
      * "14 min ago" rather than "14 min. ago".
      *
@@ -1169,9 +1190,22 @@ class SugarTvCard extends LitElement {
      */
     static ABBREVIATION_STOPS = /[.\u0970\u2024\u06d4](?=\s|$)/g;
 
+    /*
+     * Hebrew's singular comes back as "לפני דקה (1)", the word followed by the
+     * numeral in brackets, in every style and both numeric modes. It is the
+     * only language that does it, and since the card shows a one-minute age
+     * constantly it would be on screen most of the time. "לפני דקה" already
+     * says "a minute ago"; the bracketed 1 adds nothing.
+     */
+    static TRAILING_NUMERAL = /\s*\(\d+\)\s*$/;
+
     static trimAbbreviationDots(text) {
-        // Only a mark that ends a word, never one inside a number.
-        return text.replace(SugarTvCard.ABBREVIATION_STOPS, '');
+        return (
+            text
+                // Only a mark that ends a word, never one inside a number.
+                .replace(SugarTvCard.ABBREVIATION_STOPS, '')
+                .replace(SugarTvCard.TRAILING_NUMERAL, '')
+        );
     }
 
     _calculateDelta() {
