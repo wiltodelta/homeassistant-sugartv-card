@@ -35,7 +35,7 @@ export const languages = {
     },
     ru: {
         card: {
-            name: 'Карточка SugarTV',
+            name: 'SugarTV Card',
             description:
                 'Отображает данные глюкозы с трендом, дельтой и цветовыми зонами. Поддерживает Dexcom, Nightscout, LibreView, LibreLink и Carelink.',
         },
@@ -44,7 +44,7 @@ export const languages = {
             glucose_trend: 'Сенсор тренда (определяется автоматически)',
             timestamp_attribute: 'Атрибут времени измерения (необязательно)',
             show_prediction: 'Прогноз глюкозы',
-            relative_time: 'Показывать возраст вместо времени',
+            relative_time: 'Показывать давность измерения вместо времени',
             color_thresholds: 'Цветовые зоны глюкозы',
             urgent_low: 'Критически низкий',
             low: 'Низкий',
@@ -184,7 +184,7 @@ export const languages = {
             glucose_trend: 'Sensore tendenza (rilevato automaticamente)',
             timestamp_attribute: 'Attributo ora di misurazione (facoltativo)',
             show_prediction: 'Previsione glicemia',
-            relative_time: 'Mostrare da quanto tempo invece dell’ora',
+            relative_time: 'Mostra da quanto tempo invece dell’ora',
             color_thresholds: 'Zone glicemiche colorate',
             urgent_low: 'Molto basso',
             low: 'Basso',
@@ -218,7 +218,7 @@ export const languages = {
             glucose_trend: 'Trendsensor (automatisch gedetecteerd)',
             timestamp_attribute: 'Attribuut met meettijd (optioneel)',
             show_prediction: 'Glucoseverwachting',
-            relative_time: 'Toon ouderdom in plaats van de klok',
+            relative_time: 'Toon hoe oud de meting is in plaats van de klok',
             color_thresholds: 'Gekleurde glucosezones',
             urgent_low: 'Zeer laag',
             low: 'Laag',
@@ -286,7 +286,7 @@ export const languages = {
             glucose_trend: 'Сенсор тренду (визначається автоматично)',
             timestamp_attribute: 'Атрибут часу вимірювання (необов’язково)',
             show_prediction: 'Прогноз глюкози',
-            relative_time: 'Показувати вік вимірювання замість часу',
+            relative_time: 'Показувати давність вимірювання замість часу',
             color_thresholds: 'Кольорові зони глюкози',
             urgent_low: 'Критично низький',
             low: 'Низький',
@@ -424,10 +424,10 @@ export const languages = {
             show_prediction: 'Glukosevoorspelling',
             relative_time: 'Wys ouderdom van meting in plaas van die klok',
             color_thresholds: 'Gekleurde glukosesones',
-            urgent_low: 'Kritiek laag',
+            urgent_low: 'Krities laag',
             low: 'Laag',
             high: 'Hoog',
-            urgent_high: 'Kritiek hoog',
+            urgent_high: 'Krities hoog',
             thresholds_title: 'Glukosedrempels (mg/dL of mmol/L)',
         },
         units: {
@@ -709,9 +709,9 @@ export const languages = {
         },
         predictions: {
             rise_over: 'Αναμένεται άνοδος πάνω από {0} {1} σε 15 λεπτά',
-            rise_in: 'Αναμένεται άνοδος {0} {1} σε 15 λεπτά',
+            rise_in: 'Αναμένεται άνοδος κατά {0} {1} σε 15 λεπτά',
             fall_over: 'Αναμένεται πτώση πάνω από {0} {1} σε 15 λεπτά',
-            fall_in: 'Αναμένεται πτώση {0} {1} σε 15 λεπτά',
+            fall_in: 'Αναμένεται πτώση κατά {0} {1} σε 15 λεπτά',
         },
         common: {
             not_available: 'Μ/Δ',
@@ -844,13 +844,13 @@ export const languages = {
             mmoll: 'mmol/L',
         },
         predictions: {
-            rise_over: 'Oodatav tõus üle {0} {1} 15 minutiga',
-            rise_in: 'Oodatav tõus {0} {1} 15 minutiga',
-            fall_over: 'Oodatav langus üle {0} {1} 15 minutiga',
-            fall_in: 'Oodatav langus {0} {1} 15 minutiga',
+            rise_over: 'Oodatav tõus üle {0} {1} võrra 15 minutiga',
+            rise_in: 'Oodatav tõus {0} {1} võrra 15 minutiga',
+            fall_over: 'Oodatav langus üle {0} {1} võrra 15 minutiga',
+            fall_in: 'Oodatav langus {0} {1} võrra 15 minutiga',
         },
         common: {
-            not_available: 'Pole saad.',
+            not_available: 'Puudub',
             default_time: '00:00',
         },
     },
@@ -879,10 +879,10 @@ export const languages = {
         },
         predictions: {
             rise_over: '{0} {1} baino gehiagoko igoera espero da 15 minututan',
-            rise_in: '{0} {1}-ko igoera espero da 15 minututan',
+            rise_in: '{0} {1}-eko igoera espero da 15 minututan',
             fall_over:
                 '{0} {1} baino gehiagoko jaitsiera espero da 15 minututan',
-            fall_in: '{0} {1}-ko jaitsiera espero da 15 minututan',
+            fall_in: '{0} {1}-eko jaitsiera espero da 15 minututan',
         },
         common: {
             not_available: 'E/E',
@@ -905,7 +905,7 @@ export const languages = {
             urgent_low: 'پایین بحرانی',
             low: 'پایین',
             high: 'بالا',
-            urgent_high: 'بالای بحرانی',
+            urgent_high: 'بالا بحرانی',
             thresholds_title: 'آستانه‌های قند خون (mg/dL یا mmol/L)',
         },
         units: {
@@ -1016,11 +1016,11 @@ export const languages = {
         },
         predictions: {
             rise_over:
-                'Ardú níos mó ná {0} {1} ag súil leis i gceann 15 nóiméad',
-            rise_in: 'Ardú {0} {1} ag súil leis i gceann 15 nóiméad',
+                'Táthar ag súil le hardú níos mó ná {0} {1} i gceann 15 nóiméad',
+            rise_in: 'Táthar ag súil le hardú {0} {1} i gceann 15 nóiméad',
             fall_over:
-                'Titim níos mó ná {0} {1} ag súil leis i gceann 15 nóiméad',
-            fall_in: 'Titim {0} {1} ag súil leis i gceann 15 nóiméad',
+                'Táthar ag súil le titim níos mó ná {0} {1} i gceann 15 nóiméad',
+            fall_in: 'Táthar ag súil le titim {0} {1} i gceann 15 nóiméad',
         },
         common: {
             not_available: 'N/B',
@@ -1329,7 +1329,7 @@ export const languages = {
             fall_in: 'Búist við lækkun um {0} {1} á 15 mínútum',
         },
         common: {
-            not_available: 'Ekki til',
+            not_available: 'Á ekki við',
             default_time: '00:00',
         },
     },
@@ -1445,14 +1445,14 @@ export const languages = {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Trendsensor (automatesch erkannt)',
             timestamp_attribute: 'Attribut vun der Moosszäit (fakultativ)',
-            show_prediction: 'Glukosprognos',
+            show_prediction: 'Glukoseprognos',
             relative_time: 'Alter vun der Miessung amplaz vun der Auer weisen',
             color_thresholds: 'Faarweg Glukosezonen',
             urgent_low: 'Kritesch niddreg',
             low: 'Niddreg',
             high: 'Héich',
             urgent_high: 'Kritesch héich',
-            thresholds_title: 'Glukosgrenzwäerter (mg/dL oder mmol/L)',
+            thresholds_title: 'Glukosegrenzwäerter (mg/dL oder mmol/L)',
         },
         units: {
             mgdl: 'mg/dL',
@@ -1527,13 +1527,13 @@ export const languages = {
             mmoll: 'mmol/L',
         },
         predictions: {
-            rise_over: 'Paredzams pieaugums vairāk nekā par {0} {1} 15 minūtēs',
+            rise_over: 'Paredzams pieaugums par vairāk nekā {0} {1} 15 minūtēs',
             rise_in: 'Paredzams pieaugums par {0} {1} 15 minūtēs',
-            fall_over: 'Paredzams kritums vairāk nekā par {0} {1} 15 minūtēs',
+            fall_over: 'Paredzams kritums par vairāk nekā {0} {1} 15 minūtēs',
             fall_in: 'Paredzams kritums par {0} {1} 15 minūtēs',
         },
         common: {
-            not_available: 'Nav pieej.',
+            not_available: 'Nav pieejams',
             default_time: '00:00',
         },
     },
@@ -1548,7 +1548,7 @@ export const languages = {
             glucose_trend: 'Сензор за тренд (автоматски откриен)',
             timestamp_attribute: 'Атрибут за време на мерење (опционално)',
             show_prediction: 'Прогноза за гликоза',
-            relative_time: 'Прикажи старост на мерењето наместо часовник',
+            relative_time: 'Прикажи старост на мерењето наместо часовникот',
             color_thresholds: 'Обоени зони на гликоза',
             urgent_low: 'Критично ниско',
             low: 'Ниско',
@@ -1561,9 +1561,9 @@ export const languages = {
             mmoll: 'mmol/L',
         },
         predictions: {
-            rise_over: 'Се очекува пораст од повеќе од {0} {1} за 15 минути',
+            rise_over: 'Се очекува пораст поголем од {0} {1} за 15 минути',
             rise_in: 'Се очекува пораст од {0} {1} за 15 минути',
-            fall_over: 'Се очекува пад од повеќе од {0} {1} за 15 минути',
+            fall_over: 'Се очекува пад поголем од {0} {1} за 15 минути',
             fall_in: 'Се очекува пад од {0} {1} за 15 минути',
         },
         common: {
@@ -1718,7 +1718,7 @@ export const languages = {
             glucose_value: 'Senzor de glicemie',
             glucose_trend: 'Senzor de tendință (detectat automat)',
             timestamp_attribute: 'Atributul orei măsurării (opțional)',
-            show_prediction: 'Prognoză glicemie',
+            show_prediction: 'Prognoza glicemiei',
             relative_time: 'Afișează vechimea măsurării în loc de oră',
             color_thresholds: 'Zone de glicemie colorate',
             urgent_low: 'Critic scăzută',
@@ -1972,12 +1972,10 @@ export const languages = {
             mmoll: 'mmol/L',
         },
         predictions: {
-            rise_over:
-                '15 నిమిషాల్లో {0} {1} కంటే ఎక్కువ పెరుగుదల ఆశించబడుతుంది',
-            rise_in: '15 నిమిషాల్లో {0} {1} పెరుగుదల ఆశించబడుతుంది',
-            fall_over:
-                '15 నిమిషాల్లో {0} {1} కంటే ఎక్కువ తగ్గుదల ఆశించబడుతుంది',
-            fall_in: '15 నిమిషాల్లో {0} {1} తగ్గుదల ఆశించబడుతుంది',
+            rise_over: '15 నిమిషాల్లో {0} {1} కంటే ఎక్కువ పెరుగుదల అంచనా',
+            rise_in: '15 నిమిషాల్లో {0} {1} పెరుగుదల అంచనా',
+            fall_over: '15 నిమిషాల్లో {0} {1} కంటే ఎక్కువ తగ్గుదల అంచనా',
+            fall_in: '15 నిమిషాల్లో {0} {1} తగ్గుదల అంచనా',
         },
         common: {
             not_available: 'అందుబాటులో లేదు',
@@ -2042,9 +2040,10 @@ export const languages = {
             mmoll: 'mmol/L',
         },
         predictions: {
-            rise_over: '15 dakikada {0} {1} üzerinde yükselme bekleniyor',
+            rise_over:
+                '15 dakikada {0} {1} değerinden fazla yükselme bekleniyor',
             rise_in: '15 dakikada {0} {1} yükselme bekleniyor',
-            fall_over: '15 dakikada {0} {1} üzerinde düşme bekleniyor',
+            fall_over: '15 dakikada {0} {1} değerinden fazla düşme bekleniyor',
             fall_in: '15 dakikada {0} {1} düşme bekleniyor',
         },
         common: {
@@ -2116,7 +2115,7 @@ export const languages = {
             fall_in: 'Dự kiến giảm {0} {1} trong 15 phút',
         },
         common: {
-            not_available: 'K/C',
+            not_available: 'Không có',
             default_time: '00:00',
         },
     },
