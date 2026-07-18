@@ -105,6 +105,18 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
   `pt-BR`, `es-419`), so match the exact tag BEFORE the part before the hyphen:
   `zh-Hans`.split('-')[0] is `zh`, which no table has, and Simplified Chinese
   would read English with a good translation sitting right there.
+- **Text a translation review never sees is where the untranslated English
+  hides.** Reviewing `src/localize.js` covers what is in it, and the card's
+  screen-reader label was not: it printed the internal trend key with the
+  underscores stripped, so `rising_quickly` read as English by accident rather
+  than by translation, in every language. Grep for user-visible strings OUTSIDE
+  the translation file before calling a localisation pass complete: aria-labels,
+  anything built from an internal key, and any unit read straight off the sensor
+  rather than through `units.*`. For the trend specifically, Home Assistant
+  already ships those seven states translated at
+  `component.dexcom.entity.sensor.glucose_trend.state.*`; ask `hass.localize`
+  for them rather than adding 7 x 64 strings of your own, and keep the
+  humanised key as the fallback for installs without that integration loaded.
 - **`last_updated` is not "when the sensor was last polled."** HA only advances
   it when the state or an attribute actually changes; an identical rewrite
   early-returns and bumps `last_reported`, which the websocket never sends to
