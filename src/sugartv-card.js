@@ -194,6 +194,10 @@ class SugarTvCard extends LitElement {
                     selector: { boolean: {} },
                 },
                 {
+                    name: 'relative_time',
+                    selector: { boolean: {} },
+                },
+                {
                     name: 'color_thresholds',
                     selector: { boolean: {} },
                 },
@@ -266,6 +270,7 @@ class SugarTvCard extends LitElement {
                     glucose_trend: localize('editor.glucose_trend'),
                     timestamp_attribute: localize('editor.timestamp_attribute'),
                     show_prediction: localize('editor.show_prediction'),
+                    relative_time: localize('editor.relative_time'),
                     color_thresholds: localize('editor.color_thresholds'),
                     urgent_low: localize('editor.urgent_low'),
                     low: localize('editor.low'),
@@ -293,6 +298,40 @@ class SugarTvCard extends LitElement {
                 'https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap';
             document.head.appendChild(link);
         }
+        this._syncAgeTicker();
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback?.();
+        this._stopAgeTicker();
+    }
+
+    /**
+     * An age has to be redrawn as it grows, since nothing about the card
+     * changes when a minute passes. A clock reading does not, so the timer only
+     * runs when the age is what is on screen.
+     *
+     * Called from both connectedCallback and setConfig because their order is
+     * not fixed: Lovelace configures a card before attaching it, the editor
+     * reconfigures one already attached.
+     */
+    _syncAgeTicker() {
+        const wanted = Boolean(this.config?.relative_time && this.isConnected);
+        if (wanted === Boolean(this._ageTicker)) return;
+
+        if (!wanted) {
+            this._stopAgeTicker();
+            return;
+        }
+        // Half the displayed granularity, so the number is never more than
+        // thirty seconds behind the truth.
+        this._ageTicker = setInterval(() => this.requestUpdate(), 30000);
+    }
+
+    _stopAgeTicker() {
+        if (!this._ageTicker) return;
+        clearInterval(this._ageTicker);
+        this._ageTicker = null;
     }
 
     _getInitialDataState() {
@@ -526,6 +565,7 @@ class SugarTvCard extends LitElement {
         this._lastHistoryFetch = this._lastHistoryFetch || 0;
         // Null until history has been read; _staleThresholdMs falls back.
         this._cadenceMs = this._cadenceMs || null;
+        this._syncAgeTicker();
     }
 
     willUpdate(changedProperties) {
@@ -844,6 +884,14 @@ class SugarTvCard extends LitElement {
 
         const locale = this._locale();
 
+        // A null age means this engine cannot phrase one in this language. Fall
+        // through to the clock rather than to English: the rest of the card is
+        // translated, and one English phrase among it reads as a bug.
+        if (this.config?.relative_time) {
+            const age = this._formatAge(timestamp, locale);
+            if (age) return age;
+        }
+
         // hour12 has to be stated: left to Intl it follows the locale, which
         // is exactly the assumption Home Assistant's own setting overrides.
         const options = {
@@ -853,6 +901,117 @@ class SugarTvCard extends LitElement {
         };
 
         return new Date(timestamp).toLocaleTimeString(locale, options);
+    }
+
+    /**
+     * How old the reading is, in place of a clock reading, for a card read at a
+     * glance across a room where the absolute time is one subtraction away from
+     * the answer the user actually wants (#94, point 1).
+     *
+     * The wording is CLDR's abbreviated unit, "14 min", "14 мин", "14 Min.",
+     * rather than a full "14 minutes ago". Measured across the 49 languages
+     * this engine can phrase, the full form runs from 1.2 to 2.9 times the
+     * width of the clock it replaces, and the worst of them ("for 14 min
+     * siden") leaves five pixels of slack in a narrow slot before it starts
+     * crowding the reading. The abbreviation holds every language inside 1.4x
+     * and is still each language's own, not an English one borrowed.
+     *
+     * The pastness is carried by the position rather than by a word: this sits
+     * where the reading time has always sat, and anything under a minute reads
+     * "now" in the local language, which anchors the rest as time since.
+     *
+     * Returns null when this engine cannot phrase an age in this language, so
+     * the caller can show the clock instead.
+     */
+    _formatAge(timestamp, locale) {
+        const ms = Date.now() - new Date(timestamp).getTime();
+        if (!Number.isFinite(ms)) return null;
+        if (!SugarTvCard.hasRelativeTimeData(locale)) return null;
+
+        // Everything below a minute lands here, including the negative age a
+        // sensor clock running ahead of the browser produces. Both want the
+        // same answer: "in 2 minutes" on a glucose card reads as a malfunction.
+        const minutes = Math.round(ms / 60000);
+        if (minutes < 1) {
+            return new Intl.RelativeTimeFormat(locale || undefined, {
+                numeric: 'auto',
+            }).format(0, 'second');
+        }
+
+        // Past the hour mark the minute count stops being readable at a glance,
+        // and an age that long only happens on a sensor that has stopped.
+        return minutes < 60
+            ? SugarTvCard.formatDuration(locale, minutes, 'minute')
+            : SugarTvCard.formatDuration(
+                  locale,
+                  Math.round(minutes / 60),
+                  'hour',
+              );
+    }
+
+    /**
+     * Whether this engine actually has age wording for this language.
+     *
+     * Intl never fails: asked for a language its build has no data for, it
+     * quietly answers in English. That is worse than it sounds here, because
+     * the card ships its own translations for all of Home Assistant's
+     * languages, so the result is a Georgian card with one English phrase in
+     * it. What gives the miss away is resolvedOptions, which reports the locale
+     * Intl actually fell back to.
+     *
+     * Both formatters have to be asked, because the card uses both: the unit
+     * abbreviation for a count of minutes, and RelativeTimeFormat for the "now"
+     * under a minute. Their data sets are separate, so one can be present
+     * without the other.
+     *
+     * This is a property of the running engine, not of the language: a browser
+     * built with the full ICU data set has all of these, a trimmed one does
+     * not. So ask at runtime rather than carrying a list.
+     */
+    static hasRelativeTimeData(locale) {
+        if (!locale) return true;
+        const base = (tag) => String(tag).split('-')[0].toLowerCase();
+        const speaks = (resolved) => base(resolved) === base(locale);
+        try {
+            return (
+                speaks(
+                    new Intl.RelativeTimeFormat(locale).resolvedOptions()
+                        .locale,
+                ) &&
+                speaks(
+                    new Intl.NumberFormat(locale, {
+                        style: 'unit',
+                        unit: 'minute',
+                    }).resolvedOptions().locale,
+                )
+            );
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * A count of minutes or hours in the language's own abbreviation.
+     *
+     * This replaces Intl.RelativeTimeFormat, which was the obvious tool and the
+     * wrong one. Its narrow style renders as a signed number in several
+     * languages ("-3 мин", where a minus beside a glucose number reads as a
+     * negative value), its wider styles run to "for 14 min siden", and which
+     * style is signed differs between engines, so choosing among them meant a
+     * fallback chain that still left Bosnian with nothing usable. The unit
+     * abbreviation has one form, is never signed, and is shorter in every
+     * language measured.
+     */
+    static formatDuration(locale, amount, unit) {
+        try {
+            return new Intl.NumberFormat(locale || undefined, {
+                style: 'unit',
+                unit,
+                unitDisplay: 'short',
+            }).format(amount);
+        } catch (e) {
+            return null;
+        }
     }
 
     _calculateDelta() {
