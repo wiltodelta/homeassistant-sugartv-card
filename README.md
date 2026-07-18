@@ -38,7 +38,7 @@ Just select your glucose sensor — the card figures out the rest automatically.
 ### Prerequisites
 
 1. Home Assistant with HACS (Home Assistant Community Store) installed
-2. A CGM integration set up (Dexcom, Nightscout, or LibreView)
+2. One of the CGM integrations in the table above, already set up and reporting
 
 ### Installing via HACS
 
@@ -88,6 +88,30 @@ thresholds:
 check Developer Tools, States and match the patterns in the table above. Dexcom,
 for example, builds the id from your account username, so it is
 `sensor.<username>_glucose_value`, with no `dexcom_` prefix.
+
+### Options
+
+| Option                | Type      | Default              | What it does                                                                      |
+| --------------------- | --------- | -------------------- | --------------------------------------------------------------------------------- |
+| `glucose_value`       | entity id | required             | The sensor holding the reading. Everything else is derived from it.               |
+| `glucose_trend`       | entity id | auto-detected        | Point at the trend entity when the card cannot find it. YAML only.                |
+| `timestamp_attribute` | string    | auto-detected        | Attribute holding the measurement time, for an integration not listed above.      |
+| `show_prediction`     | boolean   | `true`               | The line of text under the reading.                                               |
+| `color_thresholds`    | boolean   | `true`               | Colour the reading by zone.                                                       |
+| `thresholds`          | object    | AGP/TIR for the unit | `urgent_low`, `low`, `high`, `urgent_high`, in whatever unit your sensor reports. |
+| `locale`              | string    | your HA language     | Formats the clock and the number, for example `en-GB` or `ru-RU`. YAML only.      |
+
+`glucose_trend` and `locale` are the two you have to write by hand; the rest are
+in the visual editor. The card's own text is available in English and Russian.
+
+### The forecast line
+
+`show_prediction` puts a line like "Expected to rise 30-45 mg/dL in 15 minutes"
+under the reading. It is worth knowing exactly what that is: a plain-language
+restatement of the trend arrow your integration already sent, with the range
+each arrow conventionally stands for. It is not a computed forecast, it does not
+look at your history, and it cannot know about insulin or food. Treat it as the
+arrow spelled out, and turn it off if you would rather it were not there.
 
 ### Layout
 
@@ -186,6 +210,32 @@ sugartv-urgent-bg: '#c62828'
 sugartv-urgent-text: '#ffffff'
 sugartv-warning-text: '#e65100'
 ```
+
+## Troubleshooting
+
+**The reading shows N/A.** The card is pointed at an entity Home Assistant has
+no value for. Open Developer Tools, States and check the entity id exists and
+holds a number; ids differ between installs even for the same integration, which
+is why the table above matches the tail of an id rather than the whole thing.
+
+**The trend is a question mark.** The card could not find a trend to go with the
+reading. It looks for a sibling entity next to your glucose sensor, so a renamed
+entity breaks the link. Set `glucose_trend` explicitly.
+
+**The colours look wrong for my unit.** Thresholds are stored as plain numbers,
+so a set written for mg/dL means something very different against a mmol
+reading. The card drops thresholds that exactly match the other unit's defaults,
+but it cannot second-guess numbers you chose yourself. Clear `thresholds` to
+fall back to the standard ones for your unit.
+
+**The clock is behind, or the card greys out while the sensor is fine.** The
+card can only show a time its integration reports. Dexcom publishes none, so the
+card falls back to when Home Assistant last saw the value change, and a reading
+that repeats leaves that frozen. The table under Reading time above says what
+each integration offers.
+
+**I wanted the vertical layout.** It follows the shape of the slot, not a
+setting. See Layout above.
 
 ## Support
 
