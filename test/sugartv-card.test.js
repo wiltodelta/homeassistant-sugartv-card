@@ -349,6 +349,48 @@ describe('SugarTvCard', () => {
             );
         });
 
+        // The same three id shapes the reading-time lookup is pinned against in
+        // timestamp.test.js. Trend and time resolve through one helper, so both
+        // ends have to be held or a fix to one can quietly regress the other.
+        it.each([
+            [
+                'pre-2026-02 Carelink',
+                'sensor.last_glucose_level_mg_dl',
+                'sensor.last_glucose_trend',
+            ],
+            [
+                'patient-named',
+                'sensor.carelink_john_doe_last_glucose_level_mg_dl',
+                'sensor.carelink_john_doe_last_glucose_trend',
+            ],
+            [
+                'HA 2026.4+ device-prefixed',
+                'sensor.john_doe_carelink_john_doe_last_glucose_level_mg_dl',
+                'sensor.john_doe_carelink_john_doe_last_glucose_trend',
+            ],
+        ])(
+            'detects the Carelink trend on the %s id shape',
+            (_name, value, trend) => {
+                const card = createCard(
+                    {},
+                    {
+                        states: {
+                            [value]: {
+                                state: '150',
+                                attributes: { unit_of_measurement: 'mg/dL' },
+                            },
+                            [trend]: { state: 'UP' },
+                        },
+                    },
+                );
+                card.config.glucose_value = value;
+
+                expect(card._resolveTrend(value, card.hass.states[value])).toBe(
+                    'rising',
+                );
+            },
+        );
+
         it('detects Nightscout direction attribute', () => {
             const card = createCard(
                 {},
