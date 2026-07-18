@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import haLanguages from './ha-languages.json';
 
 // ── Mock LitElement before importing the card ──────────────────────────
 vi.mock('lit', () => {
@@ -607,6 +608,20 @@ describe('SugarTvCard', () => {
                     expect(card._formatTime(ago(age * MIN))).not.toMatch(
                         /^[-−–+]/,
                     );
+                }
+            },
+        );
+
+        it.each(haLanguages)(
+            'never starts %s with a sign, at any age',
+            (locale) => {
+                const card = createCard({ relative_time: true, locale });
+
+                for (const age of [0.1, 1, 5, 59, 90, 300]) {
+                    expect(
+                        card._formatTime(ago(age * MIN)),
+                        `${locale} at ${age} min`,
+                    ).not.toMatch(/^[-−–+]/);
                 }
             },
         );

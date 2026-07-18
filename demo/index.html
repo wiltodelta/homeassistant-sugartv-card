@@ -71,12 +71,14 @@
     <body>
         <div class="container">
             <div class="controls">
-                <label for="locale-select">Locale:</label>
+                <label for="locale-select">HA language:</label>
+                <!--
+                  Filled from test/ha-languages.json so the demo offers exactly
+                  the languages Home Assistant does, and cannot drift from what
+                  the tests cover.
+                -->
                 <select id="locale-select">
-                    <option value="">Browser Default</option>
-                    <option value="en-US">English (en-US)</option>
-                    <option value="en-GB">English (en-GB)</option>
-                    <option value="ru-RU">Russian (ru-RU)</option>
+                    <option value="en">English (en)</option>
                 </select>
                 <label for="unit-select">Unit:</label>
                 <select id="unit-select">
@@ -396,8 +398,37 @@
                 });
             }
 
+            /*
+             * The same list the tests use, so the demo can never offer fewer
+             * languages than the card claims to support. Intl names each one in
+             * itself, which is how a language picker should read.
+             */
+            async function fillLocales() {
+                const select = document.getElementById('locale-select');
+                const codes = await fetch('/test/ha-languages.json').then((r) =>
+                    r.json(),
+                );
+                for (const code of codes) {
+                    if (code === 'en') continue; // already the seed option
+                    const option = document.createElement('option');
+                    option.value = code;
+                    let name = code;
+                    try {
+                        name =
+                            new Intl.DisplayNames([code], {
+                                type: 'language',
+                            }).of(code) || code;
+                    } catch (e) {
+                        // Intl has no name for it; the code alone will do.
+                    }
+                    option.textContent = `${name} (${code})`;
+                    select.appendChild(option);
+                }
+            }
+
             // --- Initial Setup ---
-            customElements.whenDefined('sugartv-card').then(() => {
+            customElements.whenDefined('sugartv-card').then(async () => {
+                await fillLocales();
                 document
                     .getElementById('unit-select')
                     .addEventListener('change', renderAllCards);
