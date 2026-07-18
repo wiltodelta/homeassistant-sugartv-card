@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getLocalizer, languages } from '../src/localize.js';
+import { frontendLanguage, getLocalizer, languages } from '../src/localize.js';
 import haLanguages from './ha-languages.json';
 
 /*
@@ -121,5 +121,87 @@ describe('language resolution', () => {
         const t = getLocalizer({ locale: 'de' }, { language: 'fr' });
 
         expect(t('editor.low')).toBe('Niedrig');
+    });
+});
+
+/*
+ * The card's editor labels and its entry in the card picker are reached without
+ * a hass, so before #101 both were English in all 64 languages. The language has
+ * to come off the frontend's own root element instead.
+ */
+describe('frontendLanguage', () => {
+    const withRoot = (hass, run) => {
+        const previous = globalThis.document;
+        globalThis.document = {
+            querySelector: (sel) =>
+                sel === 'home-assistant' ? { hass } : null,
+        };
+        try {
+            return run();
+        } finally {
+            globalThis.document = previous;
+        }
+    };
+
+    it('reads the profile language off the root element', () => {
+        expect(withRoot({ locale: { language: 'de' } }, frontendLanguage)).toBe(
+            'de',
+        );
+    });
+
+    /*
+     * hass.locale is the user's profile and hass.language the interface, and
+     * the profile wins, the same order the card itself resolves them in.
+     */
+    it('prefers the profile over the interface language', () => {
+        expect(
+            withRoot(
+                { locale: { language: 'de' }, language: 'fr' },
+                frontendLanguage,
+            ),
+        ).toBe('de');
+    });
+
+    it('falls back to the interface language when there is no profile', () => {
+        expect(withRoot({ language: 'fr' }, frontendLanguage)).toBe('fr');
+    });
+
+    it.each([
+        ['there is no root element', undefined],
+        ['the root element has no hass yet', {}],
+    ])('answers undefined when %s', (_label, hass) => {
+        const previous = globalThis.document;
+        globalThis.document = {
+            querySelector: () => (hass === undefined ? null : { hass }),
+        };
+        try {
+            expect(frontendLanguage()).toBeUndefined();
+        } finally {
+            globalThis.document = previous;
+        }
+    });
+
+    it('answers undefined off a frontend entirely, as in the demo', () => {
+        const previous = globalThis.document;
+        // eslint-disable-next-line no-undef
+        delete globalThis.document;
+        try {
+            expect(frontendLanguage()).toBeUndefined();
+        } finally {
+            globalThis.document = previous;
+        }
+    });
+
+    it('drives the localizer, so a German frontend gets German labels', () => {
+        const previous = globalThis.document;
+        globalThis.document = {
+            querySelector: () => ({ hass: { locale: { language: 'de' } } }),
+        };
+        try {
+            const t = getLocalizer({}, { language: frontendLanguage() });
+            expect(t('editor.low')).toBe(languages.de.editor.low);
+        } finally {
+            globalThis.document = previous;
+        }
     });
 });

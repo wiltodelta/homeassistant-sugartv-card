@@ -173,6 +173,20 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
   budget for the widest string the CURRENT UNIT allows, not the reading on
   screen: per-reading fills marginally better but jumps the number a quarter of
   its size crossing 99 to 100.
+- **A card is localised on three surfaces, and two of them never see a `hass`.**
+  `getConfigForm()` is static and `window.customCards` is filled at module load,
+  so both localizers used to resolve to English and 14 of 22 strings were
+  unreadable in all 64 languages (#101). Verified against the frontend source,
+  not assumed: `hui-element-editor` assigns `configElement.hass` to whatever
+  `getConfigElement()` returns; `hui-form-editor` calls `computeLabel(schema,
+hass.localize)`, whose second argument translates HA's keys and carries no
+  language; `hui-card-picker` reads `ccard.name`/`ccard.description` as
+  properties while rendering, so getters are evaluated late enough; and
+  `home-assistant` is a real element (`HomeAssistantAppEl`) holding `hass`, so
+  `document.querySelector('home-assistant')?.hass` is a real source rather than
+  folklore. `frontendLanguage()` is the one place that reads it. The trap is
+  that a translation review of `localize.js` sees only correct translations;
+  nothing in the file says where they end up.
 - **Sections view: row height 56px, gap 8px, so `rows: N` is `N*64-8` px.** The
   height is only definite when `getGridOptions()` returns a numeric `rows`.
   Masonry never sets a card height, so `cqh`/`height: 100%` do not resolve

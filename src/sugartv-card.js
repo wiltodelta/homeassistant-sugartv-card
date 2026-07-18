@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 
 import { cardStyles } from './sugartv-card-styles.js';
-import { getLocalizer } from './localize.js';
+import { frontendLanguage, getLocalizer } from './localize.js';
 import {
     TREND_MAP as TREND_MAP_DATA,
     VALUE_SUFFIXES,
@@ -181,7 +181,9 @@ class SugarTvCard extends LitElement {
     }
 
     static getConfigForm() {
-        const localize = getLocalizer({}, {});
+        // Static, so there is no instance to read a hass from. The language has
+        // to come off the frontend itself or every label here is English (#101).
+        const localize = getLocalizer({}, { language: frontendLanguage() });
         return {
             schema: [
                 {
@@ -1508,7 +1510,6 @@ class SugarTvCard extends LitElement {
     }
 }
 
-const localize = getLocalizer();
 customElements.define('sugartv-card', SugarTvCard);
 
 console.info(
@@ -1518,10 +1519,22 @@ console.info(
 );
 
 window.customCards = window.customCards || [];
+/*
+ * Getters, not strings. This runs at module load, when Home Assistant has not
+ * finished starting and no language is knowable yet; the picker reads both
+ * properties while rendering its list, which is late enough (#101).
+ */
+const cardText = (key) =>
+    getLocalizer({}, { language: frontendLanguage() })(key);
+
 window.customCards.push({
     type: 'sugartv-card',
-    name: localize('card.name'),
-    description: localize('card.description'),
+    get name() {
+        return cardText('card.name');
+    },
+    get description() {
+        return cardText('card.description');
+    },
     preview: true,
     documentationURL:
         'https://github.com/wiltodelta/homeassistant-sugartv-card',
