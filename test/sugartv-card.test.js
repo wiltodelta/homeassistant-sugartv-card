@@ -858,6 +858,24 @@ describe('SugarTvCard', () => {
             expect(german).not.toBe(french);
         });
 
+        /*
+         * The two halves met only in the merge: dim_fresh_time's label was
+         * added on one branch and the language lookup on another, so nothing
+         * had ever asked whether a new option arrives translated.
+         */
+        it('translates an option added after the language lookup existed', () => {
+            const label = withFrontend('de', () =>
+                SugarTvCard.getConfigForm().computeLabel({
+                    name: 'dim_fresh_time',
+                }),
+            );
+
+            expect(label).toBe(
+                getLocalizer({ locale: 'de' }, {})('editor.dim_fresh_time'),
+            );
+            expect(label).not.toBe('Dim the time while the reading is current');
+        });
+
         it('falls back to English when the frontend has no language yet', () => {
             const label = SugarTvCard.getConfigForm().computeLabel({
                 name: 'relative_time',
