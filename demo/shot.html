@@ -33,12 +33,18 @@
                     0 2px 2px rgba(0, 0, 0, 0.07),
                     0 1px 5px rgba(0, 0, 0, 0.06);
                 overflow: hidden;
+                /*
+                 * The text colour belongs here, not on the card. A rule in this
+                 * document outranks the card's own :host() rules, so colouring
+                 * sugartv-card directly would defeat the zone colours and shoot
+                 * black text on the red urgent background.
+                 */
+                color: #212121;
             }
             sugartv-card {
                 display: block;
                 width: 100%;
                 height: 100%;
-                color: #212121;
             }
         </style>
     </head>
@@ -49,18 +55,39 @@
         <script type="module" src="/dist/sugartv-card.js"></script>
         <script>
             const params = new URLSearchParams(location.search);
-            // shape list: "WxH,WxH"
-            const shapes = (params.get('shapes') || '560x200,260x420')
+            /*
+             * One spec a card, comma separated: WIDTHxHEIGHT:VALUE:TREND. The
+             * shape decides the layout the card picks, the value decides the
+             * colour zone, so a single page shoots both kinds of figure.
+             */
+            const specs = (
+                params.get('specs') || '560x200:145:rising,260x300:145:rising'
+            )
                 .split(',')
-                .map((s) => s.split('x').map(Number));
-            const VALUE = params.get('value') || '145';
-            const PREV = params.get('prev') || '140';
+                .map((spec) => {
+                    const [shape, value, trend] = spec.split(':');
+                    const [w, h] = shape.split('x').map(Number);
+                    return { w, h, value, trend: trend || 'steady' };
+                });
             const UNIT = params.get('unit') || 'mg/dL';
-            const TREND = params.get('trend') || 'rising';
+            const STEP = Number(params.get('step') ?? 5);
 
-            function hass(value, prev, date) {
+            /*
+             * Take the delta's direction from the trend so the arrow and the
+             * number agree. A card showing a rising arrow next to a negative
+             * delta reads as a bug in the card rather than a staged figure.
+             */
+            function hass(value, trend, date) {
                 const id = 'sensor.jane_glucose_value';
                 const sec = Math.floor(date.getTime() / 1000);
+                const direction = trend.startsWith('falling')
+                    ? 1
+                    : trend.startsWith('rising')
+                      ? -1
+                      : 0;
+                const previous = (Number(value) + direction * STEP).toFixed(
+                    UNIT === 'mmol/L' ? 1 : 0,
+                );
                 return {
                     states: {
                         [id]: {
@@ -68,11 +95,11 @@
                             attributes: { unit_of_measurement: UNIT },
                             last_changed: date.toISOString(),
                         },
-                        'sensor.jane_glucose_trend': { state: TREND },
+                        'sensor.jane_glucose_trend': { state: trend },
                     },
                     callWS: async ({ entity_ids }) => ({
                         [entity_ids[0]]: [
-                            { s: String(prev), lu: sec - 300 },
+                            { s: previous, lu: sec - 300 },
                             { s: String(value), lu: sec },
                         ],
                     }),
@@ -81,7 +108,7 @@
 
             customElements.whenDefined('sugartv-card').then(() => {
                 const stage = document.getElementById('stage');
-                shapes.forEach(([w, h]) => {
+                specs.forEach(({ w, h, value, trend }) => {
                     const frame = document.createElement('div');
                     frame.className = 'ha-card';
                     frame.style.width = w + 'px';
@@ -98,7 +125,7 @@
                     // Must be now: the card greys itself out when a reading is
                     // older than the staleness threshold, so a fixed past date
                     // would shoot a dimmed card.
-                    card.hass = hass(VALUE, PREV, new Date());
+                    card.hass = hass(value, trend, new Date());
                 });
                 // Signal readiness for the headless capture.
                 Promise.all([

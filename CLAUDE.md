@@ -8,23 +8,30 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
 - `npm test` — vitest suite (`test/*.test.js`)
 - `npm run demo` — local demo on http://localhost:3000
 - No `maintain.sh`. The gate is `npm test && npm run build && npx prettier --check .`
-- **README images are generated, not hand-cropped.** `demo/shot.html` renders the
-  card at given shapes on an HA-like background; headless Chrome shoots it at 2x:
+- **README images are generated, not hand-cropped.** `demo/shot.html` takes one
+  `WIDTHxHEIGHT:VALUE:TREND` spec a card and renders them on an HA-like
+  background; headless Chrome shoots it at 2x:
 
     ```bash
     node demo/server.js &
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-      --headless --disable-gpu --hide-scrollbars \
+    CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    shoot() { "$CHROME" --headless --disable-gpu --hide-scrollbars \
       --force-device-scale-factor=2 --virtual-time-budget=8000 \
-      --window-size=964,396 --screenshot=sugartv-card-layouts.png \
-      "http://localhost:3000/demo/shot.html?shapes=560x200,260x300"
+      --window-size="$1" --screenshot="$2" \
+      "http://localhost:3000/demo/shot.html?specs=$3"; }
+
+    shoot 964,396  sugartv-card-layouts.png 560x200:145:rising,260x300:145:rising
+    shoot 1152,216 sugartv-card-zones.png \
+      320x120:52:falling_quickly,320x120:120:rising_slightly,320x120:210:rising
     ```
 
-    Window size is the stage plus its 48px padding, so it has to track the
-    shapes. Shoot a shape where both axes bind at once (260x300 for the column)
-    or the card sits in a pool of its own slack. The reading time must be `now`
-    or the card greys itself out as stale, so the clock in the image is whenever
-    it was shot.
+    Four things the pictures depend on. The window is the stage plus its 48px
+    padding, so it tracks the specs. A column shape wants both axes binding at
+    once (260x300) or the card floats in its own slack. The reading time has to
+    be `now` or the card correctly greys itself out as stale, so the clock reads
+    whenever it was shot. And the stage colours `.ha-card`, never `sugartv-card`:
+    a rule in the outer document outranks the card's own `:host()` rules, so
+    colouring the element directly shoots black text on the red urgent zone.
 
 ## Home Assistant facts worth not re-deriving
 

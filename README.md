@@ -4,9 +4,9 @@
 
 A custom Lovelace card for Home Assistant that displays CGM (Continuous Glucose Monitor) data. Supports **Dexcom**, **Nightscout**, **LibreView**, **LibreLink**, and **Carelink (Medtronic)** with automatic trend detection.
 
-![SugarTV Card in a room](sugartv-card-room.png)
-![Full-screen view of the SugarTV Card](sugartv-card-fullscreen.png)
-![Embedded SugarTV Card on a dashboard](sugartv-card-embedded.png)
+![The same card in a wide slot and in a tall slot](sugartv-card-layouts.png)
+
+One card and one config in two slots: it takes the shape it is given.
 
 ## Features
 
@@ -93,11 +93,8 @@ for example, builds the id from your account username, so it is
 
 There is no layout option, on purpose. The card reads the shape of the slot it
 is given and picks the arrangement that fills it, so it stays right when you
-rearrange a dashboard instead of needing to be told again.
-
-![The same card in a wide slot and in a tall slot](sugartv-card-layouts.png)
-
-Same card, same config, two slots.
+rearrange a dashboard instead of needing to be told again. The two arrangements
+are the pair at the top of this page.
 
 | Slot              | Layout                                     |
 | ----------------- | ------------------------------------------ |
@@ -166,6 +163,8 @@ the glucose sensor, point the card at it with `timestamp_attribute`.
 ### Glucose zone thresholds
 
 Color-coded zones are enabled by default using the [AGP/TIR international standard](https://diabetesjournals.org/care/article/42/8/1593/36034) thresholds.
+
+![An urgent low, an in-range and a high reading](sugartv-card-zones.png)
 
 | Zone        | mg/dL     | mmol/L      | Style                      |
 | ----------- | --------- | ----------- | -------------------------- |
