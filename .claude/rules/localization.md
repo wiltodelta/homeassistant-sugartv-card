@@ -72,6 +72,30 @@ Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this doma
   for them rather than adding 7 x 64 strings of your own, and keep the
   humanised key as the fallback for installs without that integration loaded.
 
+## Editing the 64 blocks by script
+
+- **`localize.js` is prettier-formatted, so a line-oriented edit script will
+  corrupt it -- twice, in two different ways.** Rewriting one key across all 64
+  languages looks like a one-line `re.sub` per line and is not. Prettier wraps a
+  long value onto its own continuation line (`dim_by_age:\n    'Attenuare la
+scheda...'`), so replacing just the line that starts with the key leaves the
+  old string dangling and every suite fails to import. It also switches a value
+  containing an apostrophe to double quotes (Welsh and Luxembourgish are the two
+  that do), so a pattern matching only single-quoted strings silently skips
+  them. Match the whole property -- key, optional newline, either quote style,
+  trailing comma -- inside the language block it belongs to, and assert the
+  replacement count is exactly 64 before writing. `node --check src/localize.js`
+  is the cheap confirmation; the test suite reports the same breakage as five
+  unrelated red files, which reads as something far worse than a quoting bug.
+- **A label is a promise about behaviour, and a narrowed feature has to narrow
+  its label.** `dim_by_age` shipped saying "Fade the card as the reading gets
+  older" while gating only the middle rung of the ladder, so turning it off and
+  watching a stale card still fade read as a broken control -- which is exactly
+  how it was reported. The README had already been corrected; the 64 editor
+  strings had not, and the editor is the surface a user actually reads. When a
+  feature's scope changes, grep the translation table in the same pass as the
+  docs.
+
 ## The three localized surfaces
 
 - **A card is localised on three surfaces, and two of them never see a `hass`.**
