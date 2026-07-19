@@ -4,7 +4,40 @@ import { getLocalizer } from '../src/localize.js';
 
 // ── Mock LitElement before importing the card ──────────────────────────
 vi.mock('lit', () => {
+    /*
+     * Enough DOM to model what the card does to its own host. classList and
+     * className are backed by one set and stay in sync in both directions, so a
+     * test can seed a class the card does not own and watch whether it
+     * survives -- which the card's old whole-attribute assignment did not let
+     * anyone ask.
+     */
     class FakeLitElement {
+        constructor() {
+            this._classes = new Set();
+            const sync = (name, on) => {
+                if (on) this._classes.add(name);
+                else this._classes.delete(name);
+                return on;
+            };
+            this.classList = {
+                toggle: (name, force) =>
+                    sync(
+                        name,
+                        force === undefined
+                            ? !this._classes.has(name)
+                            : !!force,
+                    ),
+                add: (name) => sync(name, true),
+                remove: (name) => sync(name, false),
+                contains: (name) => this._classes.has(name),
+            };
+        }
+        get className() {
+            return [...this._classes].join(' ');
+        }
+        set className(value) {
+            this._classes = new Set(String(value).split(/\s+/).filter(Boolean));
+        }
         static get properties() {
             return {};
         }
@@ -771,6 +804,12 @@ describe('SugarTvCard', () => {
                 trend: 'steady',
                 unit: 'mg/dL',
             };
+            /*
+             * The real order: willUpdate puts the state on the host, render
+             * draws the markup. Calling render alone stopped proving anything
+             * the day the host moved out of it.
+             */
+            card.willUpdate(new Map());
             card.render();
             return card.className;
         };
@@ -798,6 +837,64 @@ describe('SugarTvCard', () => {
 
         it('leaves the middle rung alone when the option is off', () => {
             expect(rendered({}, 7)).not.toContain('aging');
+        });
+
+        /*
+         * The host belongs to more than this card. Lovelace marks it in edit
+         * mode, card_mod and themes reach for it, a parent layout card may tag
+         * it -- and the card used to overwrite the whole attribute on every
+         * render, so anything anyone else put there lived until the next
+         * glucose reading and then vanished. It only ever removes the six
+         * classes it sets itself.
+         */
+        it('leaves classes it does not own alone', () => {
+            const card = createCard({ dim_by_age: true });
+            card._cadenceMs = 5 * MIN;
+            card.className = 'card-mod some-theme element-preview';
+            card._data = {
+                ...card._data,
+                value: '210',
+                reading_time: new Date(Date.now() - 7 * MIN).toISOString(),
+                trend: 'steady',
+                unit: 'mg/dL',
+            };
+
+            card.willUpdate(new Map());
+
+            expect(card.className).toContain('card-mod');
+            expect(card.className).toContain('some-theme');
+            expect(card.className).toContain('element-preview');
+            // ...and still says what the card itself has to say.
+            expect(card.className).toContain('aging');
+            expect(card.className).toContain('zone-high');
+        });
+
+        /*
+         * The other half: a class the card DOES own has to come off again when
+         * its state clears, or a card that was once stale stays stale forever.
+         */
+        it('takes its own classes off again when the state clears', () => {
+            const card = createCard({ dim_by_age: true });
+            card._cadenceMs = 5 * MIN;
+            const at = (mins) =>
+                new Date(Date.now() - mins * MIN).toISOString();
+
+            card._data = {
+                ...card._data,
+                value: '210',
+                trend: 'steady',
+                unit: 'mg/dL',
+                reading_time: at(20),
+            };
+            card.willUpdate(new Map());
+            expect(card.className).toContain('stale');
+
+            card._data = { ...card._data, value: '120', reading_time: at(1) };
+            card.willUpdate(new Map());
+
+            expect(card.className).not.toContain('stale');
+            expect(card.className).not.toContain('aging');
+            expect(card.className).not.toContain('zone-high');
         });
 
         /*

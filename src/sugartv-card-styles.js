@@ -247,12 +247,27 @@ export const cardStyles = css`
      * rendering at full strength is a dead sensor that looks live, which is the
      * one failure mode this card does not accept, so the fade snaps instead.
      *
-     * The mechanism was never pinned down past "it happens on newly created
-     * elements and not on a card that ages in place", so follow the rule rather
-     * than the theory: anything reintroducing a transition here has to give the
-     * unclassed :host a concrete opacity and filter to interpolate FROM, and
-     * has to be checked on a freshly created card rather than on one that
-     * changes tier while sitting on a dashboard.
+     * Three explanations were tested against the real page and all three are
+     * WRONG, so do not reintroduce this on the strength of a fourth:
+     *
+     *   Setting the host class from inside render(), a Lit anti-pattern, was
+     *   the leading theory. Moving it to willUpdate fixed the anti-pattern and
+     *   changed nothing here -- still 13 of 14 stuck.
+     *
+     *   Interpolating from an absent value was the second. Giving :host an
+     *   explicit opacity and filter to start from changed nothing either.
+     *
+     *   Off-screen elements never painting was the third. A real 1280x900
+     *   viewport, and scrolling every card through it, changed nothing.
+     *
+     * What DID separate the cases: a card created on its own animates
+     * correctly, and cards created as a synchronous burst do not -- one of
+     * fourteen settles and the rest hold the start value forever. A dashboard
+     * builds its cards in exactly such a burst on load, so the failure is
+     * reachable in production even though it looks like a demo artifact.
+     *
+     * A stale card at full strength is a dead sensor that looks live. Until
+     * something explains the burst case, the fade snaps.
      */
     :host(.aging) {
         opacity: 0.85;

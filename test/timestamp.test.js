@@ -2,7 +2,40 @@ import { describe, it, expect, vi } from 'vitest';
 
 // ── Mock LitElement before importing the card ──────────────────────────
 vi.mock('lit', () => {
+    /*
+     * Enough DOM to model what the card does to its own host. classList and
+     * className are backed by one set and stay in sync in both directions, so a
+     * test can seed a class the card does not own and watch whether it
+     * survives -- which the card's old whole-attribute assignment did not let
+     * anyone ask.
+     */
     class FakeLitElement {
+        constructor() {
+            this._classes = new Set();
+            const sync = (name, on) => {
+                if (on) this._classes.add(name);
+                else this._classes.delete(name);
+                return on;
+            };
+            this.classList = {
+                toggle: (name, force) =>
+                    sync(
+                        name,
+                        force === undefined
+                            ? !this._classes.has(name)
+                            : !!force,
+                    ),
+                add: (name) => sync(name, true),
+                remove: (name) => sync(name, false),
+                contains: (name) => this._classes.has(name),
+            };
+        }
+        get className() {
+            return [...this._classes].join(' ');
+        }
+        set className(value) {
+            this._classes = new Set(String(value).split(/\s+/).filter(Boolean));
+        }
         static get properties() {
             return {};
         }
