@@ -128,6 +128,8 @@ They are deliberately not separate card options. A card showing 15:12 beside 8.1
 is half German and half English, so the clock, the decimal separator and the
 digits are decided together or the card contradicts itself.
 
+![One reading's age in four languages](sugartv-card-languages.png)
+
 The card is translated into all 64 languages Home Assistant ships, and a test
 fails when Home Assistant adds one the card has not caught up with. Only English
 and Russian are maintainer-written; the rest are machine-assisted and have not
@@ -148,6 +150,12 @@ restatement of the trend arrow your integration already sent, with the range
 each arrow conventionally stands for. It is not a computed forecast, it does not
 look at your history, and it cannot know about insulin or food. Treat it as the
 arrow spelled out, and turn it off if you would rather it were not there.
+
+The seven arrows are the same set whatever your integration calls them: the card
+normalizes Dexcom's names, Nightscout's directions, LibreView's numbers and
+Carelink's spellings onto these.
+
+![The seven trend arrows](sugartv-card-trends.png)
 
 ### Layout
 
@@ -228,6 +236,8 @@ actually want to know, and next to a real clock it reads as a second clock. Set
 instead: "14 min ago", "14 мин назад", "vor 14 Min". Under a minute it reads
 "now", past an hour it counts in hours.
 
+![The same reading with the clock and with its age](sugartv-card-relative-time.png)
+
 It is one or the other, not both. Every word comes from the browser's own locale
 data rather than from anything the card ships, so it is right in every language
 Home Assistant runs in, and it is the same phrasing Home Assistant uses
@@ -252,6 +262,8 @@ and still see a clock, that is why.
 
 Dimming is one ladder with three rungs, all measured against your sensor's own
 update interval, so they mean the same thing whatever it is.
+
+![A current reading, one overdue, and one stale](sugartv-card-age-tiers.png)
 
 | Age              | What dims                      | Reading it          |
 | ---------------- | ------------------------------ | ------------------- |
