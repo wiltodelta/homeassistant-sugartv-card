@@ -73,7 +73,7 @@ FIGURES = {
                 age=2,
                 dim=1,
                 pred=0,
-                label="<b>Current</b><br>the time steps back",
+                label="<b>Current</b><br>full strength",
             ),
             spec(
                 "340x130",
@@ -82,7 +82,7 @@ FIGURES = {
                 age=8,
                 dim=1,
                 pred=0,
-                label="<b>A poll missed</b><br>the time comes up",
+                label="<b>A poll missed</b><br>the card fades",
             ),
             spec(
                 "340x130",
@@ -91,7 +91,7 @@ FIGURES = {
                 age=20,
                 dim=1,
                 pred=0,
-                label="<b>Three missed</b><br>the whole card fades",
+                label="<b>Three missed</b><br>faded and greyed",
             ),
         ],
     ),

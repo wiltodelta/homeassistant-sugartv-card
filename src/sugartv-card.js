@@ -117,12 +117,6 @@ class SugarTvCard extends LitElement {
     // it: a wrong cadence must not let a dead sensor keep looking live.
     static STALE_FALLBACK_MS = 15 * 60 * 1000;
 
-    // Intervals a reading may be old before its time is worth reading. One
-    // missed poll is unremarkable, so up to here the time stays quiet and the
-    // number carries the card; past it the time comes up to full strength,
-    // ahead of the whole card dimming at STALE_INTERVALS (#94, point 2).
-    static FRESH_INTERVALS = 1;
-
     // No CGM reports faster than once a minute, so a shorter gap is two writes
     // of one reading rather than a cadence. Without this floor a single
     // duplicate would collapse the threshold and flag every reading stale.
@@ -564,18 +558,6 @@ class SugarTvCard extends LitElement {
         // Normalize defaults so the form editor shows correct values
         if (config.color_thresholds === undefined) {
             config = { ...config, color_thresholds: true };
-        }
-
-        // dim_by_age was dim_fresh_time in v0.13.0, its only release. Home
-        // Assistant does not reject config keys a card ignores, so without this
-        // the option would simply stop working for the people who had opted
-        // into it, with nothing on screen or in the log to say why. The old
-        // name is read once, here, so nothing downstream has to know it.
-        if (
-            config.dim_by_age === undefined &&
-            config.dim_fresh_time !== undefined
-        ) {
-            config = { ...config, dim_by_age: config.dim_fresh_time };
         }
 
         // Only fill the defaults in once the entity can actually be read.
@@ -1353,16 +1335,14 @@ class SugarTvCard extends LitElement {
     }
 
     // The cadence to reason with before history has been read, or when the
-    // recorder is off. Stated as an interval rather than as a window, so both
-    // thresholds below start from the same kind of number: deriving one from
-    // the other's window is exactly the mistake _freshThresholdMs documents.
+    // recorder is off. Stated as an interval rather than as a window, so the
+    // threshold below is derived the same way whether the cadence was measured
+    // or defaulted, rather than being a window in one case and a product in the
+    // other.
     //
-    // Divided by STALE_INTERVALS by name, not by the 3 it happens to equal.
-    // The literal would hold this default's whole purpose — that a card with no
-    // history still goes stale at exactly STALE_FALLBACK_MS — together by
-    // coincidence, and retuning STALE_INTERVALS would move the quiet tier of
-    // every recorder-disabled install while the stale window, clamped by the
-    // cap, looked untouched. That is this diff's own bug one level up.
+    // Divided by STALE_INTERVALS by name, not by the 3 it happens to equal, so
+    // that "with no history the card still goes stale at exactly
+    // STALE_FALLBACK_MS" holds by construction rather than by coincidence.
     static DEFAULT_CADENCE_MS =
         SugarTvCard.STALE_FALLBACK_MS / SugarTvCard.STALE_INTERVALS;
 
@@ -1380,47 +1360,42 @@ class SugarTvCard extends LitElement {
         );
     }
 
-    /**
-     * How long a reading stays current enough that its time needs no attention.
-     *
-     * One polling interval, off the cadence itself. Dividing the stale window
-     * by STALE_INTERVALS looks equivalent and is not: that window is capped at
-     * STALE_FALLBACK_MS, so the quiet tier inherited the cap and could never
-     * exceed five minutes. A 10 minute sensor's brand new reading then came up
-     * to full strength at five, announcing a missed poll that had not happened.
-     *
-     * Bounded ABOVE by the stale window, which the cap can bring below one
-     * interval on a slow sensor: a stale card must never carry a quiet time.
-     */
-    _freshThresholdMs() {
+    // Intervals a reading may be old before the card starts fading it. One
+    // missed poll is worth showing but not worth alarming about, so this is
+    // where the fade begins, deepening into the full stale fade at
+    // STALE_INTERVALS.
+    static AGING_INTERVALS = 1;
+
+    // The window after which the card begins to fade. Bounded ABOVE by the
+    // stale window, which the cap can bring below one interval on a very slow
+    // sensor: the fade must never start after the card is already stale.
+    _agingThresholdMs() {
         return Math.min(
-            this._cadenceOrDefault() * SugarTvCard.FRESH_INTERVALS,
+            this._cadenceOrDefault() * SugarTvCard.AGING_INTERVALS,
             this._staleThresholdMs(),
         );
     }
 
     /**
-     * Where a reading sits on the age ladder: 'fresh', 'due' or 'stale'.
+     * Where a reading sits on the age ladder: 'current', 'aging' or 'stale'.
      *
-     * One rung per thing the card has to say. Quiet for one interval, because
-     * there is nothing to read; loud for the next two, because a poll has been
-     * missed but the number is still worth trusting; the whole card dimmed
-     * after three, because it is not (#94, point 2).
+     * The fade runs ONE WAY, toward staleness. A current reading is the healthy
+     * state and is drawn at full strength; the card loses contrast as the
+     * reading ages and loses the most once it is stale. The first cut of this
+     * ran backwards — it faded the timestamp WHILE the reading was current
+     * (#94, point 2) — which spent the card's only "something is off" signal on
+     * "nothing is off", and made a working sensor look like the exception.
+     * Anything added here has to keep the ordering monotonic: older is never
+     * brighter.
      *
-     * 'due' is the rung the card draws NOTHING for, deliberately. Full strength
-     * is the card's ordinary appearance, and the middle rung is what reaching it
-     * looks like. It is named anyway so the ladder is total: a caller can switch
-     * on three rungs and be sure it has covered the reading, which is what the
-     * two booleans this replaced could not offer.
-     *
-     * The single place any of this is decided. It was two predicates reading
-     * two thresholds, which is how the quiet rung came to be derived from the
-     * capped stale window rather than from the cadence, and nothing in either
-     * function could see the other to disagree with it.
+     * 'current' is the rung the card draws NOTHING for. Full strength is its
+     * ordinary appearance, and the other two rungs are departures from it. It
+     * is named anyway so the ladder is total: a caller can switch on three
+     * rungs and be sure it has covered the reading.
      *
      * Staleness is asked FIRST, so the rungs cannot overlap even if the two
-     * windows are ever mis-ordered, making a stale card that carries a quiet
-     * time unreachable by construction rather than by arithmetic.
+     * windows are ever mis-ordered, which makes a stale card wearing the
+     * lighter fade unreachable by construction rather than by arithmetic.
      *
      * An unreadable timestamp is stale. It is the one answer that cannot
      * mislead: a card that says nothing is known reads as broken, which it is.
@@ -1430,16 +1405,8 @@ class SugarTvCard extends LitElement {
 
         const age = Date.now() - new Date(timestamp).getTime();
         if (age > this._staleThresholdMs()) return 'stale';
-        if (age <= this._freshThresholdMs()) return 'fresh';
-        return 'due';
-    }
-
-    // Read by the tests rather than by the card, which takes the tier whole so
-    // its two rungs cannot disagree about a clock that moves between them.
-    // Kept because "is this stale" is what the missing-data and timestamp
-    // suites are actually asserting, and _ageTier(x) === 'stale' says it worse.
-    _isFresh(timestamp) {
-        return this._ageTier(timestamp) === 'fresh';
+        if (age > this._agingThresholdMs()) return 'aging';
+        return 'current';
     }
 
     _isStale(timestamp) {
@@ -1541,18 +1508,24 @@ class SugarTvCard extends LitElement {
         const trendIcon = trendInfo.icon;
         const prediction = trendInfo.prediction || '';
 
-        // One read of the ladder for the whole render, so the two rungs the
-        // card draws cannot disagree about a clock that moves between them.
+        /*
+         * One read of the ladder for the whole render, so the two rungs the
+         * card draws cannot disagree about a clock that moves between them.
+         */
         const ageTier = this._ageTier(reading_time);
         const isStale = ageTier === 'stale';
-        const quietTime =
-            this.config.dim_by_age === true && ageTier === 'fresh';
+        // The lighter fade is opt-in; the stale one is not, and never was.
+        const isAging = this.config.dim_by_age === true && ageTier === 'aging';
         const zoneClass =
             this.config.color_thresholds !== false
                 ? this._getGlucoseZone(value)
                 : '';
 
-        this.className = [zoneClass, isStale ? 'stale' : '']
+        this.className = [
+            zoneClass,
+            isStale ? 'stale' : '',
+            isAging ? 'aging' : '',
+        ]
             .filter(Boolean)
             .join(' ');
 
@@ -1578,7 +1551,7 @@ class SugarTvCard extends LitElement {
             >
                 <div class="container">
                     <div class="line">
-                        <div class="time ${quietTime ? 'fresh' : ''}">
+                        <div class="time">
                             ${this._formatTime(reading_time)}
                         </div>
                         <div class="value">${this._formatValue(value)}</div>

@@ -135,22 +135,6 @@ export const cardStyles = css`
      */
     .time {
         font-size: calc(6 * var(--u) * var(--time-scale, 1));
-        transition: opacity 0.4s ease;
-    }
-
-    /*
-     * The time is only worth reading when it has something to say. While the
-     * reading is current it stays legible but quiet, and it comes up to full
-     * strength once a poll has been missed, before the whole card dims.
-     *
-     * Opacity alone, deliberately. The obvious second signal is orange, and
-     * orange already means "out of range" here (--sugartv-warning-text on the
-     * low and high zones), so an aging time on a high reading would paint two
-     * different meanings the same colour; on the urgent zones it would land on
-     * red. Whatever the zone, the tier has to read as loudness, not as hue.
-     */
-    .time.fresh {
-        opacity: 0.45;
     }
 
     /*
@@ -229,6 +213,32 @@ export const cardStyles = css`
         max-width: 100%;
         opacity: 0.7;
         text-align: center;
+    }
+
+    /*
+     * The age fade, and it runs one way only: toward staleness. A current
+     * reading is drawn at full strength, a reading that has missed a poll loses
+     * a little contrast, and a stale one loses the most. Older is never
+     * brighter, so the card can be read at a glance from across a room without
+     * reading the time at all.
+     *
+     * An earlier cut ran backwards, fading the time WHILE the reading was
+     * current, which put the card's only "something is off" signal on the state
+     * where nothing is off.
+     *
+     * Opacity, not colour. Orange already means "out of range" here
+     * (--sugartv-warning-text on the low and high zones), so a second axis
+     * reaching for orange would paint two unrelated meanings the same colour,
+     * and on the urgent zones it would land on red.
+     */
+    :host {
+        transition:
+            opacity 0.4s ease,
+            filter 0.4s ease;
+    }
+
+    :host(.aging) {
+        opacity: 0.75;
     }
 
     :host(.stale) {
