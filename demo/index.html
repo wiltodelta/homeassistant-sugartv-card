@@ -94,6 +94,42 @@
                 <input type="checkbox" id="prediction-toggle" checked />
                 <label for="relative-toggle">Relative Time:</label>
                 <input type="checkbox" id="relative-toggle" />
+                <label for="dim-toggle">Dim by age:</label>
+                <input type="checkbox" id="dim-toggle" />
+                <!--
+                  The age fade is a function of how old the reading is, so the
+                  demo needs a way to age one. Every card renders at "now"
+                  otherwise, which is the one rung that draws nothing.
+                -->
+                <label for="age-select">Reading age:</label>
+                <select id="age-select">
+                    <option value="0">Now</option>
+                    <option value="7">7 min (a poll missed)</option>
+                    <option value="20">20 min (stale)</option>
+                </select>
+                <label for="zones-toggle">Color zones:</label>
+                <input type="checkbox" id="zones-toggle" checked />
+                <!--
+                  The thresholds themselves. Their defaults differ per unit, so
+                  switching the unit refills these rather than carrying mg/dL
+                  numbers onto a mmol card -- which is the exact bug that made a
+                  normal 8.1 read as urgent low.
+                -->
+                <label for="th-urgent-low">Thresholds:</label>
+                <input
+                    type="number"
+                    id="th-urgent-low"
+                    step="0.1"
+                    title="Urgent low"
+                />
+                <input type="number" id="th-low" step="0.1" title="Low" />
+                <input type="number" id="th-high" step="0.1" title="High" />
+                <input
+                    type="number"
+                    id="th-urgent-high"
+                    step="0.1"
+                    title="Urgent high"
+                />
                 <!--
                   The two Home Assistant profile settings the card inherits.
                   "Auto" is how Home Assistant ships them, and means the
@@ -175,6 +211,40 @@
                     }),
                 };
             }
+            /*
+             * The threshold inputs. Defaults come from the card itself rather
+             * than being retyped here, so the demo cannot drift from what a
+             * real install gets, and they refill when the unit changes: mg/dL
+             * numbers on a mmol card are what once made a normal 8.1 read as
+             * urgent low.
+             */
+            const THRESHOLD_IDS = {
+                urgent_low: 'th-urgent-low',
+                low: 'th-low',
+                high: 'th-high',
+                urgent_high: 'th-urgent-high',
+            };
+
+            function defaultThresholds(unit) {
+                const card = customElements.get('sugartv-card');
+                return card.DEFAULT_THRESHOLDS[unit];
+            }
+
+            function fillThresholds(unit) {
+                const defaults = defaultThresholds(unit);
+                for (const [key, id] of Object.entries(THRESHOLD_IDS)) {
+                    document.getElementById(id).value = defaults[key];
+                }
+            }
+
+            function readThresholds() {
+                const out = {};
+                for (const [key, id] of Object.entries(THRESHOLD_IDS)) {
+                    out[key] = Number(document.getElementById(id).value);
+                }
+                return out;
+            }
+
             // A reading five minutes earlier, so scenarios show a real delta.
             function previousOf(value, unit) {
                 const n = parseFloat(value);
@@ -192,13 +262,20 @@
             function setupCardWithDelta(
                 card,
                 config,
-                { val1, val2, trend, unit },
+                { val1, val2, trend, unit, ageMinutes = 0 },
             ) {
                 if (!card) return;
+                /*
+                 * Backdated by ageMinutes. createHass derives the history from
+                 * the same date, so the cadence the card measures stays five
+                 * minutes however old the reading is -- otherwise ageing a
+                 * reading would move the thresholds it is being judged against.
+                 */
+                const date = new Date(Date.now() - ageMinutes * 60 * 1000);
                 setupCard(
                     card,
                     config,
-                    createHass(val2, trend, unit, new Date(), val1),
+                    createHass(val2, trend, unit, date, val1),
                 );
             }
 
@@ -213,6 +290,12 @@
                     document.getElementById('prediction-toggle').checked;
                 const relativeTime =
                     document.getElementById('relative-toggle').checked;
+                const dimByAge = document.getElementById('dim-toggle').checked;
+                const colorThresholds =
+                    document.getElementById('zones-toggle').checked;
+                const ageMinutes = Number(
+                    document.getElementById('age-select').value,
+                );
 
                 /*
                  * No `locale` here on purpose. The picker sets Home Assistant's
@@ -225,6 +308,9 @@
                     glucose_trend: 'sensor.dexcom_glucose_trend',
                     show_prediction: showPrediction,
                     relative_time: relativeTime,
+                    dim_by_age: dimByAge,
+                    color_thresholds: colorThresholds,
+                    thresholds: readThresholds(),
                 };
 
                 const scenarios = [
@@ -385,6 +471,7 @@
                             val2: v2,
                             trend: scenario.trend,
                             unit: selectedUnit,
+                            ageMinutes,
                         });
                     } else if (scenario.type === 'stale') {
                         let value =
@@ -428,7 +515,12 @@
                          * sensors in lockstep anyway. Stays well under the
                          * staleness threshold so the zone colours still read.
                          */
-                        const minutesOld = index % 8;
+                        /*
+                         * The picker wins when it is set, so every card lands
+                         * on the same rung and the fade is comparable across
+                         * the gallery. At "now" the stagger is back.
+                         */
+                        const minutesOld = ageMinutes || index % 8;
                         setupCard(
                             cardElement,
                             config,
@@ -475,14 +567,36 @@
             // --- Initial Setup ---
             customElements.whenDefined('sugartv-card').then(async () => {
                 await fillLocales();
+                /*
+                 * The unit refills the thresholds before re-rendering, since
+                 * their defaults are per unit. Registered as one handler rather
+                 * than two so the order cannot drift.
+                 */
                 document
                     .getElementById('unit-select')
+                    .addEventListener('change', (e) => {
+                        fillThresholds(e.target.value);
+                        renderAllCards();
+                    });
+                document
+                    .getElementById('zones-toggle')
                     .addEventListener('change', renderAllCards);
+                for (const id of Object.values(THRESHOLD_IDS)) {
+                    document
+                        .getElementById(id)
+                        .addEventListener('change', renderAllCards);
+                }
                 document
                     .getElementById('prediction-toggle')
                     .addEventListener('change', renderAllCards);
                 document
                     .getElementById('relative-toggle')
+                    .addEventListener('change', renderAllCards);
+                document
+                    .getElementById('dim-toggle')
+                    .addEventListener('change', renderAllCards);
+                document
+                    .getElementById('age-select')
                     .addEventListener('change', renderAllCards);
                 document
                     .getElementById('time-format-select')
@@ -497,6 +611,7 @@
                     .getElementById('layout-select')
                     .addEventListener('change', applyLayout);
                 applyLayout();
+                fillThresholds(document.getElementById('unit-select').value);
                 renderAllCards();
             });
 

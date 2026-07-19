@@ -1,0 +1,11 @@
+{
+    "version": "0.0.1",
+    "configurations": [
+        {
+            "name": "sugartv-demo",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "demo"],
+            "port": 3000
+        }
+    ]
+}
