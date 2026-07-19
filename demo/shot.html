@@ -24,6 +24,35 @@
                 gap: 48px;
                 padding: 48px;
                 box-sizing: border-box;
+                /*
+                 * Wraps so a set too wide for one line becomes a grid rather
+                 * than a strip nobody can read at README width. The window
+                 * decides where it breaks, so the shoot command controls the
+                 * shape of the figure.
+                 */
+                flex-wrap: wrap;
+            }
+            /*
+             * A figure is the card plus its caption. The age tiers differ only
+             * in opacity, so without a caption the reader cannot tell which
+             * rung a card is on, or that the difference is the point.
+             */
+            .figure {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 14px;
+            }
+            .caption {
+                font-size: 15px;
+                line-height: 1.35;
+                color: #5f6368;
+                text-align: center;
+                max-width: 24ch;
+            }
+            .caption b {
+                color: #212121;
+                font-weight: 500;
             }
             /* Mimic how HA frames a card on a dashboard. */
             .ha-card {
@@ -56,18 +85,50 @@
         <script>
             const params = new URLSearchParams(location.search);
             /*
-             * One spec a card, comma separated: WIDTHxHEIGHT:VALUE:TREND. The
-             * shape decides the layout the card picks, the value decides the
-             * colour zone, so a single page shoots both kinds of figure.
+             * One spec a card, comma separated:
+             *
+             *     WIDTHxHEIGHT:VALUE:TREND[:opt=value;opt=value]
+             *
+             * The shape decides the layout the card picks, the value decides
+             * the colour zone, so a single page shoots both kinds of figure.
+             *
+             * The options field is semicolon separated, since the comma already
+             * separates cards. It exists because the age tiers cannot be shot
+             * without it: they are a function of how old the reading is, and
+             * every card here used to be pinned to `now`.
+             *
+             *   age    minutes to backdate the reading by (default 0, "now")
+             *   rel    1 to show the age in place of the clock (relative_time)
+             *   dim    1 to enable dim_by_age
+             *   pred   0 to drop the forecast line
+             *   loc    the card's locale (default en-US)
+             *   label  caption under the card; <b> is allowed
              */
             const specs = (
                 params.get('specs') || '560x200:145:rising,260x300:145:rising'
             )
                 .split(',')
                 .map((spec) => {
-                    const [shape, value, trend] = spec.split(':');
+                    const [shape, value, trend, options] = spec.split(':');
                     const [w, h] = shape.split('x').map(Number);
-                    return { w, h, value, trend: trend || 'steady' };
+                    const opt = Object.fromEntries(
+                        (options || '')
+                            .split(';')
+                            .filter(Boolean)
+                            .map((pair) => pair.split('=')),
+                    );
+                    return {
+                        w,
+                        h,
+                        value,
+                        trend: trend || 'steady',
+                        age: Number(opt.age || 0),
+                        relative: opt.rel === '1',
+                        dim: opt.dim === '1',
+                        prediction: opt.pred !== '0',
+                        locale: opt.loc || 'en-US',
+                        label: opt.label ? decodeURIComponent(opt.label) : '',
+                    };
                 });
             const UNIT = params.get('unit') || 'mg/dL';
             const STEP = Number(params.get('step') ?? 5);
@@ -108,24 +169,43 @@
 
             customElements.whenDefined('sugartv-card').then(() => {
                 const stage = document.getElementById('stage');
-                specs.forEach(({ w, h, value, trend }) => {
+                specs.forEach((spec) => {
+                    const figure = document.createElement('div');
+                    figure.className = 'figure';
+                    stage.appendChild(figure);
+
                     const frame = document.createElement('div');
                     frame.className = 'ha-card';
-                    frame.style.width = w + 'px';
-                    frame.style.height = h + 'px';
-                    stage.appendChild(frame);
+                    frame.style.width = spec.w + 'px';
+                    frame.style.height = spec.h + 'px';
+                    figure.appendChild(frame);
+
                     const card = document.createElement('sugartv-card');
                     frame.appendChild(card);
                     card.setConfig({
                         glucose_value: 'sensor.jane_glucose_value',
                         glucose_trend: 'sensor.jane_glucose_trend',
-                        show_prediction: true,
-                        locale: 'en-US',
+                        show_prediction: spec.prediction,
+                        relative_time: spec.relative,
+                        dim_by_age: spec.dim,
+                        locale: spec.locale,
                     });
-                    // Must be now: the card greys itself out when a reading is
-                    // older than the staleness threshold, so a fixed past date
-                    // would shoot a dimmed card.
-                    card.hass = hass(value, trend, new Date());
+                    /*
+                     * Backdated by `age`, which defaults to now. The history
+                     * the mock returns is backdated with it, so the measured
+                     * cadence stays 5 minutes however old the reading is —
+                     * otherwise the age tiers would be shot against a cadence
+                     * that moved underneath them.
+                     */
+                    const date = new Date(Date.now() - spec.age * 60 * 1000);
+                    card.hass = hass(spec.value, spec.trend, date);
+
+                    if (spec.label) {
+                        const caption = document.createElement('div');
+                        caption.className = 'caption';
+                        caption.innerHTML = spec.label;
+                        figure.appendChild(caption);
+                    }
                 });
                 // Signal readiness for the headless capture.
                 Promise.all([
