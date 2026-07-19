@@ -247,10 +247,12 @@ export const cardStyles = css`
      * rendering at full strength is a dead sensor that looks live, which is the
      * one failure mode this card does not accept, so the fade snaps instead.
      *
-     * Interpolating a filter from the absent value is what sticks. Anything reintroducing
-     * a transition here has to give :host a concrete baseline filter to
-     * interpolate from -- and to be checked on newly created elements, not just
-     * on a card that changes tier while sitting on a dashboard.
+     * The mechanism was never pinned down past "it happens on newly created
+     * elements and not on a card that ages in place", so follow the rule rather
+     * than the theory: anything reintroducing a transition here has to give the
+     * unclassed :host a concrete opacity and filter to interpolate FROM, and
+     * has to be checked on a freshly created card rather than on one that
+     * changes tier while sitting on a dashboard.
      */
     :host(.aging) {
         opacity: 0.85;
