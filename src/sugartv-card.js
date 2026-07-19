@@ -1304,26 +1304,40 @@ class SugarTvCard extends LitElement {
      * Recover the sensor's polling interval from the gaps between its history
      * entries.
      *
-     * Take the SMALLEST gap, not the average or the median. Home Assistant only
-     * writes a history entry when the state actually changes, so a CGM that
-     * reports the same number twice leaves no entry and the gap around it comes
-     * out double. That error runs one way only: a missing entry can inflate a
-     * gap, never shrink one. The smallest observed gap is therefore the closest
-     * thing to the true cadence, and averaging would drag it upward on exactly
-     * the flat stretches where a stuck sensor most needs catching.
+     * Take the MEDIAN gap, not the average and not the smallest.
+     *
+     * The average is wrong because Home Assistant writes no history entry when
+     * a reading repeats, so a flat stretch leaves a double-width hole and drags
+     * the mean upward on exactly the stretches where a stuck sensor most needs
+     * catching. The median ignores that hole outright: it is one gap among
+     * many, and a middle value does not move when an outlier grows.
+     *
+     * The smallest was wrong for the mirror reason, which is what shipped and
+     * what #94's dimming exposed. The MIN_CADENCE_MS floor only rejects gaps
+     * under a minute, so one poll landing 90 seconds after the last — a retry,
+     * a restart, an availability blip — cleared the floor and became the
+     * cadence for the whole card. A single anomaly in 25 minutes of history
+     * redefined a 5 minute sensor as a 90 second one, which is a 4.5 minute
+     * stale window and a 90 second quiet tier: only "now" ever read as current.
+     * The typical gap is what the sensor does; the smallest is whatever went
+     * wrong most recently.
+     *
+     * The lower of the two middles on an even count, so a mixed window resolves
+     * toward the tighter reading: a cadence may only tighten staleness.
      */
     static cadenceFromHistory(timestampsMs) {
         const sorted = [...new Set(timestampsMs)].sort((a, b) => a - b);
         if (sorted.length < 2) return null;
 
-        let smallest = Infinity;
+        const gaps = [];
         for (let i = 1; i < sorted.length; i++) {
             const gap = sorted[i] - sorted[i - 1];
-            if (gap >= SugarTvCard.MIN_CADENCE_MS && gap < smallest) {
-                smallest = gap;
-            }
+            if (gap >= SugarTvCard.MIN_CADENCE_MS) gaps.push(gap);
         }
-        return Number.isFinite(smallest) ? smallest : null;
+        if (!gaps.length) return null;
+
+        gaps.sort((a, b) => a - b);
+        return gaps[Math.floor((gaps.length - 1) / 2)];
     }
 
     // The window after which a reading stops being trustworthy. Derived from
