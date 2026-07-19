@@ -6,3 +6,6 @@ yarn-debug.log*
 yarn-error.log*
 dist/
 src/sugartv-card-fonts.js
+
+# Local Claude Code settings (per machine, never shared)
+.claude/settings.local.json
