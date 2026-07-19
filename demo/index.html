@@ -22,16 +22,78 @@
                 max-width: 1600px;
                 margin: 0 auto;
             }
+            /*
+             * Three columns that collapse to one when there is no room. Each
+             * control gets its own line: the panel used to be a single centred
+             * run of label-input pairs, which wrapped wherever it happened to
+             * and left the four threshold boxes floating with no visible
+             * labels at all.
+             */
             .controls {
-                background: #e3f2fd;
-                padding: 15px;
-                border-radius: 8px;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                gap: 16px;
                 margin: 0 0 20px 0;
-                text-align: center;
             }
-            .controls label {
-                margin: 0 10px 0 20px;
+            .controls fieldset {
+                background: #e3f2fd;
+                border: none;
+                border-radius: 8px;
+                padding: 12px 16px 16px;
+                margin: 0;
+            }
+            .controls legend {
                 font-weight: bold;
+                font-size: 13px;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: #37474f;
+                padding: 0 6px 0 0;
+            }
+            /* Checkbox rows read as one target: the label wraps its input. */
+            .controls fieldset > label {
+                display: flex;
+                align-items: baseline;
+                gap: 8px;
+                margin: 8px 0 0;
+                cursor: pointer;
+            }
+            .controls fieldset > select {
+                display: block;
+                width: 100%;
+                margin: 2px 0 10px;
+            }
+            .controls fieldset > label:has(+ select) {
+                cursor: default;
+                font-weight: bold;
+                margin-top: 10px;
+            }
+            /*
+             * The thresholds are one control in four boxes, so they get a label
+             * of their own and sit on a row that wraps as a unit.
+             */
+            .thresholds {
+                display: grid;
+                grid-template-columns: auto 1fr auto 1fr;
+                align-items: baseline;
+                gap: 4px 8px;
+                margin-top: 14px;
+            }
+            .thresholds .group-label {
+                grid-column: 1 / -1;
+                font-weight: bold;
+            }
+            .thresholds label {
+                font-size: 13px;
+            }
+            .thresholds input {
+                width: 100%;
+                min-width: 0;
+            }
+            .thresholds button {
+                grid-column: 1 / -1;
+                justify-self: start;
+                margin-top: 4px;
             }
             .demo-grid {
                 display: grid;
@@ -70,90 +132,119 @@
     </head>
     <body>
         <div class="container">
+            <!--
+              Grouped by what a control actually is, not by type. The card's
+              own options sit together, so a reader can tell at a glance which
+              of these correspond to something you could set on a real
+              dashboard and which the demo is only staging. Layout is in the
+              second group deliberately: the card has no layout option, it
+              reads the shape of the slot it is given.
+            -->
             <div class="controls">
-                <label for="locale-select">HA language:</label>
-                <!--
-                  Filled from test/ha-languages.json so the demo offers exactly
-                  the languages Home Assistant does, and cannot drift from what
-                  the tests cover.
-                -->
-                <select id="locale-select">
-                    <option value="en">English (en)</option>
-                </select>
-                <label for="unit-select">Unit:</label>
-                <select id="unit-select">
-                    <option value="mg/dL">mg/dL</option>
-                    <option value="mmol/L">mmol/L</option>
-                </select>
-                <label for="layout-select">Layout:</label>
-                <select id="layout-select">
-                    <option value="horizontal">Horizontal (wide slot)</option>
-                    <option value="vertical">Vertical (tall slot)</option>
-                </select>
-                <label for="prediction-toggle">Show Prediction:</label>
-                <input type="checkbox" id="prediction-toggle" checked />
-                <label for="relative-toggle">Relative Time:</label>
-                <input type="checkbox" id="relative-toggle" />
-                <label for="dim-toggle">Dim by age:</label>
-                <input type="checkbox" id="dim-toggle" />
-                <!--
-                  The age fade is a function of how old the reading is, so the
-                  demo needs a way to age one. Every card renders at "now"
-                  otherwise, which is the one rung that draws nothing.
-                -->
-                <label for="age-select">Reading age:</label>
-                <select id="age-select">
-                    <option value="0">Now</option>
-                    <option value="7">7 min (a poll missed)</option>
-                    <option value="20">20 min (stale)</option>
-                </select>
-                <label for="zones-toggle">Color zones:</label>
-                <input type="checkbox" id="zones-toggle" checked />
-                <!--
-                  The thresholds themselves. Their defaults differ per unit, so
-                  switching the unit refills these rather than carrying mg/dL
-                  numbers onto a mmol card -- which is the exact bug that made a
-                  normal 8.1 read as urgent low.
-                -->
-                <label for="th-urgent-low">Thresholds:</label>
-                <input
-                    type="number"
-                    id="th-urgent-low"
-                    step="0.1"
-                    title="Urgent low"
-                />
-                <input type="number" id="th-low" step="0.1" title="Low" />
-                <input type="number" id="th-high" step="0.1" title="High" />
-                <input
-                    type="number"
-                    id="th-urgent-high"
-                    step="0.1"
-                    title="Urgent high"
-                />
-                <!--
-                  The two Home Assistant profile settings the card inherits.
-                  "Auto" is how Home Assistant ships them, and means the
-                  language decides.
-                -->
-                <label for="time-format-select">HA time format:</label>
-                <select id="time-format-select">
-                    <option value="">Auto (from language)</option>
-                    <option value="12">12 hour</option>
-                    <option value="24">24 hour</option>
-                </select>
-                <label for="number-format-select">HA number format:</label>
-                <select id="number-format-select">
-                    <option value="">Auto (from language)</option>
-                    <option value="comma_decimal">1,234.56</option>
-                    <option value="decimal_comma">1.234,56</option>
-                    <option value="space_comma">1 234,56</option>
-                    <option value="quote_decimal">1'234.56</option>
-                    <option value="none">No formatting</option>
-                </select>
+                <fieldset>
+                    <legend>Card options</legend>
+                    <label
+                        ><input
+                            type="checkbox"
+                            id="prediction-toggle"
+                            checked
+                        />Glucose forecast</label
+                    >
+                    <label
+                        ><input type="checkbox" id="relative-toggle" />Show
+                        reading age instead of the clock</label
+                    >
+                    <label
+                        ><input type="checkbox" id="dim-toggle" />Fade the card
+                        as the reading ages</label
+                    >
+                    <label
+                        ><input
+                            type="checkbox"
+                            id="zones-toggle"
+                            checked
+                        />Color-coded glucose zones</label
+                    >
+                    <!--
+                      Their defaults differ per unit, so switching the unit
+                      refills these rather than carrying mg/dL numbers onto a
+                      mmol card -- the exact bug that made a normal 8.1 read as
+                      urgent low.
+                    -->
+                    <div class="thresholds">
+                        <span class="group-label">Thresholds</span>
+                        <label for="th-urgent-low">Urgent low</label>
+                        <input type="number" id="th-urgent-low" step="0.1" />
+                        <label for="th-low">Low</label>
+                        <input type="number" id="th-low" step="0.1" />
+                        <label for="th-high">High</label>
+                        <input type="number" id="th-high" step="0.1" />
+                        <label for="th-urgent-high">Urgent high</label>
+                        <input type="number" id="th-urgent-high" step="0.1" />
+                        <button type="button" id="th-reset">Reset</button>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>The scenario</legend>
+                    <label for="unit-select">Sensor unit</label>
+                    <select id="unit-select">
+                        <option value="mg/dL">mg/dL</option>
+                        <option value="mmol/L">mmol/L</option>
+                    </select>
+                    <!--
+                      The age fade is a function of how old the reading is, so
+                      the demo needs a way to age one. Every card renders at
+                      "now" otherwise, which is the one rung that draws nothing.
+                    -->
+                    <label for="age-select">Reading age</label>
+                    <select id="age-select">
+                        <option value="0">Now</option>
+                        <option value="7">7 min (a poll missed)</option>
+                        <option value="20">20 min (stale)</option>
+                    </select>
+                    <label for="layout-select">Slot shape</label>
+                    <select id="layout-select">
+                        <option value="horizontal">Wide</option>
+                        <option value="vertical">Tall</option>
+                    </select>
+                </fieldset>
+
+                <fieldset>
+                    <!--
+                      What the card inherits rather than is told. "Auto" is how
+                      Home Assistant ships the two formats, and means the
+                      language decides.
+                    -->
+                    <legend>Inherited from Home Assistant</legend>
+                    <!--
+                      Filled from test/ha-languages.json so the demo offers
+                      exactly the languages Home Assistant does, and cannot
+                      drift from what the tests cover.
+                    -->
+                    <label for="locale-select">Language</label>
+                    <select id="locale-select">
+                        <option value="en">English (en)</option>
+                    </select>
+                    <label for="time-format-select">Time format</label>
+                    <select id="time-format-select">
+                        <option value="">Auto (from language)</option>
+                        <option value="12">12 hour</option>
+                        <option value="24">24 hour</option>
+                    </select>
+                    <label for="number-format-select">Number format</label>
+                    <select id="number-format-select">
+                        <option value="">Auto (from language)</option>
+                        <option value="comma_decimal">1,234.56</option>
+                        <option value="decimal_comma">1.234,56</option>
+                        <option value="space_comma">1 234,56</option>
+                        <option value="quote_decimal">1'234.56</option>
+                        <option value="none">No formatting</option>
+                    </select>
+                </fieldset>
             </div>
-            <div class="demo-grid horizontal" id="card-grid">
-                <!-- All cards will be dynamically injected here -->
-            </div>
+
+            <div class="demo-grid horizontal" id="card-grid"></div>
         </div>
 
         <script type="module" src="/demo/hass-mock.js"></script>
@@ -547,6 +638,15 @@
                         .getElementById(id)
                         .addEventListener('change', renderAllCards);
                 }
+                // Custom thresholds are easy to break and tedious to type back.
+                document
+                    .getElementById('th-reset')
+                    .addEventListener('click', () => {
+                        fillThresholds(
+                            document.getElementById('unit-select').value,
+                        );
+                        renderAllCards();
+                    });
                 document
                     .getElementById('prediction-toggle')
                     .addEventListener('change', renderAllCards);
