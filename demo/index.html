@@ -7,103 +7,95 @@
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
-            href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
             rel="stylesheet"
         />
+        <!--
+          Pico, classless: it styles the semantic markup below without a single
+          class name, so the panel stays plain HTML and the CSS here shrinks to
+          layout. It also brings a dark mode for free.
+
+          A CDN, like the font above it. Offline the page degrades to unstyled
+          rather than broken -- the cards carry their own styles in shadow DOM,
+          which is the part this demo exists to show.
+        -->
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+        />
         <style>
-            body {
-                background: #fafafa;
-                font-family: 'Roboto', sans-serif;
-                margin: 0;
-                padding: 20px;
-                color: #333;
-            }
-            .container {
-                max-width: 1600px;
-                margin: 0 auto;
-            }
             /*
-             * Three columns that collapse to one when there is no room. Each
-             * control gets its own line: the panel used to be a single centred
-             * run of label-input pairs, which wrapped wherever it happened to
-             * and left the four threshold boxes floating with no visible
-             * labels at all.
+             * Only what Pico does not cover: the page frame, the controls grid
+             * and the two slot shapes. Everything else -- fieldsets, labels,
+             * inputs, selects, the button -- is Pico styling plain markup.
              */
+            :root {
+                --pico-font-family: 'Roboto', system-ui, sans-serif;
+                /* Roomier than Pico's default, which is sized for prose. */
+                --pico-form-element-spacing-vertical: 0.5rem;
+            }
+            body > .container {
+                max-width: 1600px;
+            }
+            /* Three columns that collapse to one when there is no room. */
             .controls {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-                gap: 16px;
-                margin: 0 0 20px 0;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 1rem;
+                align-items: start;
             }
             .controls fieldset {
-                background: #e3f2fd;
-                border: none;
-                border-radius: 8px;
-                padding: 12px 16px 16px;
                 margin: 0;
+                padding: 0.25rem 1rem 1rem;
+                border: 1px solid var(--pico-muted-border-color);
+                border-radius: var(--pico-border-radius);
             }
             .controls legend {
-                font-weight: bold;
-                font-size: 13px;
+                padding: 0 0.4rem;
+                font-size: 0.75rem;
+                font-weight: 600;
                 text-transform: uppercase;
-                letter-spacing: 0.04em;
-                color: #37474f;
-                padding: 0 6px 0 0;
-            }
-            /* Checkbox rows read as one target: the label wraps its input. */
-            .controls fieldset > label {
-                display: flex;
-                align-items: baseline;
-                gap: 8px;
-                margin: 8px 0 0;
-                cursor: pointer;
-            }
-            .controls fieldset > select {
-                display: block;
-                width: 100%;
-                margin: 2px 0 10px;
-            }
-            .controls fieldset > label:has(+ select) {
-                cursor: default;
-                font-weight: bold;
-                margin-top: 10px;
+                letter-spacing: 0.06em;
+                color: var(--pico-muted-color);
             }
             /*
-             * The thresholds are one control in four boxes, so they get a label
-             * of their own and sit on a row that wraps as a unit.
+             * The thresholds are one control in four boxes, so they share a
+             * label and sit on a grid that wraps as a unit.
              */
             .thresholds {
                 display: grid;
-                grid-template-columns: auto 1fr auto 1fr;
-                align-items: baseline;
-                gap: 4px 8px;
-                margin-top: 14px;
+                grid-template-columns: 1fr 1fr;
+                gap: 0 0.75rem;
             }
             .thresholds .group-label {
                 grid-column: 1 / -1;
-                font-weight: bold;
-            }
-            .thresholds label {
-                font-size: 13px;
-            }
-            .thresholds input {
-                width: 100%;
-                min-width: 0;
+                margin-bottom: 0.25rem;
+                font-weight: 500;
             }
             .thresholds button {
                 grid-column: 1 / -1;
+                width: auto;
                 justify-self: start;
-                margin-top: 4px;
+                margin: 0;
+                padding: 0.25rem 0.9rem;
+                font-size: 0.8rem;
+            }
+            /* A hint under a control, not a label of its own. */
+            .hint {
+                display: block;
+                margin-top: -0.5rem;
+                color: var(--pico-muted-color);
+                font-size: 0.75rem;
             }
             .demo-grid {
                 display: grid;
                 gap: 32px;
             }
             .demo-card {
-                background: white;
-                border-radius: 16px;
-                padding: 24px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                background: var(--pico-card-background-color);
+                border-radius: var(--pico-border-radius);
+                padding: 1.25rem;
+                box-shadow: var(--pico-card-box-shadow);
             }
             sugartv-card {
                 display: block;
@@ -157,6 +149,17 @@
                     <label
                         ><input type="checkbox" id="dim-toggle" />Fade the card
                         as the reading ages</label
+                    >
+                    <!--
+                      Says what the checkbox cannot. It gates the middle rung
+                      only; a stale card fades whatever this is set to, because
+                      a dead sensor has to look dead. Without this the control
+                      reads as broken the moment you turn it off on a stale
+                      card and the colour does not come back.
+                    -->
+                    <small class="hint"
+                        >Gates the middle rung only. A stale reading always
+                        fades.</small
                     >
                     <label
                         ><input
