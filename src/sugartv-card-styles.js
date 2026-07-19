@@ -239,12 +239,19 @@ export const cardStyles = css`
      * reaching for orange would paint two unrelated meanings the same colour,
      * and on the urgent zones it would land on red.
      */
-    :host {
-        transition:
-            opacity 0.4s ease,
-            filter 0.4s ease;
-    }
-
+    /*
+     * No transition here, and that is a fix rather than an omission. Animating
+     * the host's filter left freshly rendered cards stuck at the transition's
+     * START value: 13 of 14 cards in the demo carried the .stale class while
+     * computing to grayscale(0) and opacity 1, and never settled. A stale card
+     * rendering at full strength is a dead sensor that looks live, which is the
+     * one failure mode this card does not accept, so the fade snaps instead.
+     *
+     * Interpolating a filter from the absent value is what sticks. Anything reintroducing
+     * a transition here has to give :host a concrete baseline filter to
+     * interpolate from -- and to be checked on newly created elements, not just
+     * on a card that changes tier while sitting on a dashboard.
+     */
     :host(.aging) {
         opacity: 0.85;
     }

@@ -114,6 +114,29 @@ describe('the age fade in the stylesheet', () => {
     });
 
     /*
+     * The fade must not be animated off a bare :host rule. Transitioning the
+     * host's filter left freshly rendered cards stuck at the transition's start
+     * value -- 13 of 14 cards in the demo carried .stale while computing to
+     * grayscale(0) and opacity 1, and never settled. That is a stale card drawn
+     * at full strength: a dead sensor that looks live.
+     *
+     * Asserted as "if you transition the host, give it a baseline to
+     * interpolate from", so a correct reintroduction still passes and the
+     * broken shape does not.
+     */
+    it('does not animate the fade without a baseline to animate from', () => {
+        const bare = [...cardStyles.matchAll(/([^{}]*)\{([^}]*)\}/g)].filter(
+            ([, selector]) => /(^|,)\s*:host\s*$/m.test(selector),
+        );
+        const animated = bare.filter(([, , body]) => /transition/.test(body));
+
+        for (const [, , body] of animated) {
+            expect(body).toMatch(/filter:/);
+            expect(body).toMatch(/opacity:/);
+        }
+    });
+
+    /*
      * Colour is spent on this card: orange means "out of range" and red means
      * "urgent". The fade must not reach for either, or a stale high reading
      * would paint two unrelated meanings the same colour.
