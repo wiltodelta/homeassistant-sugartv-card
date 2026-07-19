@@ -183,6 +183,15 @@
                 };
             }
 
+            /*
+             * The interval the mock history implies, and therefore the cadence
+             * the card measures from it. Everything about the age ladder is
+             * relative to this: the fade starts at one of these and staleness
+             * at three, so anything that ages a reading has to be stated in
+             * terms of it rather than in loose minutes.
+             */
+            const MOCK_CADENCE_MIN = 5;
+
             function createHass(value, trend, unit, date, prev) {
                 const curSec = Math.floor(date.getTime() / 1000);
                 const locale = haLocale();
@@ -204,7 +213,7 @@
                         [entity_ids[0]]: [
                             {
                                 s: String(prev === undefined ? value : prev),
-                                lu: curSec - 300,
+                                lu: curSec - MOCK_CADENCE_MIN * 60,
                             },
                             { s: String(value), lu: curSec },
                         ],
@@ -518,9 +527,18 @@
                         /*
                          * The picker wins when it is set, so every card lands
                          * on the same rung and the fade is comparable across
-                         * the gallery. At "now" the stagger is back.
+                         * the gallery.
+                         *
+                         * At "now" the stagger is back, bounded by the cadence
+                         * so it cannot cross into the fade. It used to run
+                         * 0-7 minutes against a 5 minute cadence, so picking
+                         * "now" still dimmed a third of the gallery -- the
+                         * label said one thing and the cards showed another.
+                         * Relative time only needs the readings to differ, not
+                         * to be old.
                          */
-                        const minutesOld = ageMinutes || index % 8;
+                        const minutesOld =
+                            ageMinutes || index % MOCK_CADENCE_MIN;
                         setupCard(
                             cardElement,
                             config,
