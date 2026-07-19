@@ -32,6 +32,28 @@ Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this doma
   as `--value-descent` (scale-invariant, same argument as the width budget) so
   the ink-to-ink gap is identical whatever separator the locale writes.
 
+## The host belongs to more than this card
+
+- **Own six classes on the host and touch nothing else.** `stale`, `aging` and
+  the four `zone-*` are the card's; Lovelace's edit-mode markers, `card_mod`, a
+  theme and a parent layout card also write up there. Assigning `this.className`
+  wholesale, which is what shipped through v0.15.0, deleted all of theirs on
+  every render -- invisibly, because nothing in this repo reads them.
+  `classList.toggle` per owned class, from `willUpdate` rather than `render`:
+  Lit contracts render to be side-effect free, and the host has to be styled in
+  the same frame as the markup it wraps.
+- **Do not put a transition on `:host`, and do not trust a fourth theory about
+  why.** Three were tested against the real page and all three are wrong: the
+  render-side-effect anti-pattern (moving the class to `willUpdate` changed
+  nothing), interpolating from an absent value (an explicit baseline changed
+  nothing), and off-screen elements never painting (a real viewport and
+  scrolling every card through it changed nothing). What separates the cases is
+  batch creation: a card created alone animates correctly, and of fourteen
+  created in one synchronous burst exactly one settles while the rest hold the
+  transition's start value forever. A dashboard builds cards in such a burst,
+  so this is reachable in production, and a stale card at full strength is a
+  dead sensor that looks live. `test/styles.test.js` guards the shape.
+
 ## Sign glyphs
 
 - **Fullwidth `＋` and `－` (U+FF0B/U+FF0D) are CJK-width glyphs.** They advance

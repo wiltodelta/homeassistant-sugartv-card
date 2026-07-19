@@ -587,6 +587,64 @@ class SugarTvCard extends LitElement {
         if (changedProperties.has('hass') || changedProperties.has('config')) {
             this._updateData();
         }
+        // After _updateData, which is where the values these classes read from
+        // arrive, and before render, so the host is styled in the same frame as
+        // the markup it wraps.
+        this._syncHostClasses();
+    }
+
+    /*
+     * The classes this card puts on its own host, and the only ones it may
+     * remove. Anything else up there belongs to somebody else -- Lovelace's
+     * edit-mode markers, card_mod, a theme, a parent layout card -- and a card
+     * that clears them is a card that breaks tools it has never heard of.
+     */
+    static HOST_CLASSES = [
+        'stale',
+        'aging',
+        'zone-urgent-low',
+        'zone-low',
+        'zone-high',
+        'zone-urgent-high',
+    ];
+
+    /**
+     * Put the card's own state on the host.
+     *
+     * In willUpdate rather than in render, which is where this used to sit.
+     * Lit contracts render to be free of side effects, and assigning host state
+     * from inside it lands the class in the same style recalculation as the
+     * element's first computed style -- the shape that left a freshly created
+     * card stuck at a CSS transition's start value in v0.13.0 through v0.14.0,
+     * carrying .stale while computing to no greyscale at all. Cards that aged
+     * in place were fine, which is what made it look like a CSS bug.
+     *
+     * classList over className, and only over the classes above: the whole
+     * attribute used to be overwritten on every render, so any class anyone
+     * else had put on the host lived until the next glucose reading.
+     */
+    _syncHostClasses() {
+        const { value, reading_time } = this._data;
+
+        /*
+         * One read of the ladder, so the two rungs cannot disagree about a
+         * clock that moves between them.
+         */
+        const ageTier = this._ageTier(reading_time);
+        // The lighter fade is opt-in; the stale one is not, and never was.
+        const isAging = this.config?.dim_by_age === true && ageTier === 'aging';
+        const zoneClass =
+            this.config?.color_thresholds !== false
+                ? this._getGlucoseZone(value)
+                : '';
+
+        this.classList.toggle('stale', ageTier === 'stale');
+        this.classList.toggle('aging', isAging);
+        for (const candidate of SugarTvCard.HOST_CLASSES) {
+            if (candidate.startsWith('zone-')) {
+                this.classList.toggle(candidate, candidate === zoneClass);
+            }
+        }
     }
 
     updated() {
@@ -1507,27 +1565,6 @@ class SugarTvCard extends LitElement {
             trendSymbols.unknown;
         const trendIcon = trendInfo.icon;
         const prediction = trendInfo.prediction || '';
-
-        /*
-         * One read of the ladder for the whole render, so the two rungs the
-         * card draws cannot disagree about a clock that moves between them.
-         */
-        const ageTier = this._ageTier(reading_time);
-        const isStale = ageTier === 'stale';
-        // The lighter fade is opt-in; the stale one is not, and never was.
-        const isAging = this.config.dim_by_age === true && ageTier === 'aging';
-        const zoneClass =
-            this.config.color_thresholds !== false
-                ? this._getGlucoseZone(value)
-                : '';
-
-        this.className = [
-            zoneClass,
-            isStale ? 'stale' : '',
-            isAging ? 'aging' : '',
-        ]
-            .filter(Boolean)
-            .join(' ');
 
         const localize = getLocalizer(this.config, this.hass);
         const ariaLabel = [
