@@ -66,6 +66,18 @@ Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this doma
   learned it once: `.time.stale` used to go red, and the whole-card fade
   replaced it precisely because colour could not work across the zones.
   Before adding a colour, check the zone rules; before adding a tier, check
-  whether opacity says it. Related: a tier whose text never changes still needs
+  whether opacity says it. But opacity MULTIPLIES down the tree, so a
+  card-level fade lands on top of whatever an element already carries: the
+  forecast line held its own 0.7 to read as secondary, which under the stale
+  fade composited to 0.35 and 2.1:1 against the card, unreadable at any size,
+  and on the orange out-of-range zones it sat at 2.6:1 even on a current
+  reading. It reads as secondary from font size alone (2.7u against the
+  reading's 20u), so the opacity was pure cost. Before giving an element its
+  own opacity, ask what it will compose with; and score a fade by its
+  resulting CONTRAST rather than by how the number looks, since 0.5 sounds
+  like "half visible" and is really 3.2:1, right on the large-text floor.
+  A stale card still has to be readable: it carries the last reading anyone
+  got, and the fade means "do not trust this as current", not "stop being able
+  to see it". Related: a tier whose text never changes still needs
   the age ticker, since only the tier moves, and a frozen card then looks
   correct rather than stuck.
