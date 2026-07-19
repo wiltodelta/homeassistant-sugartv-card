@@ -13,9 +13,9 @@ One card and one config in two slots: it takes the shape it is given.
 - **Multi-sensor support** — Dexcom, Nightscout, LibreView, LibreLink, Carelink (auto-detected)
 - Displays: current glucose, delta from previous reading, trend direction, last update time, glucose prediction
 - Color-coded glucose zones (AGP/TIR standard thresholds)
-- Dims as a reading ages, on three rungs measured against the sensor's own
-  update interval — the card fades once three polls have been missed, and
-  optionally the time sits quiet until the first one does
+- Fades as a reading ages, on three rungs measured against the sensor's own
+  update interval — a current reading is drawn at full strength, and the card
+  loses contrast as the reading gets older
 - Tap to open HA more-info dialog with history graph
 - Automatic local time format and unit support (mmol/L and mg/dL)
 - Adapts to the space it is given: a wide slot lays the reading out in a row, a

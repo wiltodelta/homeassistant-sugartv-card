@@ -21,14 +21,29 @@ vi.mock('lit', () => ({
 
 const { cardStyles } = await import('../src/sugartv-card-styles.js');
 
-// The opacity declared inside `:host(<selector>)`, or null when the rung
-// declares none, which is how "full strength" is spelled.
-const hostOpacity = (selector) => {
-    const block = cardStyles.match(
-        new RegExp(`:host\\(\\.${selector}\\)\\s*\\{([^}]*)\\}`),
+/*
+ * One naive brace-matcher for the whole file. It cannot survive a nested block
+ * such as an @media, which is exactly why it lives in one place: the day the
+ * stylesheet nests, this is the single line to fix rather than three.
+ */
+const rulesMatching = (selectorPattern) =>
+    [...cardStyles.matchAll(/([^{}]*)\{([^}]*)\}/g)].filter(([, selector]) =>
+        selectorPattern.test(selector),
     );
-    if (!block) return null;
-    const found = block[1].match(/opacity:\s*([\d.]+)/);
+
+// The body of `:host(.<selector>)`, or null when the sheet declares no such rung.
+const hostRule = (selector) => {
+    const found = rulesMatching(
+        new RegExp(`(^|,)\\s*:host\\(\\.${selector}\\)\\s*$`, 'm'),
+    );
+    return found.length ? found[0][2] : null;
+};
+
+// Its opacity, or null when the rung declares none -- which is how "full
+// strength" is spelled.
+const hostOpacity = (selector) => {
+    const body = hostRule(selector);
+    const found = body && body.match(/opacity:\s*([\d.]+)/);
     return found ? Number(found[1]) : null;
 };
 
@@ -48,9 +63,15 @@ const contrastOnWhite = (alpha) => {
 };
 
 describe('the age fade in the stylesheet', () => {
-    it('draws a current reading at full strength', () => {
-        // No rung of its own: full strength is the card's ordinary appearance.
-        expect(hostOpacity('current')).toBeNull();
+    /*
+     * Paired with a rung that DOES exist, because "no rule" is what this
+     * extractor returns for any name at all. Asserting the absence alone passed
+     * identically for :host(.banana) and for a stylesheet that had been
+     * deleted, so it proved the regex ran rather than that the rung is unstyled.
+     */
+    it('gives a current reading no rule of its own', () => {
+        expect(hostRule('current')).toBeNull();
+        expect(hostRule('stale')).not.toBeNull();
     });
 
     /*
@@ -103,9 +124,7 @@ describe('the age fade in the stylesheet', () => {
          * back. An opacity on the grouped rule would compound just as badly, so
          * checking all of them is also the stronger assertion.
          */
-        const blocks = [...cardStyles.matchAll(/([^{}]*)\{([^}]*)\}/g)].filter(
-            ([, selector]) => /(^|,)\s*\.prediction\s*$/m.test(selector),
-        );
+        const blocks = rulesMatching(/(^|,)\s*\.prediction\s*$/m);
 
         expect(blocks.length).toBeGreaterThan(0);
         for (const [, , body] of blocks) {
@@ -114,25 +133,42 @@ describe('the age fade in the stylesheet', () => {
     });
 
     /*
-     * The fade must not be animated off a bare :host rule. Transitioning the
-     * host's filter left freshly rendered cards stuck at the transition's start
-     * value -- 13 of 14 cards in the demo carried .stale while computing to
-     * grayscale(0) and opacity 1, and never settled. That is a stale card drawn
-     * at full strength: a dead sensor that looks live.
+     * The fade must not be animated without something to animate from.
+     * Transitioning the host left freshly rendered cards stuck at the
+     * transition's start value: 13 of 14 cards in the demo carried .stale while
+     * computing to grayscale(0) and opacity 1, and never settled. That is a
+     * stale card drawn at full strength -- a dead sensor that looks live.
      *
-     * Asserted as "if you transition the host, give it a baseline to
-     * interpolate from", so a correct reintroduction still passes and the
-     * broken shape does not.
+     * The mechanism was not pinned down beyond "it happens on newly created
+     * elements and not on a card that ages in place", so this guards the shape
+     * rather than a theory: any :host rung that animates must also declare the
+     * properties it animates, giving the browser a concrete start value.
      */
-    it('does not animate the fade without a baseline to animate from', () => {
-        const bare = [...cardStyles.matchAll(/([^{}]*)\{([^}]*)\}/g)].filter(
-            ([, selector]) => /(^|,)\s*:host\s*$/m.test(selector),
-        );
-        const animated = bare.filter(([, , body]) => /transition/.test(body));
+    it('never animates the fade without a baseline to animate from', () => {
+        const hostRules = rulesMatching(/(^|,)\s*:host(\([^)]*\))?\s*$/m);
 
-        for (const [, , body] of animated) {
-            expect(body).toMatch(/filter:/);
-            expect(body).toMatch(/opacity:/);
+        // Vacuous otherwise: an empty list satisfies every check below.
+        expect(hostRules.length).toBeGreaterThan(0);
+
+        const animates = hostRules.some(
+            ([, , body]) =>
+                /transition/.test(body) && /(opacity|filter)/.test(body),
+        );
+
+        if (animates) {
+            /*
+             * The start value has to live on the UNCLASSED :host. A rung that
+             * declares filter and opacity alongside its own transition is
+             * declaring where to animate TO, which is what the first version of
+             * this guard accepted -- so a transition on :host(.stale), the more
+             * natural place to put one, passed it untouched.
+             */
+            const base = rulesMatching(/(^|,)\s*:host\s*$/m)
+                .map(([, , body]) => body)
+                .join('\n');
+
+            expect(base).toMatch(/filter:/);
+            expect(base).toMatch(/opacity:/);
         }
     });
 
@@ -142,7 +178,7 @@ describe('the age fade in the stylesheet', () => {
      * would paint two unrelated meanings the same colour.
      */
     it('fades with contrast rather than colour', () => {
-        const stale = cardStyles.match(/:host\(\.stale\)\s*\{([^}]*)\}/)[1];
+        const stale = hostRule('stale');
 
         expect(stale).not.toMatch(/color|background/);
         expect(stale).toMatch(/grayscale/);

@@ -321,6 +321,16 @@
              */
             const MOCK_CADENCE_MIN = 5;
 
+            /*
+             * How far apart the gallery's readings are spread at "now", so
+             * relative time has something to show. Strictly inside one cadence:
+             * spread them wider and picking "now" starts fading a third of the
+             * gallery, which is what a bare `index % 8` against this 5 minute
+             * cadence used to do. Derived rather than written as 5, so the
+             * bound survives someone retuning the cadence.
+             */
+            const STAGGER_SPAN = Math.max(1, MOCK_CADENCE_MIN);
+
             function createHass(value, trend, unit, date, prev) {
                 const curSec = Math.floor(date.getTime() / 1000);
                 const locale = haLocale();
@@ -601,27 +611,19 @@
                          * on the same rung and the fade is comparable across
                          * the gallery.
                          *
-                         * At "now" the stagger is back, bounded by the cadence
-                         * so it cannot cross into the fade. It used to run
-                         * 0-7 minutes against a 5 minute cadence, so picking
-                         * "now" still dimmed a third of the gallery -- the
-                         * label said one thing and the cards showed another.
+                         * At "now" the stagger is back, bounded by
+                         * STAGGER_SPAN so it cannot cross into the fade.
                          * Relative time only needs the readings to differ, not
                          * to be old.
                          */
-                        const minutesOld =
-                            ageMinutes || index % MOCK_CADENCE_MIN;
-                        setupCard(
-                            cardElement,
-                            config,
-                            createHass(
-                                value,
-                                scenario.trend,
-                                selectedUnit,
-                                new Date(Date.now() - minutesOld * 60 * 1000),
-                                previousOf(value, selectedUnit),
-                            ),
-                        );
+                        const minutesOld = ageMinutes || index % STAGGER_SPAN;
+                        setupCardWithDelta(cardElement, config, {
+                            val1: previousOf(value, selectedUnit),
+                            val2: value,
+                            trend: scenario.trend,
+                            unit: selectedUnit,
+                            ageMinutes: minutesOld,
+                        });
                     }
                 });
             }

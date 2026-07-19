@@ -776,8 +776,10 @@ describe('SugarTvCard', () => {
         };
 
         it('leaves a current reading at full strength', () => {
-            expect(rendered({ dim_by_age: true }, 1)).not.toContain('aging');
-            expect(rendered({ dim_by_age: true }, 1)).not.toContain('stale');
+            const className = rendered({ dim_by_age: true }, 1);
+
+            expect(className).not.toContain('aging');
+            expect(className).not.toContain('stale');
         });
 
         it('fades a reading that has missed a poll', () => {
@@ -1207,7 +1209,7 @@ describe('SugarTvCard', () => {
          * an integration retry, a restart, an availability blip — sits above it
          * and became the cadence for the whole card. A 5 minute sensor then
          * measured 90 seconds, which collapsed the stale window to 4.5 minutes
-         * and the fresh window to 90 seconds, so only "now" ever read as
+         * and the fade window to 90 seconds, so only "now" ever read as
          * current. The typical gap is what the sensor actually does; the
          * smallest is whatever went wrong most recently.
          */
@@ -1266,8 +1268,8 @@ describe('SugarTvCard', () => {
         });
 
         /*
-         * The quiet tier, one missed poll wide, scaled off the same cadence so
-         * the two tiers hold their ratio on any sensor (#94, point 2).
+         * The fade starts one missed poll in, scaled off the same cadence as
+         * staleness so the two rungs hold their ratio on any sensor.
          */
         it('starts the fade one interval in, where staleness takes three', () => {
             const card = createCard();
@@ -1384,13 +1386,11 @@ describe('SugarTvCard', () => {
          * The default cadence exists so a card with no history still goes stale
          * at exactly the fallback. That identity is what lets the fallback be
          * stated as an interval rather than as a window, which is in turn what
-         * lets the quiet tier come off a cadence at all. It held by a literal 3
-         * until this test; retuning STALE_INTERVALS would then have moved the
-         * quiet tier of every recorder-disabled install while the stale window,
-         * clamped by the cap, went on reading 15 minutes as though nothing had
-         * changed.
-         */
-        /*
+         * lets the fade come off a cadence at all. It held by a literal 3 until
+         * this test; retuning STALE_INTERVALS would then have moved the fade of
+         * every recorder-disabled install while the stale window, clamped by
+         * the cap, went on reading 15 minutes as though nothing had changed.
+         *
          * Asserted on the constants rather than on the windows they produce,
          * because neither window can see this break. _staleThresholdMs clamps
          * to STALE_FALLBACK_MS, so a mis-derived default still reads 15 minutes
@@ -1411,7 +1411,7 @@ describe('SugarTvCard', () => {
             card._cadenceMs = 1 * MIN;
             const fiveMinutesAgo = new Date(Date.now() - 5 * MIN).toISOString();
 
-            // The same timestamp is fresh under the 15 minute fallback.
+            // The same timestamp is current under the 15 minute fallback.
             expect(card._isStale(fiveMinutesAgo)).toBe(true);
             expect(createCard()._isStale(fiveMinutesAgo)).toBe(false);
         });

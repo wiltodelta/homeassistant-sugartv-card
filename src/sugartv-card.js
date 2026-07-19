@@ -1312,7 +1312,7 @@ class SugarTvCard extends LitElement {
      * a restart, an availability blip — cleared the floor and became the
      * cadence for the whole card. A single anomaly in 25 minutes of history
      * redefined a 5 minute sensor as a 90 second one, which is a 4.5 minute
-     * stale window and a 90 second quiet tier: only "now" ever read as current.
+     * stale window and a 90 second fade window: only "now" ever read as current.
      * The typical gap is what the sensor does; the smallest is whatever went
      * wrong most recently.
      *
