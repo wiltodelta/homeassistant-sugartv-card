@@ -753,81 +753,61 @@ describe('SugarTvCard', () => {
     });
 
     /*
-     * The seam. _isFresh can be perfect and the card still never dim, which is
-     * exactly the failure a unit test on the predicate alone cannot see.
+     * The seam. The ladder can be perfect and the card still never fade, which
+     * is exactly the failure a unit test on the tier alone cannot see: the tier
+     * is only a string until render turns it into a class.
      */
-    describe('the quiet time tier in the markup', () => {
+    describe('the age fade in the markup', () => {
         const MIN = 60 * 1000;
-        const rendered = (config, minutesAgo) => {
+        const rendered = (config, minutesAgo, value = '120') => {
             const card = createCard(config);
+            card._cadenceMs = 5 * MIN;
             card._data = {
                 ...card._data,
-                value: '120',
+                value,
                 reading_time: new Date(
                     Date.now() - minutesAgo * MIN,
                 ).toISOString(),
                 trend: 'steady',
                 unit: 'mg/dL',
             };
-            return card.render();
+            card.render();
+            return card.className;
         };
 
-        it('marks the time quiet while the reading is current', () => {
-            expect(rendered({ dim_by_age: true }, 1)).toContain(
-                'class="time fresh"',
-            );
+        it('leaves a current reading at full strength', () => {
+            expect(rendered({ dim_by_age: true }, 1)).not.toContain('aging');
+            expect(rendered({ dim_by_age: true }, 1)).not.toContain('stale');
         });
 
-        it('drops the mark once a poll has been missed', () => {
-            expect(rendered({ dim_by_age: true }, 7)).not.toContain('fresh');
-        });
-
-        // The default has to stay exactly what it was for everyone who never
-        // asked for this, which on a fresh reading is a time at full strength.
-        it('leaves the time alone when the option is off', () => {
-            expect(rendered({}, 1)).not.toContain('fresh');
+        it('fades a reading that has missed a poll', () => {
+            expect(rendered({ dim_by_age: true }, 7)).toContain('aging');
         });
 
         /*
-         * The v0.13.0 name. Home Assistant does not reject a config key the
-         * card ignores, so dropping it outright would have turned the option
-         * off for exactly the people who went and enabled it, silently: no
-         * error, no log line, just a card that stopped dimming.
+         * The option gates the lighter fade only. Whole-card dimming on
+         * staleness predates it and stays always-on: a live sensor that looks
+         * stale is a harmless failure, a dead one that looks live is not.
          */
-        describe('the name it shipped under in v0.13.0', () => {
-            const configured = (config) => {
-                const card = createCard();
-                card.setConfig({
-                    glucose_value: 'sensor.jane_glucose_value',
-                    ...config,
-                });
-                return card.config;
-            };
+        it('dims a stale reading whether or not the option is set', () => {
+            expect(rendered({}, 20)).toContain('stale');
+            expect(rendered({ dim_by_age: true }, 20)).toContain('stale');
+        });
 
-            it('still turns the dimming on', () => {
-                expect(configured({ dim_fresh_time: true }).dim_by_age).toBe(
-                    true,
-                );
-            });
+        it('leaves the middle rung alone when the option is off', () => {
+            expect(rendered({}, 7)).not.toContain('aging');
+        });
 
-            it('still turns it off, rather than merely being absent', () => {
-                expect(configured({ dim_fresh_time: false }).dim_by_age).toBe(
-                    false,
-                );
-            });
+        /*
+         * The zone class shares the attribute with the fade, so one must not
+         * overwrite the other. Shot at 210, since an in-range reading carries
+         * no zone class at all and would pass this whatever the code did.
+         */
+        it('keeps the zone class alongside the fade', () => {
+            const className = rendered({ dim_by_age: true }, 7, '210');
 
-            // Someone who has migrated may leave the old key behind; the name
-            // they set deliberately is the one that counts.
-            it('loses to the current name when a config carries both', () => {
-                expect(
-                    configured({ dim_fresh_time: true, dim_by_age: false })
-                        .dim_by_age,
-                ).toBe(false);
-            });
-
-            it('leaves a config that never mentioned it alone', () => {
-                expect(configured({}).dim_by_age).toBeUndefined();
-            });
+            expect(className).toContain('zone-high');
+            expect(className).toContain('aging');
         });
     });
 
@@ -899,21 +879,37 @@ describe('SugarTvCard', () => {
         });
 
         /*
-         * The two halves met only in the merge: dim_by_age's label was
-         * added on one branch and the language lookup on another, so nothing
-         * had ever asked whether a new option arrives translated.
+         * Every leaf field in the schema, not one sample. The label lookup and
+         * the frontend language lookup were written on separate branches and
+         * met only in a merge, so nothing had ever asked whether an option
+         * added later arrives translated. Walking the schema means a new option
+         * cannot quietly ship English: it fails here the moment it is added
+         * without a string.
+         *
+         * Leaves only. An expandable container carries a title rather than a
+         * label and correctly has none, so including it would assert the
+         * opposite of the rule.
          */
-        it('translates an option added after the language lookup existed', () => {
+        const leafFields = (schema) =>
+            schema.flatMap((field) =>
+                field.schema
+                    ? leafFields(field.schema)
+                    : field.name
+                      ? [field]
+                      : [],
+            );
+
+        it.each(
+            leafFields(SugarTvCard.getConfigForm().schema).map((f) => [f.name]),
+        )('translates the %s label off the frontend language', (name) => {
             const label = withFrontend('de', () =>
-                SugarTvCard.getConfigForm().computeLabel({
-                    name: 'dim_by_age',
-                }),
+                SugarTvCard.getConfigForm().computeLabel({ name }),
             );
 
             expect(label).toBe(
-                getLocalizer({ locale: 'de' }, {})('editor.dim_by_age'),
+                getLocalizer({ locale: 'de' }, {})(`editor.${name}`),
             );
-            expect(label).not.toBe('Dim the time while the reading is current');
+            expect(label).toBeTruthy();
         });
 
         it('falls back to English when the frontend has no language yet', () => {
@@ -1273,74 +1269,94 @@ describe('SugarTvCard', () => {
          * The quiet tier, one missed poll wide, scaled off the same cadence so
          * the two tiers hold their ratio on any sensor (#94, point 2).
          */
-        it('gives the quiet tier one interval where staleness gets three', () => {
+        it('starts the fade one interval in, where staleness takes three', () => {
             const card = createCard();
             card._cadenceMs = 5 * MIN;
 
-            expect(card._isFresh(at(4))).toBe(true);
-            expect(card._isFresh(at(6))).toBe(false);
-            // Still not stale, which is the whole point of a middle tier.
+            expect(card._ageTier(at(4))).toBe('current');
+            expect(card._ageTier(at(6))).toBe('aging');
+            // Fading, but not yet stale: that is the whole point of a middle rung.
             expect(card._isStale(at(6))).toBe(false);
         });
 
-        it('narrows the quiet tier on a 1 minute sensor too', () => {
+        it('starts it sooner on a 1 minute sensor', () => {
             const card = createCard();
             card._cadenceMs = 1 * MIN;
             const twoMinutesAgo = new Date(Date.now() - 2 * MIN).toISOString();
 
-            expect(card._isFresh(twoMinutesAgo)).toBe(false);
-            // The same reading is quiet under the 15 minute fallback.
-            expect(createCard()._isFresh(twoMinutesAgo)).toBe(true);
+            expect(card._ageTier(twoMinutesAgo)).toBe('aging');
+            // The same reading is still current under the 15 minute fallback.
+            expect(createCard()._ageTier(twoMinutesAgo)).toBe('current');
         });
 
         /*
-         * The quiet tier used to divide the stale window by three, and that
-         * window is capped at the 15 minute fallback, so the tier was capped at
-         * five however slow the sensor. A 10 minute sensor's brand new reading,
-         * which has not missed anything, came up to full strength at five
-         * minutes as if a poll had been skipped. One interval means one
-         * interval; it has to come off the cadence, not off the capped window.
+         * The fade window comes off the cadence, not off the stale window,
+         * which is capped at the 15 minute fallback. Dividing that capped
+         * window instead would hold the fade at five minutes however slow the
+         * sensor, so a 10 minute sensor's brand new reading would start fading
+         * at five, reporting a missed poll that had not happened.
          */
-        it('holds the quiet tier at one interval on a slow sensor', () => {
+        it('holds the fade at one interval on a slow sensor', () => {
             const card = createCard();
             card._cadenceMs = 10 * MIN;
 
-            expect(card._isFresh(at(9))).toBe(true);
-            expect(card._isFresh(at(11))).toBe(false);
+            expect(card._ageTier(at(9))).toBe('current');
+            expect(card._ageTier(at(11))).toBe('aging');
         });
 
         /*
-         * The quiet tier may never outlast the window it sits inside. A 15
-         * minute sensor's staleness is capped at 15, so its quiet tier has to
-         * be capped there too, or a stale card would carry a quiet time.
+         * The fade may never start after the card is already stale. A 20 minute
+         * sensor's staleness is capped at 15, so its fade has to be capped
+         * there too, or the card would go straight from full strength to the
+         * stale fade with nothing in between.
          */
-        it('never lets the quiet tier outlast staleness', () => {
+        it('never lets the fade start after staleness', () => {
             const card = createCard();
             card._cadenceMs = 20 * MIN;
 
-            expect(card._freshThresholdMs()).toBeLessThanOrEqual(
+            expect(card._agingThresholdMs()).toBeLessThanOrEqual(
                 card._staleThresholdMs(),
             );
         });
 
         /*
-         * The ladder itself, rung by rung. The middle one had no test of its
-         * own: it was whatever _isFresh and _isStale both happened to deny, so
-         * nothing would have noticed the two of them disagreeing and leaving no
-         * rung at all, or both claiming the same reading.
+         * The ladder itself, rung by rung, including the one the card draws
+         * nothing for. That rung had no test of its own while it was whatever
+         * two predicates both happened to deny, so nothing would have noticed
+         * them disagreeing and leaving no rung at all, or both claiming the
+         * same reading.
          */
         describe('_ageTier', () => {
             it.each([
-                [1, 'fresh'],
-                [4, 'fresh'],
-                [6, 'due'],
-                [14, 'due'],
+                [1, 'current'],
+                [4, 'current'],
+                [6, 'aging'],
+                [14, 'aging'],
                 [16, 'stale'],
             ])('puts a %i minute old reading on the %s rung', (mins, tier) => {
                 const card = createCard();
                 card._cadenceMs = 5 * MIN;
 
                 expect(card._ageTier(at(mins))).toBe(tier);
+            });
+
+            /*
+             * The direction of the whole thing. Whatever the rungs are called
+             * and wherever their thresholds land, an older reading may never
+             * come out brighter than a newer one -- that inversion is the bug
+             * this ladder was rebuilt to remove, and it is invisible in any
+             * single-rung assertion.
+             */
+            it('never draws an older reading brighter than a newer one', () => {
+                const card = createCard();
+                card._cadenceMs = 5 * MIN;
+                const dimness = { current: 0, aging: 1, stale: 2 };
+
+                const ages = [0, 1, 4, 5, 6, 10, 14, 15, 16, 30, 120];
+                const steps = ages.map((m) => dimness[card._ageTier(at(m))]);
+
+                expect(steps).toEqual([...steps].sort((a, b) => a - b));
+                expect(card._ageTier(at(0))).toBe('current');
             });
 
             it.each([[null], ['unknown'], ['unavailable']])(
@@ -1352,16 +1368,15 @@ describe('SugarTvCard', () => {
 
             /*
              * Staleness is asked first for this reason. Should the two windows
-             * ever cross, a stale card must not also carry a quiet time: the
-             * card would be dimmed for being dead and quiet for being current.
+             * ever cross, a stale card must not wear the lighter fade: it would
+             * be reporting a fresher reading than it has.
              */
-            it('never calls one reading both stale and fresh', () => {
+            it('never calls one reading both stale and merely aging', () => {
                 const card = createCard();
                 card._cadenceMs = 20 * MIN;
-                card._freshThresholdMs = () => 60 * MIN;
+                card._agingThresholdMs = () => 60 * MIN;
 
                 expect(card._ageTier(at(30))).toBe('stale');
-                expect(card._isFresh(at(30))).toBe(false);
             });
         });
 

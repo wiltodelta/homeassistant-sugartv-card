@@ -94,8 +94,6 @@
                 <input type="checkbox" id="prediction-toggle" checked />
                 <label for="relative-toggle">Relative Time:</label>
                 <input type="checkbox" id="relative-toggle" />
-                <label for="dim-toggle">Dim by age:</label>
-                <input type="checkbox" id="dim-toggle" />
                 <!--
                   The two Home Assistant profile settings the card inherits.
                   "Auto" is how Home Assistant ships them, and means the
@@ -215,7 +213,6 @@
                     document.getElementById('prediction-toggle').checked;
                 const relativeTime =
                     document.getElementById('relative-toggle').checked;
-                const dimByAge = document.getElementById('dim-toggle').checked;
 
                 /*
                  * No `locale` here on purpose. The picker sets Home Assistant's
@@ -228,7 +225,6 @@
                     glucose_trend: 'sensor.dexcom_glucose_trend',
                     show_prediction: showPrediction,
                     relative_time: relativeTime,
-                    dim_by_age: dimByAge,
                 };
 
                 const scenarios = [
@@ -487,9 +483,6 @@
                     .addEventListener('change', renderAllCards);
                 document
                     .getElementById('relative-toggle')
-                    .addEventListener('change', renderAllCards);
-                document
-                    .getElementById('dim-toggle')
                     .addEventListener('change', renderAllCards);
                 document
                     .getElementById('time-format-select')

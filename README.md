@@ -100,7 +100,7 @@ for example, builds the id from your account username, so it is
 | `timestamp_attribute` | string    | auto-detected        | Attribute holding the measurement time, for an integration not listed above.      |
 | `show_prediction`     | boolean   | `true`               | The line of text under the reading.                                               |
 | `relative_time`       | boolean   | `false`              | Show the reading's age ("14 min ago") in place of the clock.                      |
-| `dim_by_age`          | boolean   | `false`              | Keep the time quiet while the reading is current, at full strength once it ages.  |
+| `dim_by_age`          | boolean   | `false`              | Fade the card once a poll has been missed, ahead of the stale fade.               |
 | `color_thresholds`    | boolean   | `true`               | Colour the reading by zone.                                                       |
 | `thresholds`          | object    | AGP/TIR for the unit | `urgent_low`, `low`, `high`, `urgent_high`, in whatever unit your sensor reports. |
 | `locale`              | string    | your HA language     | Formats the clock and the number, for example `en-GB` or `ru-RU`. YAML only.      |
@@ -258,35 +258,41 @@ every language. Rather than dropping to English in the middle of an otherwise
 translated card, the card keeps showing the clock for those. If you turn this on
 and still see a clock, that is why.
 
-#### How the card dims as a reading ages
+#### How the card fades as a reading ages
 
-Dimming is one ladder with three rungs, all measured against your sensor's own
-update interval, so they mean the same thing whatever it is.
+The fade runs one way: toward staleness. A current reading is drawn at full
+strength, and the card loses contrast as the reading gets older. Older is never
+brighter, so you can read the card's health from across a room without reading
+the time at all.
 
-![A current reading, one overdue, and one stale](sugartv-card-age-tiers.png)
+![A current reading, one that has missed a poll, and a stale one](sugartv-card-age-tiers.png)
 
-| Age              | What dims                      | Reading it          |
+| Age              | What it looks like             | Reading it          |
 | ---------------- | ------------------------------ | ------------------- |
-| Under 1 interval | The time, to low contrast      | Nothing to read     |
-| 1 to 3 intervals | Nothing, the time comes up     | A poll went missing |
+| Under 1 interval | Full strength, nothing dimmed  | Nothing to see here |
+| 1 to 3 intervals | The card fades a little        | A poll went missing |
 | Over 3 intervals | The whole card, plus greyscale | Do not trust this   |
+
+All three are measured against your sensor's own update interval, so they mean
+the same thing whatever it is.
 
 The bottom rung is the card's oldest behaviour and **has no setting**. A dead
 sensor has to look dead, so that one is not yours to turn off.
 
-The top rung is, because a quiet timestamp is a preference rather than a safety
-signal. `dim_by_age: true` turns it on, off by default. The middle rung is what
-you get either way: the time at full strength, saying a reading is overdue.
+The middle rung is yours: `dim_by_age: true` turns it on, off by default. It is
+a preference rather than a safety signal, since a reading one poll old is
+usually still worth trusting.
 
-Glance at a card with this on and you can tell without reading the time that
-there is nothing to read. It works with either time display, and it does not
-colour anything: orange already means "out of range" here, so an aging time on a
-high reading would paint two unrelated meanings the same colour, and on the
-urgent zones it would land on red.
+It does not colour anything. Orange already means "out of range" here, so a
+second signal reaching for orange would paint two unrelated meanings the same
+colour, and on the urgent zones it would land on red. Contrast is the one axis
+still free.
 
-> **Renamed in v0.14.0.** This option was `dim_fresh_time` in v0.13.0, its only
-> release. The old name still works and means the same thing, so nothing breaks
-> if you leave it; `dim_by_age` wins if a config somehow carries both.
+> **Changed in v0.15.0.** Through v0.14.0 this option ran the other way: it
+> dimmed the timestamp _while_ the reading was current and brought it up to full
+> strength as the reading aged. That put the card's only "something is off"
+> signal on the state where nothing is off. If you had it on, you will now see
+> the opposite, and a current reading is no longer dimmed at all.
 
 #### When the card calls a reading stale
 

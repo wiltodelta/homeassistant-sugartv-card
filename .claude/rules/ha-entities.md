@@ -71,36 +71,47 @@ Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this doma
   the symptom that surfaced it. A cadence feeds every age tier at once, so a
   wrong one is never a local error. Prefer the statistic that ignores outliers
   on both sides, and resolve ties toward the tighter reading.
+- **The age fade runs ONE WAY, toward staleness, and getting that backwards is
+  the defect this ladder was rebuilt to remove.** v0.13.0 and v0.14.0 faded the
+  timestamp WHILE the reading was current and brought it up to full strength as
+  the reading aged, which is what #94 asked for verbatim. It still had to go: it
+  spent the card's only "something is off" signal on the state where nothing is
+  off, so a healthy sensor was the thing that looked unusual. The maintainer
+  read the README figure and called it a bug on sight, which is the real test. A
+  requested design is not automatically a correct one, and a monotonic signal is
+  legible without a legend where an inverted one is not. `_ageTier()` now
+  returns `current` / `aging` / `stale`, and a test asserts the ordering over a
+  sweep of ages rather than rung by rung, because the inversion is invisible in
+  any single-rung assertion.
 - **The age tiers are ONE ladder, and splitting them into predicates is how
-  they drift.** `_isFresh` and `_isStale` each read their own threshold, and
-  neither could see the other, which is how the quiet rung came to be derived
-  from the CAPPED stale window (`/ STALE_INTERVALS`) instead of from the
-  cadence. That inherited the 15 minute cap, so the rung could never exceed 5
-  minutes and a 10 minute sensor announced a missed poll that had not happened.
-  `_ageTier()` is the single source; the predicates delegate to it. It asks
-  staleness FIRST so the rungs cannot overlap even if the thresholds are ever
-  mis-ordered, which makes "stale card carrying a quiet time" unreachable by
-  construction rather than by arithmetic.
+  they drift.** They were once `_isFresh` and `_isStale`, each reading its own
+  threshold and neither able to see the other, which is how the middle rung came
+  to be derived from the CAPPED stale window (`/ STALE_INTERVALS`) instead of
+  from the cadence. That inherited the 15 minute cap, so the rung could never
+  exceed 5 minutes and a 10 minute sensor announced a missed poll that had not
+  happened. `_ageTier()` is the single source; `_isStale` delegates to it. It
+  asks staleness FIRST so the rungs cannot overlap even if the thresholds are
+  ever mis-ordered, which makes "stale card wearing the lighter fade"
+  unreachable by construction rather than by arithmetic.
 - **State the no-history fallback as a CADENCE, not as a window.** Both
-  thresholds then start from the same kind of number, and the quiet tier has an
+  thresholds then start from the same kind of number, and the middle rung has an
   interval to take one of; deriving it from the stale window is what inherited
   the cap in the first place. `DEFAULT_CADENCE_MS` divides by `STALE_INTERVALS`
   by name rather than by the 3 it equals, because `_staleThresholdMs` clamps to
   `STALE_FALLBACK_MS` and would go on reading 15 minutes while a retune
-  silently moved the quiet tier of every recorder-disabled install. A test pins
-  the identity on the constants; asserting it on either window stays green
-  through exactly that break, and with no history the old capped formula and
-  the new one agree exactly, which is why the original bug only ever showed on
-  a sensor slower than 5 minutes.
+  silently moved the fade of every recorder-disabled install. A test pins the
+  identity on the constants; asserting it on either window stays green through
+  exactly that break, and with no history the old capped formula and the new one
+  agree exactly, which is why the original bug only ever showed on a sensor
+  slower than 5 minutes.
 - **The bottom rung of that ladder has no option, deliberately.** Whole-card
   dimming on staleness predates the tiering (v0.9.3) and stays always-on:
   a live sensor that looks stale is a harmless failure, a dead one that looks
-  live is not. `dim_by_age` gates the quiet rung only. Any future "one switch
+  live is not. `dim_by_age` gates the middle rung only. Any future "one switch
   for all dimming" is that same unsafe trade wearing a tidier API. The option
-  was `dim_fresh_time` in v0.13.0, its only release; `setConfig` reads the old
-  name once, because HA does not reject a config key a card ignores and the
-  rename would otherwise have silently switched the feature off for exactly the
-  people who had turned it on.
+  was `dim_fresh_time` in v0.13.0 and `dim_by_age` from v0.14.0; the v0.15.0
+  reversal kept the v0.14.0 name, since the name still describes what it does
+  and a second rename inside three releases costs more than it explains.
 
 ## Sections view (grid sizing)
 
