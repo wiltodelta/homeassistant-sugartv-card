@@ -13,8 +13,9 @@ One card and one config in two slots: it takes the shape it is given.
 - **Multi-sensor support** — Dexcom, Nightscout, LibreView, LibreLink, Carelink (auto-detected)
 - Displays: current glucose, delta from previous reading, trend direction, last update time, glucose prediction
 - Color-coded glucose zones (AGP/TIR standard thresholds)
-- Stale data indicator — the card fades once three polls have been missed,
-  measured against the sensor's own update interval
+- Dims as a reading ages, on three rungs measured against the sensor's own
+  update interval — the card fades once three polls have been missed, and
+  optionally the time sits quiet until the first one does
 - Tap to open HA more-info dialog with history graph
 - Automatic local time format and unit support (mmol/L and mg/dL)
 - Adapts to the space it is given: a wide slot lays the reading out in a row, a
@@ -99,7 +100,7 @@ for example, builds the id from your account username, so it is
 | `timestamp_attribute` | string    | auto-detected        | Attribute holding the measurement time, for an integration not listed above.      |
 | `show_prediction`     | boolean   | `true`               | The line of text under the reading.                                               |
 | `relative_time`       | boolean   | `false`              | Show the reading's age ("14 min ago") in place of the clock.                      |
-| `dim_fresh_time`      | boolean   | `false`              | Keep the time quiet while the reading is current, at full strength once it ages.  |
+| `dim_by_age`          | boolean   | `false`              | Keep the time quiet while the reading is current, at full strength once it ages.  |
 | `color_thresholds`    | boolean   | `true`               | Colour the reading by zone.                                                       |
 | `thresholds`          | object    | AGP/TIR for the unit | `urgent_low`, `low`, `high`, `urgent_high`, in whatever unit your sensor reports. |
 | `locale`              | string    | your HA language     | Formats the clock and the number, for example `en-GB` or `ru-RU`. YAML only.      |
@@ -247,38 +248,54 @@ every language. Rather than dropping to English in the middle of an otherwise
 translated card, the card keeps showing the clock for those. If you turn this on
 and still see a clock, that is why.
 
-#### Letting the time fade into the background
+#### How the card dims as a reading ages
 
-The time is only worth reading when it has something to say. Set
-`dim_fresh_time: true` and it sits at low contrast while the reading is current,
-then comes up to full strength once a poll has been missed, before the card
-dims as a whole. Glance at it and you can tell without reading it that there is
-nothing to read.
+Dimming is one ladder with three rungs, all measured against your sensor's own
+update interval, so they mean the same thing whatever it is.
 
-The three tiers come off the same measured cadence as staleness, so they mean
-the same thing on any sensor: quiet for one interval, loud for the next two,
-the whole card dimmed after that. It works with either time display, and it
-does not colour anything. Orange already means "out of range" here, so an aging
-time on a high reading would paint two different meanings the same colour.
+| Age              | What dims                      | Reading it          |
+| ---------------- | ------------------------------ | ------------------- |
+| Under 1 interval | The time, to low contrast      | Nothing to read     |
+| 1 to 3 intervals | Nothing, the time comes up     | A poll went missing |
+| Over 3 intervals | The whole card, plus greyscale | Do not trust this   |
+
+The bottom rung is the card's oldest behaviour and **has no setting**. A dead
+sensor has to look dead, so that one is not yours to turn off.
+
+The top rung is, because a quiet timestamp is a preference rather than a safety
+signal. `dim_by_age: true` turns it on, off by default. The middle rung is what
+you get either way: the time at full strength, saying a reading is overdue.
+
+Glance at a card with this on and you can tell without reading the time that
+there is nothing to read. It works with either time display, and it does not
+colour anything: orange already means "out of range" here, so an aging time on a
+high reading would paint two unrelated meanings the same colour, and on the
+urgent zones it would land on red.
+
+> **Renamed in v0.14.0.** This option was `dim_fresh_time` in v0.13.0, its only
+> release. The old name still works and means the same thing, so nothing breaks
+> if you leave it; `dim_by_age` wins if a config somehow carries both.
 
 #### When the card calls a reading stale
 
 The card dims once three polls have gone missing. Three of what depends on your
 sensor, so the card measures rather than assumes: it reads the gaps between your
-own readings in the recorder history and takes the smallest one as the update
+own readings in the recorder history and takes the typical one as the update
 interval. A one minute CGM therefore dims after three minutes, a five minute one
 after fifteen.
 
 There is no setting for this, and the interval is not asked for. The card
 already reads history to compute the delta, so the answer is in data it holds.
 
-Two deliberate limits. It takes the smallest gap rather than an average, because
-Home Assistant writes no history entry when a reading repeats, and averaging
-would stretch the window on exactly the flat stretches where a stuck sensor most
-needs catching. And a measured interval can only shorten the window, never
-extend it past fifteen minutes: a live sensor that looks stale is a harmless
-failure, a dead one that looks live is not. With the recorder disabled, fifteen
-minutes is what you get.
+Two deliberate limits. It takes the median gap rather than the average or the
+smallest. The average stretches the window on exactly the flat stretches where a
+stuck sensor most needs catching, since Home Assistant writes no history entry
+when a reading repeats. The smallest collapses it the other way: one poll
+arriving early, after a retry or a restart, would otherwise redefine a five
+minute sensor as a ninety second one. And a measured interval can only shorten
+the window, never extend it past fifteen minutes: a live sensor that looks stale
+is a harmless failure, a dead one that looks live is not. With the recorder
+disabled, fifteen minutes is what you get.
 
 ### Glucose zone thresholds
 

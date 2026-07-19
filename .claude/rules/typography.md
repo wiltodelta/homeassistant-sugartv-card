@@ -62,7 +62,10 @@ Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this doma
   (`--sugartv-warning-text`) means "out of range" and red means "urgent", so any
   second axis reaching for orange paints two unrelated meanings the same colour
   and lands on red in the urgent zones, where nothing shows. The freshness
-  tiering (#94, point 2) is opacity only for that reason. Before adding a
-  colour, check the zone rules; before adding a tier, check whether opacity says
-  it. Related: a tier whose text never changes still needs the age ticker, since
-  only the tier moves, and a frozen card then looks correct rather than stuck.
+  tiering (#94, point 2) is opacity only for that reason, and v0.9.3 had already
+  learned it once: `.time.stale` used to go red, and the whole-card fade
+  replaced it precisely because colour could not work across the zones.
+  Before adding a colour, check the zone rules; before adding a tier, check
+  whether opacity says it. Related: a tier whose text never changes still needs
+  the age ticker, since only the tier moves, and a frozen card then looks
+  correct rather than stuck.

@@ -773,21 +773,61 @@ describe('SugarTvCard', () => {
         };
 
         it('marks the time quiet while the reading is current', () => {
-            expect(rendered({ dim_fresh_time: true }, 1)).toContain(
+            expect(rendered({ dim_by_age: true }, 1)).toContain(
                 'class="time fresh"',
             );
         });
 
         it('drops the mark once a poll has been missed', () => {
-            expect(rendered({ dim_fresh_time: true }, 7)).not.toContain(
-                'fresh',
-            );
+            expect(rendered({ dim_by_age: true }, 7)).not.toContain('fresh');
         });
 
         // The default has to stay exactly what it was for everyone who never
         // asked for this, which on a fresh reading is a time at full strength.
         it('leaves the time alone when the option is off', () => {
             expect(rendered({}, 1)).not.toContain('fresh');
+        });
+
+        /*
+         * The v0.13.0 name. Home Assistant does not reject a config key the
+         * card ignores, so dropping it outright would have turned the option
+         * off for exactly the people who went and enabled it, silently: no
+         * error, no log line, just a card that stopped dimming.
+         */
+        describe('the name it shipped under in v0.13.0', () => {
+            const configured = (config) => {
+                const card = createCard();
+                card.setConfig({
+                    glucose_value: 'sensor.jane_glucose_value',
+                    ...config,
+                });
+                return card.config;
+            };
+
+            it('still turns the dimming on', () => {
+                expect(configured({ dim_fresh_time: true }).dim_by_age).toBe(
+                    true,
+                );
+            });
+
+            it('still turns it off, rather than merely being absent', () => {
+                expect(configured({ dim_fresh_time: false }).dim_by_age).toBe(
+                    false,
+                );
+            });
+
+            // Someone who has migrated may leave the old key behind; the name
+            // they set deliberately is the one that counts.
+            it('loses to the current name when a config carries both', () => {
+                expect(
+                    configured({ dim_fresh_time: true, dim_by_age: false })
+                        .dim_by_age,
+                ).toBe(false);
+            });
+
+            it('leaves a config that never mentioned it alone', () => {
+                expect(configured({}).dim_by_age).toBeUndefined();
+            });
         });
     });
 
@@ -859,19 +899,19 @@ describe('SugarTvCard', () => {
         });
 
         /*
-         * The two halves met only in the merge: dim_fresh_time's label was
+         * The two halves met only in the merge: dim_by_age's label was
          * added on one branch and the language lookup on another, so nothing
          * had ever asked whether a new option arrives translated.
          */
         it('translates an option added after the language lookup existed', () => {
             const label = withFrontend('de', () =>
                 SugarTvCard.getConfigForm().computeLabel({
-                    name: 'dim_fresh_time',
+                    name: 'dim_by_age',
                 }),
             );
 
             expect(label).toBe(
-                getLocalizer({ locale: 'de' }, {})('editor.dim_fresh_time'),
+                getLocalizer({ locale: 'de' }, {})('editor.dim_by_age'),
             );
             expect(label).not.toBe('Dim the time while the reading is current');
         });
@@ -917,7 +957,7 @@ describe('SugarTvCard', () => {
         it('runs for a dimmed clock too, whose text never changes', () => {
             vi.useFakeTimers();
 
-            const card = createCard({ dim_fresh_time: true });
+            const card = createCard({ dim_by_age: true });
             card.isConnected = true;
             card._syncAgeTicker();
 
@@ -1142,11 +1182,10 @@ describe('SugarTvCard', () => {
         });
 
         /*
-         * Why not the average. HA writes no history entry when a reading
-         * repeats, so a flat stretch leaves a double-width hole. An average
-         * would report 7.5 minutes for this 5 minute sensor and stretch the
-         * stale window by half again; a middle value does not move when one
-         * outlier grows.
+         * The reason this takes the smallest gap rather than an average. HA
+         * writes no history entry when a reading repeats, so a flat stretch
+         * leaves a double-width hole. An average would report 7.5 minutes for
+         * this 5 minute sensor and stretch the stale window by half again.
          */
         it('is not fooled by a gap where a repeated reading was dropped', () => {
             expect(SugarTvCard.cadenceFromHistory(at(0, 5, 15, 20))).toBe(
@@ -1172,9 +1211,9 @@ describe('SugarTvCard', () => {
          * an integration retry, a restart, an availability blip — sits above it
          * and became the cadence for the whole card. A 5 minute sensor then
          * measured 90 seconds, which collapsed the stale window to 4.5 minutes
-         * and the quiet tier to 90 seconds, so only "now" ever read as current.
-         * The typical gap is what the sensor actually does; the smallest is
-         * whatever went wrong most recently.
+         * and the fresh window to 90 seconds, so only "now" ever read as
+         * current. The typical gap is what the sensor actually does; the
+         * smallest is whatever went wrong most recently.
          */
         it('is not collapsed by a single early poll among regular ones', () => {
             const times = at(0, 5, 10, 11.5, 15, 20);
