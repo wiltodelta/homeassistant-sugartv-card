@@ -210,7 +210,7 @@ class SugarTvCard extends LitElement {
                     selector: { boolean: {} },
                 },
                 {
-                    name: 'dim_fresh_time',
+                    name: 'dim_by_age',
                     selector: { boolean: {} },
                 },
                 {
@@ -287,7 +287,7 @@ class SugarTvCard extends LitElement {
                     timestamp_attribute: localize('editor.timestamp_attribute'),
                     show_prediction: localize('editor.show_prediction'),
                     relative_time: localize('editor.relative_time'),
-                    dim_fresh_time: localize('editor.dim_fresh_time'),
+                    dim_by_age: localize('editor.dim_by_age'),
                     color_thresholds: localize('editor.color_thresholds'),
                     urgent_low: localize('editor.urgent_low'),
                     low: localize('editor.low'),
@@ -335,7 +335,7 @@ class SugarTvCard extends LitElement {
      */
     _syncAgeTicker() {
         const wanted = Boolean(
-            (this.config?.relative_time || this.config?.dim_fresh_time) &&
+            (this.config?.relative_time || this.config?.dim_by_age) &&
             this.isConnected,
         );
         if (wanted === Boolean(this._ageTicker)) return;
@@ -564,6 +564,18 @@ class SugarTvCard extends LitElement {
         // Normalize defaults so the form editor shows correct values
         if (config.color_thresholds === undefined) {
             config = { ...config, color_thresholds: true };
+        }
+
+        // dim_by_age was dim_fresh_time in v0.13.0, its only release. Home
+        // Assistant does not reject config keys a card ignores, so without this
+        // the option would simply stop working for the people who had opted
+        // into it, with nothing on screen or in the log to say why. The old
+        // name is read once, here, so nothing downstream has to know it.
+        if (
+            config.dim_by_age === undefined &&
+            config.dim_fresh_time !== undefined
+        ) {
+            config = { ...config, dim_by_age: config.dim_fresh_time };
         }
 
         // Only fill the defaults in once the entity can actually be read.
@@ -1350,7 +1362,7 @@ class SugarTvCard extends LitElement {
     // history still goes stale at exactly STALE_FALLBACK_MS — together by
     // coincidence, and retuning STALE_INTERVALS would move the quiet tier of
     // every recorder-disabled install while the stale window, clamped by the
-    // cap, went on reading 15 minutes as though nothing had changed.
+    // cap, looked untouched. That is this diff's own bug one level up.
     static DEFAULT_CADENCE_MS =
         SugarTvCard.STALE_FALLBACK_MS / SugarTvCard.STALE_INTERVALS;
 
@@ -1534,7 +1546,7 @@ class SugarTvCard extends LitElement {
         const ageTier = this._ageTier(reading_time);
         const isStale = ageTier === 'stale';
         const quietTime =
-            this.config.dim_fresh_time === true && ageTier === 'fresh';
+            this.config.dim_by_age === true && ageTier === 'fresh';
         const zoneClass =
             this.config.color_thresholds !== false
                 ? this._getGlucoseZone(value)

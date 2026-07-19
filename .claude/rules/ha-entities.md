@@ -92,6 +92,15 @@ Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this doma
   through exactly that break, and with no history the old capped formula and
   the new one agree exactly, which is why the original bug only ever showed on
   a sensor slower than 5 minutes.
+- **The bottom rung of that ladder has no option, deliberately.** Whole-card
+  dimming on staleness predates the tiering (v0.9.3) and stays always-on:
+  a live sensor that looks stale is a harmless failure, a dead one that looks
+  live is not. `dim_by_age` gates the quiet rung only. Any future "one switch
+  for all dimming" is that same unsafe trade wearing a tidier API. The option
+  was `dim_fresh_time` in v0.13.0, its only release; `setConfig` reads the old
+  name once, because HA does not reject a config key a card ignores and the
+  rename would otherwise have silently switched the feature off for exactly the
+  people who had turned it on.
 
 ## Sections view (grid sizing)
 
