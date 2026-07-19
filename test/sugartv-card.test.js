@@ -1142,10 +1142,11 @@ describe('SugarTvCard', () => {
         });
 
         /*
-         * The reason this takes the smallest gap rather than an average. HA
-         * writes no history entry when a reading repeats, so a flat stretch
-         * leaves a double-width hole. An average would report 7.5 minutes for
-         * this 5 minute sensor and stretch the stale window by half again.
+         * Why not the average. HA writes no history entry when a reading
+         * repeats, so a flat stretch leaves a double-width hole. An average
+         * would report 7.5 minutes for this 5 minute sensor and stretch the
+         * stale window by half again; a middle value does not move when one
+         * outlier grows.
          */
         it('is not fooled by a gap where a repeated reading was dropped', () => {
             expect(SugarTvCard.cadenceFromHistory(at(0, 5, 15, 20))).toBe(
@@ -1163,6 +1164,22 @@ describe('SugarTvCard', () => {
             expect(
                 SugarTvCard.cadenceFromHistory(times),
             ).toBeGreaterThanOrEqual(MIN);
+        });
+
+        /*
+         * What the smallest gap could not survive. The floor only rejects gaps
+         * under a minute, so one poll that lands 90 seconds after the last —
+         * an integration retry, a restart, an availability blip — sits above it
+         * and became the cadence for the whole card. A 5 minute sensor then
+         * measured 90 seconds, which collapsed the stale window to 4.5 minutes
+         * and the quiet tier to 90 seconds, so only "now" ever read as current.
+         * The typical gap is what the sensor actually does; the smallest is
+         * whatever went wrong most recently.
+         */
+        it('is not collapsed by a single early poll among regular ones', () => {
+            const times = at(0, 5, 10, 11.5, 15, 20);
+
+            expect(SugarTvCard.cadenceFromHistory(times)).toBe(5 * MIN);
         });
 
         it.each([

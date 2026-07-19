@@ -60,6 +60,17 @@ Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this doma
   a safe failure (live sensor looks stale) into an unsafe one (dead sensor
   looks live). The fix belongs upstream: `pydexcom` already exposes
   `GlucoseReading.datetime`, and the integration drops it.
+- **A measured cadence is a MEDIAN gap, and both other statistics fail loudly
+  in opposite directions.** The average is dragged up by the double-width hole
+  HA leaves when a reading repeats and writes no history entry. The smallest,
+  which shipped for that reason, is dragged down by any single early poll: the
+  `MIN_CADENCE_MS` floor only rejects gaps under a minute, so one retry landing
+  at 90 seconds redefined a 5 minute sensor as a 90 second one for the whole
+  card. That collapsed staleness to 4.5 minutes and the quiet tier to 90
+  seconds, so only the sub-minute `now` string ever read as current, which is
+  the symptom that surfaced it. A cadence feeds every age tier at once, so a
+  wrong one is never a local error. Prefer the statistic that ignores outliers
+  on both sides, and resolve ties toward the tighter reading.
 
 ## Sections view (grid sizing)
 
