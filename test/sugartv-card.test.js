@@ -1194,6 +1194,7 @@ describe('SugarTvCard', () => {
 
     describe('_staleThresholdMs', () => {
         const MIN = 60 * 1000;
+        const at = (mins) => new Date(Date.now() - mins * MIN).toISOString();
 
         it('falls back to 15 minutes before history has been read', () => {
             expect(createCard()._staleThresholdMs()).toBe(15 * MIN);
@@ -1236,8 +1237,6 @@ describe('SugarTvCard', () => {
         it('gives the quiet tier one interval where staleness gets three', () => {
             const card = createCard();
             card._cadenceMs = 5 * MIN;
-            const at = (mins) =>
-                new Date(Date.now() - mins * MIN).toISOString();
 
             expect(card._isFresh(at(4))).toBe(true);
             expect(card._isFresh(at(6))).toBe(false);
@@ -1255,12 +1254,103 @@ describe('SugarTvCard', () => {
             expect(createCard()._isFresh(twoMinutesAgo)).toBe(true);
         });
 
-        it.each([[null], ['unknown'], ['unavailable']])(
-            'treats %s as not fresh, so the time is never quietly wrong',
-            (timestamp) => {
-                expect(createCard()._isFresh(timestamp)).toBe(false);
-            },
-        );
+        /*
+         * The quiet tier used to divide the stale window by three, and that
+         * window is capped at the 15 minute fallback, so the tier was capped at
+         * five however slow the sensor. A 10 minute sensor's brand new reading,
+         * which has not missed anything, came up to full strength at five
+         * minutes as if a poll had been skipped. One interval means one
+         * interval; it has to come off the cadence, not off the capped window.
+         */
+        it('holds the quiet tier at one interval on a slow sensor', () => {
+            const card = createCard();
+            card._cadenceMs = 10 * MIN;
+
+            expect(card._isFresh(at(9))).toBe(true);
+            expect(card._isFresh(at(11))).toBe(false);
+        });
+
+        /*
+         * The quiet tier may never outlast the window it sits inside. A 15
+         * minute sensor's staleness is capped at 15, so its quiet tier has to
+         * be capped there too, or a stale card would carry a quiet time.
+         */
+        it('never lets the quiet tier outlast staleness', () => {
+            const card = createCard();
+            card._cadenceMs = 20 * MIN;
+
+            expect(card._freshThresholdMs()).toBeLessThanOrEqual(
+                card._staleThresholdMs(),
+            );
+        });
+
+        /*
+         * The ladder itself, rung by rung. The middle one had no test of its
+         * own: it was whatever _isFresh and _isStale both happened to deny, so
+         * nothing would have noticed the two of them disagreeing and leaving no
+         * rung at all, or both claiming the same reading.
+         */
+        describe('_ageTier', () => {
+            it.each([
+                [1, 'fresh'],
+                [4, 'fresh'],
+                [6, 'due'],
+                [14, 'due'],
+                [16, 'stale'],
+            ])('puts a %i minute old reading on the %s rung', (mins, tier) => {
+                const card = createCard();
+                card._cadenceMs = 5 * MIN;
+
+                expect(card._ageTier(at(mins))).toBe(tier);
+            });
+
+            it.each([[null], ['unknown'], ['unavailable']])(
+                'calls %s stale, the one answer that cannot mislead',
+                (timestamp) => {
+                    expect(createCard()._ageTier(timestamp)).toBe('stale');
+                },
+            );
+
+            /*
+             * Staleness is asked first for this reason. Should the two windows
+             * ever cross, a stale card must not also carry a quiet time: the
+             * card would be dimmed for being dead and quiet for being current.
+             */
+            it('never calls one reading both stale and fresh', () => {
+                const card = createCard();
+                card._cadenceMs = 20 * MIN;
+                card._freshThresholdMs = () => 60 * MIN;
+
+                expect(card._ageTier(at(30))).toBe('stale');
+                expect(card._isFresh(at(30))).toBe(false);
+            });
+        });
+
+        /*
+         * The default cadence exists so a card with no history still goes stale
+         * at exactly the fallback. That identity is what lets the fallback be
+         * stated as an interval rather than as a window, which is in turn what
+         * lets the quiet tier come off a cadence at all. It held by a literal 3
+         * until this test; retuning STALE_INTERVALS would then have moved the
+         * quiet tier of every recorder-disabled install while the stale window,
+         * clamped by the cap, went on reading 15 minutes as though nothing had
+         * changed.
+         */
+        /*
+         * Asserted on the constants rather than on the windows they produce,
+         * because neither window can see this break. _staleThresholdMs clamps
+         * to STALE_FALLBACK_MS, so a mis-derived default still reads 15 minutes
+         * there; and with no history the old capped formula and the new one
+         * agree exactly, which is why the original bug hid in the fallback case
+         * and only ever showed on a sensor slower than 5 minutes. An earlier
+         * version of this test asserted the window and stayed green through the
+         * very retune it was written to catch.
+         */
+        it('keeps the no-history cadence worth exactly three of itself', () => {
+            expect(
+                SugarTvCard.DEFAULT_CADENCE_MS * SugarTvCard.STALE_INTERVALS,
+            ).toBe(SugarTvCard.STALE_FALLBACK_MS);
+        });
 
         it('drives _isStale, so a fast sensor dims sooner', () => {
             const card = createCard();

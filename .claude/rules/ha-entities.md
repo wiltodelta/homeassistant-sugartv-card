@@ -71,6 +71,27 @@ Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this doma
   the symptom that surfaced it. A cadence feeds every age tier at once, so a
   wrong one is never a local error. Prefer the statistic that ignores outliers
   on both sides, and resolve ties toward the tighter reading.
+- **The age tiers are ONE ladder, and splitting them into predicates is how
+  they drift.** `_isFresh` and `_isStale` each read their own threshold, and
+  neither could see the other, which is how the quiet rung came to be derived
+  from the CAPPED stale window (`/ STALE_INTERVALS`) instead of from the
+  cadence. That inherited the 15 minute cap, so the rung could never exceed 5
+  minutes and a 10 minute sensor announced a missed poll that had not happened.
+  `_ageTier()` is the single source; the predicates delegate to it. It asks
+  staleness FIRST so the rungs cannot overlap even if the thresholds are ever
+  mis-ordered, which makes "stale card carrying a quiet time" unreachable by
+  construction rather than by arithmetic.
+- **State the no-history fallback as a CADENCE, not as a window.** Both
+  thresholds then start from the same kind of number, and the quiet tier has an
+  interval to take one of; deriving it from the stale window is what inherited
+  the cap in the first place. `DEFAULT_CADENCE_MS` divides by `STALE_INTERVALS`
+  by name rather than by the 3 it equals, because `_staleThresholdMs` clamps to
+  `STALE_FALLBACK_MS` and would go on reading 15 minutes while a retune
+  silently moved the quiet tier of every recorder-disabled install. A test pins
+  the identity on the constants; asserting it on either window stays green
+  through exactly that break, and with no history the old capped formula and
+  the new one agree exactly, which is why the original bug only ever showed on
+  a sensor slower than 5 minutes.
 
 ## Sections view (grid sizing)
 
