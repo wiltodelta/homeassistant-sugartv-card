@@ -27,10 +27,10 @@ The step-by-step release commands and the GitHub Actions / HACS pickup notes liv
 
 Topic-specific rules live in `.claude/rules/*.md` and are auto-loaded when matching files are touched. Read the matching file before editing that domain -- each holds the full architecture notes, thresholds, gotchas, and incident history for its subsystem:
 
-| File                            | Covers                                                                                                                                                           |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.claude/rules/ha-entities.md`  | Entity-id resolution (names not keys, tail-matching), `setConfig`-before-`hass` ordering, `last_updated` vs `last_reported` freshness, sections-view grid sizing |
-| `.claude/rules/localization.md` | `hass.locale` vs `hass.language`, Intl silent-fallback behaviour, the 64-language HA snapshot, the three localized surfaces                                      |
-| `.claude/rules/typography.md`   | Glyph-ink metrics, `Range` rect vs `measureText`, fullwidth sign glyphs, scale-invariant width-per-unit budget, colour budget                                    |
+| File                            | Covers                                                                                                                                                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.claude/rules/ha-entities.md`  | Entity-id resolution (names not keys, tail-matching), `setConfig`-before-`hass` ordering, `last_updated` vs `last_reported` freshness, the age ladder (median cadence, quiet tier, staleness), sections-view grid sizing |
+| `.claude/rules/localization.md` | `hass.locale` vs `hass.language`, Intl silent-fallback behaviour, the 64-language HA snapshot, the three localized surfaces                                                                                              |
+| `.claude/rules/typography.md`   | Glyph-ink metrics, `Range` rect vs `measureText`, fullwidth sign glyphs, scale-invariant width-per-unit budget, colour budget                                                                                            |
 
 Additional docs: [`docs/readme-screenshots.md`](docs/readme-screenshots.md) (screenshot recipe), [`docs/release.md`](docs/release.md) (release steps).
