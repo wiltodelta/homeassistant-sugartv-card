@@ -415,40 +415,6 @@
                         trend: 'rising_quickly',
                         valueOverride: 300,
                     },
-                    {
-                        id: 'stale',
-                        title: 'STALE: Normal (20 min ago)',
-                        type: 'stale',
-                        trend: 'steady',
-                    },
-                    {
-                        id: 'stale-urgent-low',
-                        title: 'STALE: Urgent Low (20 min ago)',
-                        type: 'stale',
-                        trend: 'falling_quickly',
-                        valueOverride: 40,
-                    },
-                    {
-                        id: 'stale-low',
-                        title: 'STALE: Low (20 min ago)',
-                        type: 'stale',
-                        trend: 'falling',
-                        valueOverride: 60,
-                    },
-                    {
-                        id: 'stale-high',
-                        title: 'STALE: High (20 min ago)',
-                        type: 'stale',
-                        trend: 'rising',
-                        valueOverride: 200,
-                    },
-                    {
-                        id: 'stale-urgent-high',
-                        title: 'STALE: Urgent High (20 min ago)',
-                        type: 'stale',
-                        trend: 'rising_quickly',
-                        valueOverride: 300,
-                    },
                 ];
 
                 scenarios.forEach((scenario, index) => {
@@ -482,29 +448,6 @@
                             unit: selectedUnit,
                             ageMinutes,
                         });
-                    } else if (scenario.type === 'stale') {
-                        let value =
-                            scenario.valueOverride !== undefined
-                                ? scenario.valueOverride
-                                : baseValue;
-                        if (
-                            selectedUnit === 'mmol/L' &&
-                            !isNaN(parseFloat(value))
-                        ) {
-                            value = (parseFloat(value) / 18).toFixed(1);
-                        }
-                        const staleDate = new Date(Date.now() - 20 * 60 * 1000);
-                        setupCard(
-                            cardElement,
-                            config,
-                            createHass(
-                                value,
-                                scenario.trend,
-                                selectedUnit,
-                                staleDate,
-                                previousOf(value, selectedUnit),
-                            ),
-                        );
                     } else {
                         // static
                         let value =
