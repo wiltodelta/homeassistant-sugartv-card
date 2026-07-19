@@ -207,11 +207,19 @@ export const cardStyles = css`
      * measured from the rendered glyphs, and is zero whenever the reading has
      * no descender, which is every mg/dL card.
      */
+    /*
+     * No opacity of its own, deliberately. It used to carry 0.7 to read as
+     * secondary, but font size already says that -- 2.7u against the reading's
+     * 20u -- and the opacity cost more than it bought. It multiplied with the
+     * age fade below, so a stale forecast landed at 0.35 and 2.1:1 against the
+     * card, which is not readable at any size; and on the orange out-of-range
+     * zones it fell to 2.6:1 even on a current reading. Hierarchy by size,
+     * contrast left alone.
+     */
     .prediction {
         font-size: calc(2.7 * var(--u));
         margin-top: calc(var(--value-descent, 0) * var(--u));
         max-width: 100%;
-        opacity: 0.7;
         text-align: center;
     }
 
@@ -238,11 +246,26 @@ export const cardStyles = css`
     }
 
     :host(.aging) {
-        opacity: 0.75;
+        opacity: 0.85;
     }
 
+    /*
+     * A stale card must still be READABLE. It is reporting the last reading
+     * anyone got, which is information you want even when it is old; the fade
+     * says "do not trust this as current", not "you may stop being able to see
+     * it". 0.5 shipped from v0.9.3 and put the reading at 3.2:1 against the
+     * card, right on the large-text floor, with the forecast line below any
+     * threshold at all. 0.7 holds the reading at 5.9:1 and is still an obvious
+     * step down from the rung above.
+     *
+     * The greyscale does the rest, and does it where opacity cannot: on the
+     * coloured zones it is the whole signal, and it happens to RAISE contrast
+     * rather than lower it, since orange desaturates toward a darker luma
+     * (3.8:1 to 5.3:1). On a normal white card it changes nothing visible,
+     * which is why the opacity has to carry that case on its own.
+     */
     :host(.stale) {
-        opacity: 0.5;
+        opacity: 0.7;
         filter: grayscale(0.8);
     }
 
@@ -256,11 +279,6 @@ export const cardStyles = css`
     :host(.zone-low),
     :host(.zone-high) {
         color: var(--sugartv-warning-text, #e65100);
-    }
-
-    :host(.zone-urgent-low) .prediction,
-    :host(.zone-urgent-high) .prediction {
-        opacity: 0.85;
     }
 
     /*
