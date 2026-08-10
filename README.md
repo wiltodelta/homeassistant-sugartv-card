@@ -368,6 +368,21 @@ each integration offers.
 **I wanted the vertical layout.** It follows the shape of the slot, not a
 setting. See Layout above.
 
+## Names that cannot be renamed
+
+Three strings in this project are external identities. Each one lives somewhere
+outside the repository, so changing it breaks existing installs rather than
+producing a rename to review.
+
+| String | Where it lives | What breaks |
+| --- | --- | --- |
+| `wiltodelta/homeassistant-sugartv-card` | The HACS default plugin list | HACS resolves the card by repository path, so renaming the repository cuts off updates for everyone who installed it |
+| `sugartv-card.js` in `hacs.json` | Release assets | HACS downloads this exact filename from the release |
+| `sugartv-card` in `customElements.define` | Every user's Lovelace config, as `type: custom:sugartv-card` | Cards stop rendering until each user edits their own dashboard |
+
+The `name` field in `package.json` is not one of them: nothing is published to
+npm under it, so it is free to change.
+
 ## Support
 
 - Found a bug? [Create an issue](https://github.com/wiltodelta/homeassistant-sugartv-card/issues)
