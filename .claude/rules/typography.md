@@ -1,5 +1,5 @@
 ---
-globs: src/**/*.js, src/**/*.css
+globs: src/**/*.js
 description: Type and layout metrics — measure ink not boxes, Range rect vs measureText, fullwidth sign glyphs, scale-invariant width-per-unit budget, and the card's colour budget.
 ---
 
