@@ -8,7 +8,7 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
 - `npm test` — vitest suite (`test/*.test.js`)
 - `npm run demo` — local demo on http://localhost:3000
 - No `maintain.sh`. The gate is `npm test && npm run build && npx prettier --check .`
-- README images are generated, not hand-cropped — regenerate them with the headless-Chrome recipe in [`docs/readme-screenshots.md`](docs/readme-screenshots.md), never crop by hand.
+- The headless-Chrome recipe that regenerates the README images is in [`docs/readme-screenshots.md`](docs/readme-screenshots.md).
 
 ## Home Assistant facts worth not re-deriving
 
@@ -18,8 +18,7 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
 
 ## Release process
 
-- **Never force-push tags.** HACS caches releases by tag name — re-tagging means users won't get the update.
-- **Always increment version** for every push that should reach users, even hotfixes.
+- **Never force-push tags.** HACS caches releases by tag name, so a re-tag never reaches an installation that already fetched it.
 
 The step-by-step release commands and the GitHub Actions / HACS pickup notes live in [`docs/release.md`](docs/release.md).
 
