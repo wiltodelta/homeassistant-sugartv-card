@@ -1,5 +1,7 @@
 ---
-globs: src/**/*.js, test/**/*.js
+paths:
+    - 'src/**/*.js'
+    - 'test/**/*.js'
 description: Home Assistant integration facts — entity-id resolution, setConfig/hass ordering, state freshness (last_updated vs last_reported), sections-view grid sizing.
 ---
 

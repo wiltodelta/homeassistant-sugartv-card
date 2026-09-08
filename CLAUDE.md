@@ -4,21 +4,23 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
 
 ## How to run
 
-- `npm run build` — build the card
-- `npm test` — vitest suite (`test/*.test.js`)
-- `npm run demo` — local demo on http://localhost:3000
+- `npm run build` - build the card
+- `npm test` - vitest suite (`test/*.test.js`)
+- `npm run demo` - local demo on http://localhost:3000
 - No `maintain.sh`. The gate is `npm test && npm run build && npx prettier --check .`
 - The headless-Chrome recipe that regenerates the README images is in [`docs/readme-screenshots.md`](docs/readme-screenshots.md).
 
 ## Home Assistant facts worth not re-deriving
 
-- **Entity ids have no predictable head — match the tail via `siblingEntityId()`; `setConfig` runs before `hass`, so nothing about the entity is knowable at config time.** `last_updated` is not "when the sensor was last polled", and `last_reported` is the wrong fix. Full HA integration facts (entity-name-vs-key resolution, Dexcom/Carelink id shapes, freshness, sections-view grid sizing): [`.claude/rules/ha-entities.md`](.claude/rules/ha-entities.md).
-- **`hass.locale` is not `hass.language` — read both, and resolve the locale in ONE place.** Intl never fails; it silently answers in English, so compare `resolvedOptions().locale` to what you asked for. HA ships 64 languages (`test/ha-languages.json` is the snapshot), and two of the card's three localized surfaces never see a `hass`. Full localization rules: [`.claude/rules/localization.md`](.claude/rules/localization.md).
-- **A glyph's box is not its ink, and the eye measures ink** — measure with `measureText().actualBoundingBox*` / `getBoundingClientRect()` on the SVG `path`, never a `Range` rect (it reports the line box). Width-per-unit is scale-invariant, so one measurement sizes the type. Colour is already spent (orange = out of range, red = urgent); new signals get opacity. Full type + layout metrics: [`.claude/rules/typography.md`](.claude/rules/typography.md).
+Each of these is a rule file, and the rule is the source; read it before touching its domain.
+
+- Entity-id resolution via `siblingEntityId()`, `setConfig` running before `hass`, and why `last_updated` and `last_reported` both mislead: `.claude/rules/ha-entities.md`.
+- `hass.locale` versus `hass.language`, Intl's silent English fallback, the 64-language snapshot in `test/ha-languages.json`, and the two localized surfaces that never see a `hass`: `.claude/rules/localization.md`.
+- Measuring glyph ink with `measureText().actualBoundingBox*` and the SVG `path` rect rather than a `Range` rect, the scale-invariant width-per-unit budget, and the colour budget (orange and red are spent, new signals get opacity): `.claude/rules/typography.md`.
 
 ## Release process
 
-- **Never force-push tags.** HACS caches releases by tag name, so a re-tag never reaches an installation that already fetched it.
+- HACS caches releases by tag name, so the global never-re-tag rule applies to every published tag here: bump the version instead.
 
 The step-by-step release commands and the GitHub Actions / HACS pickup notes live in [`docs/release.md`](docs/release.md).
 

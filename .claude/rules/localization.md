@@ -1,5 +1,9 @@
 ---
-globs: src/localize.js, src/**/*.js, test/**/*.js, test/ha-languages.json
+paths:
+    - 'src/localize.js'
+    - 'src/**/*.js'
+    - 'test/**/*.js'
+    - 'test/ha-languages.json'
 description: Localization rules — hass.locale vs hass.language, Intl silent-fallback behaviour, the 64-language HA snapshot, and the three surfaces a card is localized on.
 ---
 
