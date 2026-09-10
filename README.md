@@ -11,7 +11,7 @@ One card and one config in two slots: it takes the shape it is given.
 ## Features
 
 - **Multi-sensor support** — Dexcom, Nightscout, LibreView, LibreLink, Carelink (auto-detected)
-- Displays: current glucose, delta from previous reading, trend direction, last update time, glucose prediction
+- Displays: current glucose, delta from previous reading, trend direction, last update time, glucose prediction, active insulin (optional)
 - Color-coded glucose zones (AGP/TIR standard thresholds)
 - Fades as a reading ages, on three rungs measured against the sensor's own
   update interval — a current reading is drawn at full strength, and the card
@@ -34,6 +34,13 @@ One card and one config in two slots: it takes the shape it is given.
 | **Carelink** (Medtronic) | `sensor.*last_glucose_level_mg_dl` | Auto-detected from `*last_glucose_trend` entity |
 
 Just select your glucose sensor — the card figures out the rest automatically.
+
+Community integrations beyond the table work as glucose sources too, with two
+limits. Their trend usually lives in a separate entity (`*_bg_direction`,
+`*_glucose_trend`) rather than an attribute, so point `glucose_trend` at it
+(the card already speaks the Nightscout directions those entities publish);
+and none of them reports the measurement time in a shape the card reads, so
+the clock falls back to `last_updated`.
 
 ## Installation
 
@@ -59,6 +66,7 @@ Just select your glucose sensor — the card figures out the rest automatically.
 2. Choose "Custom: SugarTV Card"
 3. Use the visual editor to configure:
     - Select glucose value sensor
+    - Point at an active insulin sensor, optionally
     - Toggle prediction display
     - Toggle color-coded glucose zones
     - Customize glucose thresholds
@@ -77,6 +85,7 @@ type: custom:sugartv-card
 glucose_value: sensor.jane_glucose_value
 glucose_trend: sensor.jane_glucose_trend # optional override
 timestamp_attribute: measurement_timestamp # optional override
+insulin_value: sensor.jane_active_insulin # optional
 show_prediction: true
 color_thresholds: true
 thresholds:
@@ -98,6 +107,7 @@ for example, builds the id from your account username, so it is
 | `glucose_value`       | entity id | required             | The sensor holding the reading. Everything else is derived from it.               |
 | `glucose_trend`       | entity id | auto-detected        | Point at the trend entity when the card cannot find it. YAML only.                |
 | `timestamp_attribute` | string    | auto-detected        | Attribute holding the measurement time, for an integration not listed above.      |
+| `insulin_value`       | entity id | none                 | An active insulin (IOB) sensor, drawn as a second line under the forecast.        |
 | `show_prediction`     | boolean   | `true`               | The line of text under the reading.                                               |
 | `relative_time`       | boolean   | `false`              | Show the reading's age ("14 min ago") in place of the clock.                      |
 | `dim_by_age`          | boolean   | `false`              | Fade the card once a poll has been missed, ahead of the stale fade.               |
@@ -156,6 +166,52 @@ normalizes Dexcom's names, Nightscout's directions, LibreView's numbers and
 Carelink's spellings onto these.
 
 ![The seven trend arrows](sugartv-card-trends.png)
+
+### Active insulin
+
+Point the card at an insulin sensor and it draws a second line under the
+forecast: "Active insulin 1.25 U", phrased in the card's language like
+everything else on it.
+
+![The insulin line with the forecast on, and on its own](sugartv-card-insulin.png)
+
+```yaml
+type: custom:sugartv-card
+glucose_value: sensor.jane_glucose_value
+insulin_value: sensor.jane_active_insulin
+```
+
+The entity is the toggle: point at one and the line appears, clear it and the
+line goes away. Nothing shows while the entity is missing, `unknown` or
+`unavailable`.
+
+There is nothing to auto-detect, deliberately. Of the integrations in the
+table above only Carelink is a pump integration, and its `sensor.*active_insulin` is
+the entity to point at.
+
+Everywhere else the insulin number lives in a second integration beside the
+glucose one, and `insulin_value` takes any sensor. Where one exists, checked
+against each integration's source:
+
+| Source                            | Insulin entity                                       | Unit           |
+| --------------------------------- | ---------------------------------------------------- | -------------- |
+| Carelink (Medtronic)              | `sensor.*active_insulin`                             | none published |
+| Nightscout community integrations | `sensor.*insulin_on_board`                           | `U`            |
+| Nocturne                          | `sensor.*insulin_on_board`                           | `U`            |
+| Glucifer (Juggluco bridge)        | `sensor.*insulin_on_board`, `sensor.*active_insulin` | `U`            |
+| Medtrum EasyView                  | `sensor.*active_insulin`                             | `U`            |
+
+The core Nightscout integration publishes glucose only, so if your glucose
+comes from it and you run AAPS, Loop or OpenAPS, the number has to come from
+one of the community Nightscout integrations above or from a template sensor
+of your own; spellings vary a little between them (`nightscout_v3` calls it
+Loop IOB).
+
+The amount is formatted in your number format, to two decimals, and the unit
+comes off the sensor itself. Carelink publishes no unit at all, so the line
+falls back to `U`. A negative value is passed through rather than clamped: a
+temporary basal below zero produces negative insulin on board on some systems,
+and hiding that would be worse than showing it.
 
 ### Layout
 
@@ -374,11 +430,11 @@ Three strings in this project are external identities. Each one lives somewhere
 outside the repository, so changing it breaks existing installs rather than
 producing a rename to review.
 
-| String | Where it lives | What breaks |
-| --- | --- | --- |
-| `wiltodelta/homeassistant-sugartv-card` | The HACS default plugin list | HACS resolves the card by repository path, so renaming the repository cuts off updates for everyone who installed it |
-| `sugartv-card.js` in `hacs.json` | Release assets | HACS downloads this exact filename from the release |
-| `sugartv-card` in `customElements.define` | Every user's Lovelace config, as `type: custom:sugartv-card` | Cards stop rendering until each user edits their own dashboard |
+| String                                    | Where it lives                                               | What breaks                                                                                                          |
+| ----------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `wiltodelta/homeassistant-sugartv-card`   | The HACS default plugin list                                 | HACS resolves the card by repository path, so renaming the repository cuts off updates for everyone who installed it |
+| `sugartv-card.js` in `hacs.json`          | Release assets                                               | HACS downloads this exact filename from the release                                                                  |
+| `sugartv-card` in `customElements.define` | Every user's Lovelace config, as `type: custom:sugartv-card` | Cards stop rendering until each user edits their own dashboard                                                       |
 
 The `name` field in `package.json` is not one of them: nothing is published to
 npm under it, so it is free to change.

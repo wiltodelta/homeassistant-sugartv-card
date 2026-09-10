@@ -112,11 +112,13 @@ describe('the age fade in the stylesheet', () => {
      * fades twice on a stale card. The forecast line used to carry 0.7, which
      * put it at 2.1:1 there -- below every threshold at any size. Hierarchy on
      * that line is font size now, and this pins it: re-adding an opacity here
-     * would silently reintroduce the compounding.
+     * would silently reintroduce the compounding. The insulin line and the
+     * footnotes block that wraps them sit on the same spot of the card and
+     * would compound just the same, so they are held to the identical rule.
      */
-    it('leaves the forecast line without an opacity to compound', () => {
+    it('leaves the secondary lines without an opacity to compound', () => {
         /*
-         * EVERY rule whose selector list mentions .prediction, not the first
+         * EVERY rule whose selector list mentions one of them, not the first
          * one that matches. The first version of this test looked for
          * `.prediction {` and found the grouped `.time, .value, .delta,
          * .prediction {` rule instead, which has never carried an opacity -- so
@@ -124,7 +126,9 @@ describe('the age fade in the stylesheet', () => {
          * back. An opacity on the grouped rule would compound just as badly, so
          * checking all of them is also the stronger assertion.
          */
-        const blocks = rulesMatching(/(^|,)\s*\.prediction\s*$/m);
+        const blocks = rulesMatching(
+            /(^|,)\s*\.(prediction|insulin|footnotes)\s*$/m,
+        );
 
         expect(blocks.length).toBeGreaterThan(0);
         for (const [, , body] of blocks) {

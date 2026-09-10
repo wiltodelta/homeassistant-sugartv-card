@@ -16,5 +16,6 @@ src/sugartv-card-fonts.js
 /.agents/
 /.codex/
 /.opencode/
+/.sc/
 /opencode.json
 /opencode.jsonc

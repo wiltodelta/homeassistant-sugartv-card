@@ -101,6 +101,8 @@
              *   rel    1 to show the age in place of the clock (relative_time)
              *   dim    1 to enable dim_by_age
              *   pred   0 to drop the forecast line
+             *   iob    units of active insulin to show under the forecast
+             *          (omitted: no insulin entity, no line)
              *   loc    the card's locale (default en-US)
              *   label  caption under the card; <b> is allowed
              */
@@ -126,6 +128,7 @@
                         relative: opt.rel === '1',
                         dim: opt.dim === '1',
                         prediction: opt.pred !== '0',
+                        iob: opt.iob === undefined ? null : opt.iob,
                         locale: opt.loc || 'en-US',
                         label: opt.label ? decodeURIComponent(opt.label) : '',
                     };
@@ -138,7 +141,7 @@
              * number agree. A card showing a rising arrow next to a negative
              * delta reads as a bug in the card rather than a staged figure.
              */
-            function hass(value, trend, date) {
+            function hass(value, trend, date, iob) {
                 const id = 'sensor.jane_glucose_value';
                 const sec = Math.floor(date.getTime() / 1000);
                 const direction = trend.startsWith('falling')
@@ -157,6 +160,15 @@
                             last_changed: date.toISOString(),
                         },
                         'sensor.jane_glucose_trend': { state: trend },
+                        // Carelink-shaped: an active insulin entity with no
+                        // unit of its own.
+                        ...(iob !== null
+                            ? {
+                                  'sensor.jane_active_insulin': {
+                                      state: String(iob),
+                                  },
+                              }
+                            : {}),
                     },
                     callWS: async ({ entity_ids }) => ({
                         [entity_ids[0]]: [
@@ -188,6 +200,11 @@
                         show_prediction: spec.prediction,
                         relative_time: spec.relative,
                         dim_by_age: spec.dim,
+                        ...(spec.iob !== null
+                            ? {
+                                  insulin_value: 'sensor.jane_active_insulin',
+                              }
+                            : {}),
                         locale: spec.locale,
                     });
                     /*
@@ -198,7 +215,7 @@
                      * that moved underneath them.
                      */
                     const date = new Date(Date.now() - spec.age * 60 * 1000);
-                    card.hass = hass(spec.value, spec.trend, date);
+                    card.hass = hass(spec.value, spec.trend, date, spec.iob);
 
                     if (spec.label) {
                         const caption = document.createElement('div');

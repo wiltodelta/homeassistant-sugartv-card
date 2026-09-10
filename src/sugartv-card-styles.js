@@ -4,10 +4,11 @@ import { css } from 'lit';
  * Layout
  * ------
  * One markup, two orientations. The container holds the time, the value, a
- * .tail carrying the trend and delta, and the prediction. Wide boxes lay them
- * out as a row with the prediction wrapped onto its own line; tall and square
- * boxes stack them into a column. Nothing here is configurable: the card reads
- * the shape it was given and picks the orientation that fills it.
+ * .tail carrying the trend and delta, and the footnotes (the forecast line
+ * and, when configured, active insulin). Wide boxes lay them out as a row
+ * with the footnotes wrapped onto their own block; tall and square boxes stack
+ * them into a column. Nothing here is configurable: the card reads the shape
+ * it was given and picks the orientation that fills it.
  *
  * Optical geometry
  * ----------------
@@ -112,14 +113,16 @@ export const cardStyles = css`
     .time,
     .value,
     .delta,
-    .prediction {
+    .prediction,
+    .insulin {
         text-box: trim-both cap alphabetic;
     }
 
     /* Even digit advances: no drift off centre, no jitter on a new reading. */
     .time,
     .value,
-    .delta {
+    .delta,
+    .insulin {
         font-variant-numeric: tabular-nums;
     }
 
@@ -201,12 +204,30 @@ export const cardStyles = css`
     }
 
     /*
-     * Clear the reading's descender. .value is trimmed to the alphabetic
+     * The lines under the reading: the forecast and, when configured, the
+     * active insulin. One block with a rhythm of its own, tighter than the
+     * container's gap, because two lines at the container's gap read as two
+     * separate announcements while these are one level of detail -- the same
+     * licence the stacked trend and delta take in the column layout.
+     *
+     * The block carries the descent clearance, not the forecast line itself,
+     * so whichever line lands directly under the reading clears its
+     * descender: with insulin configured and the forecast off, the insulin
+     * line is the one sitting under the number. The clearance itself is
+     * measured from the rendered glyphs: .value is trimmed to the alphabetic
      * baseline so its box ends where the digits do, but a decimal comma hangs
      * below that and would otherwise print on this line. --value-descent is
-     * measured from the rendered glyphs, and is zero whenever the reading has
-     * no descender, which is every mg/dL card.
+     * zero whenever the reading has no descender, which is every mg/dL card.
      */
+    .footnotes {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: calc(1.2 * var(--u));
+        margin-top: calc(var(--value-descent, 0) * var(--u));
+        max-width: 100%;
+    }
+
     /*
      * No opacity of its own, deliberately. It used to carry 0.7 to read as
      * secondary, but font size already says that -- 2.7u against the reading's
@@ -216,9 +237,9 @@ export const cardStyles = css`
      * zones it fell to 2.6:1 even on a current reading. Hierarchy by size,
      * contrast left alone.
      */
-    .prediction {
+    .prediction,
+    .insulin {
         font-size: calc(2.7 * var(--u));
-        margin-top: calc(var(--value-descent, 0) * var(--u));
         max-width: 100%;
         text-align: center;
     }

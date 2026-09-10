@@ -9,6 +9,7 @@ export const languages = {
             glucose_value: 'Glucose sensor',
             glucose_trend: 'Trend sensor (auto-detected)',
             timestamp_attribute: 'Reading time attribute (optional)',
+            insulin_value: 'Active insulin sensor (optional)',
             show_prediction: 'Glucose forecast',
             relative_time: 'Show reading age instead of the clock',
             dim_by_age: 'Start fading before the reading is stale',
@@ -29,6 +30,9 @@ export const languages = {
             fall_over: 'Expected to fall over {0} {1} in 15 minutes',
             fall_in: 'Expected to fall {0} {1} in 15 minutes',
         },
+        insulin: {
+            active: 'Active insulin {0} {1}',
+        },
         common: {
             not_available: 'N/A',
             default_time: '00:00',
@@ -44,6 +48,7 @@ export const languages = {
             glucose_value: 'Сенсор глюкозы',
             glucose_trend: 'Сенсор тренда (определяется автоматически)',
             timestamp_attribute: 'Атрибут времени измерения (необязательно)',
+            insulin_value: 'Сенсор активного инсулина (необязательно)',
             show_prediction: 'Прогноз глюкозы',
             relative_time: 'Показывать давность измерения вместо времени',
             dim_by_age: 'Начинать приглушение до устаревания',
@@ -66,6 +71,9 @@ export const languages = {
                 'Ожидается падение более чем на {0} {1} в течение 15 минут',
             fall_in: 'Ожидается падение на {0} {1} в течение 15 минут',
         },
+        insulin: {
+            active: 'Активный инсулин {0} {1}',
+        },
         common: {
             not_available: 'Н/Д',
             default_time: '00:00',
@@ -81,6 +89,7 @@ export const languages = {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Trendsensor (automatisch erkannt)',
             timestamp_attribute: 'Attribut der Messzeit (optional)',
+            insulin_value: 'Sensor für aktives Insulin (optional)',
             show_prediction: 'Glukoseprognose',
             relative_time: 'Alter der Messung statt der Uhrzeit',
             dim_by_age: 'Schon vor dem Veralten abblenden',
@@ -103,6 +112,9 @@ export const languages = {
                 'Voraussichtlicher Abfall um mehr als {0} {1} in 15 Minuten',
             fall_in: 'Voraussichtlicher Abfall um {0} {1} in 15 Minuten',
         },
+        insulin: {
+            active: 'Aktives Insulin {0} {1}',
+        },
         common: {
             not_available: 'K/A',
             default_time: '00:00',
@@ -118,6 +130,7 @@ export const languages = {
             glucose_value: 'Capteur de glycémie',
             glucose_trend: 'Capteur de tendance (détecté automatiquement)',
             timestamp_attribute: 'Attribut de l’heure de mesure (facultatif)',
+            insulin_value: "Capteur d'insuline active (facultatif)",
             show_prediction: 'Prévision de glycémie',
             relative_time: 'Afficher l’ancienneté plutôt que l’heure',
             dim_by_age: 'Estomper avant que la mesure soit périmée',
@@ -138,6 +151,9 @@ export const languages = {
             fall_over: 'Baisse attendue de plus de {0} {1} en 15 minutes',
             fall_in: 'Baisse attendue de {0} {1} en 15 minutes',
         },
+        insulin: {
+            active: 'Insuline active {0} {1}',
+        },
         common: {
             not_available: 'N/D',
             default_time: '00:00',
@@ -153,6 +169,7 @@ export const languages = {
             glucose_value: 'Sensor de glucosa',
             glucose_trend: 'Sensor de tendencia (detección automática)',
             timestamp_attribute: 'Atributo de la hora de medición (opcional)',
+            insulin_value: 'Sensor de insulina activa (opcional)',
             show_prediction: 'Previsión de glucosa',
             relative_time: 'Mostrar la antigüedad en lugar de la hora',
             dim_by_age: 'Atenuar antes de que la medición caduque',
@@ -173,6 +190,9 @@ export const languages = {
             fall_over: 'Se espera una bajada de más de {0} {1} en 15 minutos',
             fall_in: 'Se espera una bajada de {0} {1} en 15 minutos',
         },
+        insulin: {
+            active: 'Insulina activa {0} {1}',
+        },
         common: {
             not_available: 'N/D',
             default_time: '00:00',
@@ -188,6 +208,7 @@ export const languages = {
             glucose_value: 'Sensore glicemia',
             glucose_trend: 'Sensore tendenza (rilevato automaticamente)',
             timestamp_attribute: 'Attributo ora di misurazione (facoltativo)',
+            insulin_value: 'Sensore di insulina attiva (opzionale)',
             show_prediction: 'Previsione glicemia',
             relative_time: 'Mostra da quanto tempo invece dell’ora',
             dim_by_age: 'Attenuare prima che la misurazione scada',
@@ -208,6 +229,9 @@ export const languages = {
             fall_over: 'Prevista una diminuzione di oltre {0} {1} in 15 minuti',
             fall_in: 'Prevista una diminuzione di {0} {1} in 15 minuti',
         },
+        insulin: {
+            active: 'Insulina attiva {0} {1}',
+        },
         common: {
             not_available: 'N/D',
             default_time: '00:00',
@@ -223,6 +247,7 @@ export const languages = {
             glucose_value: 'Glucosesensor',
             glucose_trend: 'Trendsensor (automatisch gedetecteerd)',
             timestamp_attribute: 'Attribuut met meettijd (optioneel)',
+            insulin_value: 'Actieve insuline-sensor (optioneel)',
             show_prediction: 'Glucoseverwachting',
             relative_time: 'Toon hoe oud de meting is in plaats van de klok',
             dim_by_age: 'Dimmen voordat de meting verouderd is',
@@ -243,6 +268,9 @@ export const languages = {
             fall_over: 'Verwachte daling van meer dan {0} {1} in 15 minuten',
             fall_in: 'Verwachte daling van {0} {1} in 15 minuten',
         },
+        insulin: {
+            active: 'Actieve insuline {0} {1}',
+        },
         common: {
             not_available: 'N.v.t.',
             default_time: '00:00',
@@ -258,6 +286,7 @@ export const languages = {
             glucose_value: 'Czujnik glikemii',
             glucose_trend: 'Czujnik trendu (wykrywany automatycznie)',
             timestamp_attribute: 'Atrybut czasu pomiaru (opcjonalnie)',
+            insulin_value: 'Czujnik aktywnej insuliny (opcjonalnie)',
             show_prediction: 'Prognoza glikemii',
             relative_time: 'Pokazuj wiek odczytu zamiast godziny',
             dim_by_age: 'Przygaszaj, zanim pomiar się zestarzeje',
@@ -278,6 +307,9 @@ export const languages = {
             fall_over: 'Oczekiwany spadek o ponad {0} {1} w ciągu 15 minut',
             fall_in: 'Oczekiwany spadek o {0} {1} w ciągu 15 minut',
         },
+        insulin: {
+            active: 'Aktywna insulina {0} {1}',
+        },
         common: {
             not_available: 'Brak',
             default_time: '00:00',
@@ -293,6 +325,7 @@ export const languages = {
             glucose_value: 'Сенсор глюкози',
             glucose_trend: 'Сенсор тренду (визначається автоматично)',
             timestamp_attribute: 'Атрибут часу вимірювання (необов’язково)',
+            insulin_value: 'Сенсор активного інсуліну (опціонально)',
             show_prediction: 'Прогноз глюкози',
             relative_time: 'Показувати давність вимірювання замість часу',
             dim_by_age: 'Починати приглушення до застарівання',
@@ -313,6 +346,9 @@ export const languages = {
             fall_over: 'Очікується падіння більш ніж на {0} {1} за 15 хвилин',
             fall_in: 'Очікується падіння на {0} {1} за 15 хвилин',
         },
+        insulin: {
+            active: 'Активний інсулін {0} {1}',
+        },
         common: {
             not_available: 'Н/Д',
             default_time: '00:00',
@@ -328,6 +364,7 @@ export const languages = {
             glucose_value: 'Sensor de glicose',
             glucose_trend: 'Sensor de tendência (detetado automaticamente)',
             timestamp_attribute: 'Atributo da hora de medição (opcional)',
+            insulin_value: 'Sensor de insulina ativa (opcional)',
             show_prediction: 'Previsão de glicose',
             relative_time: 'Mostrar há quanto tempo em vez da hora',
             dim_by_age: 'Atenuar antes de a medição ficar desatualizada',
@@ -348,6 +385,9 @@ export const languages = {
             fall_over: 'Prevista uma descida de mais de {0} {1} em 15 minutos',
             fall_in: 'Prevista uma descida de {0} {1} em 15 minutos',
         },
+        insulin: {
+            active: 'Insulina ativa {0} {1}',
+        },
         common: {
             not_available: 'N/D',
             default_time: '00:00',
@@ -363,6 +403,7 @@ export const languages = {
             glucose_value: 'Glukossensor',
             glucose_trend: 'Trendsensor (identifieras automatiskt)',
             timestamp_attribute: 'Attribut för mättid (valfritt)',
+            insulin_value: 'Sensor för aktivt insulin (valfritt)',
             show_prediction: 'Glukosprognos',
             relative_time: 'Visa mätningens ålder i stället för klockan',
             dim_by_age: 'Tona ned innan mätningen blir inaktuell',
@@ -383,6 +424,9 @@ export const languages = {
             fall_over: 'Förväntad minskning med mer än {0} {1} på 15 minuter',
             fall_in: 'Förväntad minskning med {0} {1} på 15 minuter',
         },
+        insulin: {
+            active: 'Aktivt insulin {0} {1}',
+        },
         common: {
             not_available: 'Ej tillg.',
             default_time: '00:00',
@@ -398,6 +442,7 @@ export const languages = {
             glucose_value: 'Senzor glykemie',
             glucose_trend: 'Senzor trendu (detekován automaticky)',
             timestamp_attribute: 'Atribut času měření (volitelné)',
+            insulin_value: 'Senzor aktivního inzulínu (volitelné)',
             show_prediction: 'Předpověď glykemie',
             relative_time: 'Zobrazit stáří měření místo času',
             dim_by_age: 'Ztlumit dříve, než měření zestárne',
@@ -418,6 +463,9 @@ export const languages = {
             fall_over: 'Očekává se pokles o více než {0} {1} za 15 minut',
             fall_in: 'Očekává se pokles o {0} {1} za 15 minut',
         },
+        insulin: {
+            active: 'Aktivní inzulín {0} {1}',
+        },
         common: {
             not_available: 'N/A',
             default_time: '00:00',
@@ -433,6 +481,7 @@ export const languages = {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Tendenssensor (outomaties bespeur)',
             timestamp_attribute: 'Attribuut vir metingstyd (opsioneel)',
+            insulin_value: 'Aktiewe insulien-sensor (opsioneel)',
             show_prediction: 'Glukosevoorspelling',
             relative_time: 'Wys ouderdom van meting in plaas van die klok',
             dim_by_age: 'Verdof voor die lesing verouderd is',
@@ -453,6 +502,9 @@ export const languages = {
             fall_over: 'Verwagte daling van meer as {0} {1} in 15 minute',
             fall_in: 'Verwagte daling van {0} {1} in 15 minute',
         },
+        insulin: {
+            active: 'Aktiewe insulien {0} {1}',
+        },
         common: {
             not_available: 'N.v.t.',
             default_time: '00:00',
@@ -468,6 +520,7 @@ export const languages = {
             glucose_value: 'مستشعر الجلوكوز',
             glucose_trend: 'مستشعر الاتجاه (يُكتشف تلقائيًا)',
             timestamp_attribute: 'خاصية وقت القياس (اختياري)',
+            insulin_value: 'مستشعر الأنسولين النشط (اختياري)',
             show_prediction: 'توقع الجلوكوز',
             relative_time: 'عرض عمر القياس بدلاً من الساعة',
             dim_by_age: 'ابدأ التعتيم قبل أن تصبح القراءة قديمة',
@@ -488,6 +541,9 @@ export const languages = {
             fall_over: 'يُتوقع انخفاض بأكثر من {0} {1} خلال 15 دقيقة',
             fall_in: 'يُتوقع انخفاض بمقدار {0} {1} خلال 15 دقيقة',
         },
+        insulin: {
+            active: 'الأنسولين النشط {0} {1}',
+        },
         common: {
             not_available: 'غير متاح',
             default_time: '00:00',
@@ -504,6 +560,7 @@ export const languages = {
             glucose_trend: 'Сензор за тенденция (открива се автоматично)',
             timestamp_attribute:
                 'Атрибут за време на измерване (незадължително)',
+            insulin_value: 'Сензор за активен инсулин (по избор)',
             show_prediction: 'Прогноза за глюкоза',
             relative_time: 'Показване на възрастта вместо часа',
             dim_by_age: 'Затъмняване, преди измерването да остарее',
@@ -524,6 +581,9 @@ export const languages = {
             fall_over: 'Очаква се спадане с повече от {0} {1} за 15 минути',
             fall_in: 'Очаква се спадане с {0} {1} за 15 минути',
         },
+        insulin: {
+            active: 'Активен инсулин {0} {1}',
+        },
         common: {
             not_available: 'Н/Д',
             default_time: '00:00',
@@ -539,6 +599,7 @@ export const languages = {
             glucose_value: 'গ্লুকোজ সেন্সর',
             glucose_trend: 'প্রবণতা সেন্সর (স্বয়ংক্রিয়ভাবে শনাক্ত)',
             timestamp_attribute: 'পরিমাপের সময়ের অ্যাট্রিবিউট (ঐচ্ছিক)',
+            insulin_value: 'সক্রিয় ইনসুলিন সেন্সর (ঐচ্ছিক)',
             show_prediction: 'গ্লুকোজ পূর্বাভাস',
             relative_time: 'ঘড়ির বদলে পরিমাপের বয়স দেখান',
             dim_by_age: 'পরিমাপ পুরোনো হওয়ার আগেই ম্লান করা শুরু করুন',
@@ -559,6 +620,9 @@ export const languages = {
             fall_over: '১৫ মিনিটে {0} {1}-এর বেশি হ্রাস প্রত্যাশিত',
             fall_in: '১৫ মিনিটে {0} {1} হ্রাস প্রত্যাশিত',
         },
+        insulin: {
+            active: 'সক্রিয় ইনসুলিন {0} {1}',
+        },
         common: {
             not_available: 'নেই',
             default_time: '00:00',
@@ -574,6 +638,7 @@ export const languages = {
             glucose_value: 'Senzor glukoze',
             glucose_trend: 'Senzor trenda (automatski otkriven)',
             timestamp_attribute: 'Atribut vremena mjerenja (opcionalno)',
+            insulin_value: 'Sensor aktivnog inzulina (opciono)',
             show_prediction: 'Prognoza glukoze',
             relative_time: 'Prikaži starost mjerenja umjesto sata',
             dim_by_age: 'Prigušiti prije nego mjerenje zastari',
@@ -594,6 +659,9 @@ export const languages = {
             fall_over: 'Očekuje se pad veći od {0} {1} za 15 minuta',
             fall_in: 'Očekuje se pad od {0} {1} za 15 minuta',
         },
+        insulin: {
+            active: 'Aktivni inzulin {0} {1}',
+        },
         common: {
             not_available: 'N/D',
             default_time: '00:00',
@@ -609,6 +677,7 @@ export const languages = {
             glucose_value: 'Sensor de glucosa',
             glucose_trend: 'Sensor de tendència (detectat automàticament)',
             timestamp_attribute: 'Atribut de l’hora de mesura (opcional)',
+            insulin_value: "Sensor d'insulina activa (opcional)",
             show_prediction: 'Previsió de glucosa',
             relative_time: 'Mostra l’antiguitat en lloc de l’hora',
             dim_by_age: 'Atenuar abans que la mesura caduqui',
@@ -629,6 +698,9 @@ export const languages = {
             fall_over: 'S’espera una baixada de més de {0} {1} en 15 minuts',
             fall_in: 'S’espera una baixada de {0} {1} en 15 minuts',
         },
+        insulin: {
+            active: 'Insulina activa {0} {1}',
+        },
         common: {
             not_available: 'N/D',
             default_time: '00:00',
@@ -644,6 +716,7 @@ export const languages = {
             glucose_value: 'Synhwyrydd glwcos',
             glucose_trend: 'Synhwyrydd tuedd (canfyddir yn awtomatig)',
             timestamp_attribute: 'Priodoledd amser y mesuriad (dewisol)',
+            insulin_value: 'Synhwyrydd inswlin weithredol (dewisol)',
             show_prediction: 'Rhagolwg glwcos',
             relative_time: "Dangos oedran y mesuriad yn lle'r cloc",
             dim_by_age: "Dechrau pylu cyn i'r darlleniad heneiddio",
@@ -664,6 +737,9 @@ export const languages = {
             fall_over: 'Disgwylir gostyngiad o fwy na {0} {1} mewn 15 munud',
             fall_in: 'Disgwylir gostyngiad o {0} {1} mewn 15 munud',
         },
+        insulin: {
+            active: 'Inswlin weithredol {0} {1}',
+        },
         common: {
             not_available: 'Dim',
             default_time: '00:00',
@@ -679,6 +755,7 @@ export const languages = {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Tendenssensor (registreres automatisk)',
             timestamp_attribute: 'Attribut for måletidspunkt (valgfrit)',
+            insulin_value: 'Sensor for aktivt insulin (valgfrit)',
             show_prediction: 'Glukoseprognose',
             relative_time: 'Vis målingens alder i stedet for klokkeslæt',
             dim_by_age: 'Dæmp, før målingen bliver forældet',
@@ -699,6 +776,9 @@ export const languages = {
             fall_over: 'Forventet fald på mere end {0} {1} på 15 minutter',
             fall_in: 'Forventet fald på {0} {1} på 15 minutter',
         },
+        insulin: {
+            active: 'Aktivt insulin {0} {1}',
+        },
         common: {
             not_available: 'Ikke tilgæng.',
             default_time: '00:00',
@@ -714,6 +794,7 @@ export const languages = {
             glucose_value: 'Αισθητήρας γλυκόζης',
             glucose_trend: 'Αισθητήρας τάσης (αυτόματος εντοπισμός)',
             timestamp_attribute: 'Ιδιότητα ώρας μέτρησης (προαιρετικό)',
+            insulin_value: 'Αισθητήρας ενεργού ινσουλίνης (προαιρετικό)',
             show_prediction: 'Πρόβλεψη γλυκόζης',
             relative_time: 'Εμφάνιση ηλικίας μέτρησης αντί για ώρα',
             dim_by_age: 'Εξασθένιση πριν η μέτρηση παλιώσει',
@@ -734,6 +815,9 @@ export const languages = {
             fall_over: 'Αναμένεται πτώση πάνω από {0} {1} σε 15 λεπτά',
             fall_in: 'Αναμένεται πτώση κατά {0} {1} σε 15 λεπτά',
         },
+        insulin: {
+            active: 'Ενεργή ινσουλίνη {0} {1}',
+        },
         common: {
             not_available: 'Μ/Δ',
             default_time: '00:00',
@@ -749,6 +833,7 @@ export const languages = {
             glucose_value: 'Glucose sensor',
             glucose_trend: 'Trend sensor (auto-detected)',
             timestamp_attribute: 'Reading time attribute (optional)',
+            insulin_value: 'Active insulin sensor (optional)',
             show_prediction: 'Glucose forecast',
             relative_time: 'Show reading age instead of the clock',
             dim_by_age: 'Start fading before the reading is stale',
@@ -769,6 +854,9 @@ export const languages = {
             fall_over: 'Expected to fall over {0} {1} in 15 minutes',
             fall_in: 'Expected to fall {0} {1} in 15 minutes',
         },
+        insulin: {
+            active: 'Active insulin {0} {1}',
+        },
         common: {
             not_available: 'N/A',
             default_time: '00:00',
@@ -784,6 +872,7 @@ export const languages = {
             glucose_value: 'Glukoza sensilo',
             glucose_trend: 'Tendenca sensilo (aŭtomate detektita)',
             timestamp_attribute: 'Atributo de mezurtempo (nedeviga)',
+            insulin_value: 'Sensilo de aktiva insulino (opcia)',
             show_prediction: 'Glukoza prognozo',
             relative_time: 'Montri aĝon de mezuro anstataŭ horloĝon',
             dim_by_age: 'Komenci malheligi antaŭ ol la mezuro malfreŝiĝas',
@@ -804,6 +893,9 @@ export const languages = {
             fall_over: 'Atendata falo de pli ol {0} {1} en 15 minutoj',
             fall_in: 'Atendata falo de {0} {1} en 15 minutoj',
         },
+        insulin: {
+            active: 'Aktiva insulino {0} {1}',
+        },
         common: {
             not_available: 'N/D',
             default_time: '00:00',
@@ -819,6 +911,7 @@ export const languages = {
             glucose_value: 'Sensor de glucosa',
             glucose_trend: 'Sensor de tendencia (detección automática)',
             timestamp_attribute: 'Atributo de la hora de medición (opcional)',
+            insulin_value: 'Sensor de insulina activa (opcional)',
             show_prediction: 'Pronóstico de glucosa',
             relative_time: 'Mostrar la antigüedad en lugar de la hora',
             dim_by_age: 'Atenuar antes de que la medición caduque',
@@ -839,6 +932,9 @@ export const languages = {
             fall_over: 'Se espera una bajada de más de {0} {1} en 15 minutos',
             fall_in: 'Se espera una bajada de {0} {1} en 15 minutos',
         },
+        insulin: {
+            active: 'Insulina activa {0} {1}',
+        },
         common: {
             not_available: 'N/D',
             default_time: '00:00',
@@ -854,6 +950,7 @@ export const languages = {
             glucose_value: 'Glükoosiandur',
             glucose_trend: 'Trendiandur (tuvastatakse automaatselt)',
             timestamp_attribute: 'Mõõtmisaja atribuut (valikuline)',
+            insulin_value: 'Aktiivse insuliini andur (valikuline)',
             show_prediction: 'Glükoosi prognoos',
             relative_time: 'Näita mõõtmise vanust kellaaja asemel',
             dim_by_age: 'Tumenda enne, kui mõõtmine aegub',
@@ -874,6 +971,9 @@ export const languages = {
             fall_over: 'Oodatav langus üle {0} {1} võrra 15 minutiga',
             fall_in: 'Oodatav langus {0} {1} võrra 15 minutiga',
         },
+        insulin: {
+            active: 'Aktiivne insuliin {0} {1}',
+        },
         common: {
             not_available: 'Puudub',
             default_time: '00:00',
@@ -889,6 +989,7 @@ export const languages = {
             glucose_value: 'Glukosa sentsorea',
             glucose_trend: 'Joera sentsorea (automatikoki hautemana)',
             timestamp_attribute: 'Neurketa orduaren atributua (aukerakoa)',
+            insulin_value: 'Insulina aktiboaren sentsorea (aukerakoa)',
             show_prediction: 'Glukosa iragarpena',
             relative_time: 'Erakutsi neurketaren adina orduaren ordez',
             dim_by_age: 'Ilundu neurketa zaharkitu aurretik',
@@ -910,6 +1011,9 @@ export const languages = {
                 '{0} {1} baino gehiagoko jaitsiera espero da 15 minututan',
             fall_in: '{0} {1}-eko jaitsiera espero da 15 minututan',
         },
+        insulin: {
+            active: 'Insulina aktiboa {0} {1}',
+        },
         common: {
             not_available: 'E/E',
             default_time: '00:00',
@@ -925,6 +1029,7 @@ export const languages = {
             glucose_value: 'حسگر قند خون',
             glucose_trend: 'حسگر روند (تشخیص خودکار)',
             timestamp_attribute: 'ویژگی زمان اندازه‌گیری (اختیاری)',
+            insulin_value: 'حسگر انسولین فعال (اختیاری)',
             show_prediction: 'پیش‌بینی قند خون',
             relative_time: 'نمایش زمان سپری‌شده به جای ساعت',
             dim_by_age: 'شروع کم‌رنگ شدن پیش از کهنه شدن اندازه‌گیری',
@@ -945,6 +1050,9 @@ export const languages = {
             fall_over: 'کاهش بیش از {0} {1} در ۱۵ دقیقه پیش‌بینی می‌شود',
             fall_in: 'کاهش {0} {1} در ۱۵ دقیقه پیش‌بینی می‌شود',
         },
+        insulin: {
+            active: 'انسولین فعال {0} {1}',
+        },
         common: {
             not_available: 'موجود نیست',
             default_time: '00:00',
@@ -960,6 +1068,7 @@ export const languages = {
             glucose_value: 'Glukoosianturi',
             glucose_trend: 'Trendianturi (tunnistetaan automaattisesti)',
             timestamp_attribute: 'Mittausajan attribuutti (valinnainen)',
+            insulin_value: 'Aktiivisen insuliinin anturi (valinnainen)',
             show_prediction: 'Glukoosiennuste',
             relative_time: 'Näytä mittauksen ikä kellonajan sijaan',
             dim_by_age: 'Himmennä ennen kuin mittaus vanhenee',
@@ -980,6 +1089,9 @@ export const languages = {
             fall_over: 'Odotettu lasku yli {0} {1} 15 minuutissa',
             fall_in: 'Odotettu lasku {0} {1} 15 minuutissa',
         },
+        insulin: {
+            active: 'Aktiivinen insuliini {0} {1}',
+        },
         common: {
             not_available: 'Ei saat.',
             default_time: '00:00',
@@ -995,6 +1107,7 @@ export const languages = {
             glucose_value: 'Glukoazesensor',
             glucose_trend: 'Trendsensor (automatysk fûn)',
             timestamp_attribute: 'Attribút fan de mjittiid (opsjoneel)',
+            insulin_value: 'Aktive ynsuline-sensor (opsjoneel)',
             show_prediction: 'Glukoazeferwachting',
             relative_time: 'Toan âldens fan de mjitting ynstee fan de klok',
             dim_by_age: 'Dimme foardat de mjitting ferâldere is',
@@ -1015,6 +1128,9 @@ export const languages = {
             fall_over: 'Ferwachte daling fan mear as {0} {1} yn 15 minuten',
             fall_in: 'Ferwachte daling fan {0} {1} yn 15 minuten',
         },
+        insulin: {
+            active: 'Aktive ynsuline {0} {1}',
+        },
         common: {
             not_available: 'N.v.t.',
             default_time: '00:00',
@@ -1030,6 +1146,7 @@ export const languages = {
             glucose_value: 'Braiteoir glúcóis',
             glucose_trend: 'Braiteoir treochta (aimsithe go huathoibríoch)',
             timestamp_attribute: 'Aitreabúid am an tomhais (roghnach)',
+            insulin_value: 'Mothaireoir inslin gníomhaigh (roghnach)',
             show_prediction: 'Réamhaisnéis glúcóis',
             relative_time: 'Taispeáin aois an tomhais in ionad an chloig',
             dim_by_age: 'Tosaigh ag lagú sula dtéann an léamh i seanaois',
@@ -1052,6 +1169,9 @@ export const languages = {
                 'Táthar ag súil le titim níos mó ná {0} {1} i gceann 15 nóiméad',
             fall_in: 'Táthar ag súil le titim {0} {1} i gceann 15 nóiméad',
         },
+        insulin: {
+            active: 'Inslin ghníomhach {0} {1}',
+        },
         common: {
             not_available: 'N/B',
             default_time: '00:00',
@@ -1067,6 +1187,7 @@ export const languages = {
             glucose_value: 'Sensor de glicosa',
             glucose_trend: 'Sensor de tendencia (detectado automaticamente)',
             timestamp_attribute: 'Atributo da hora de medición (opcional)',
+            insulin_value: 'Sensor de insulina activa (opcional)',
             show_prediction: 'Previsión de glicosa',
             relative_time: 'Amosar a antigüidade en lugar da hora',
             dim_by_age: 'Atenuar antes de que a medición caduque',
@@ -1087,6 +1208,9 @@ export const languages = {
             fall_over: 'Espérase unha baixada de máis de {0} {1} en 15 minutos',
             fall_in: 'Espérase unha baixada de {0} {1} en 15 minutos',
         },
+        insulin: {
+            active: 'Insulina activa {0} {1}',
+        },
         common: {
             not_available: 'N/D',
             default_time: '00:00',
@@ -1102,6 +1226,7 @@ export const languages = {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Trendsensor (automatisch erkennt)',
             timestamp_attribute: 'Attribut vo de Mässziit (optional)',
+            insulin_value: 'Sensor für aktivi Insulin (optional)',
             show_prediction: 'Glukoseprognose',
             relative_time: 'Alter vo de Mässig statt de Uhrziit zeige',
             dim_by_age: 'Abdunkle, bevor d Mässig veraltet isch',
@@ -1122,6 +1247,9 @@ export const languages = {
             fall_over: 'Erwartete Abfall vo meh als {0} {1} i 15 Minute',
             fall_in: 'Erwartete Abfall vo {0} {1} i 15 Minute',
         },
+        insulin: {
+            active: 'Aktivi Insulin {0} {1}',
+        },
         common: {
             not_available: 'K/A',
             default_time: '00:00',
@@ -1137,6 +1265,7 @@ export const languages = {
             glucose_value: 'חיישן גלוקוז',
             glucose_trend: 'חיישן מגמה (זיהוי אוטומטי)',
             timestamp_attribute: 'מאפיין זמן המדידה (אופציונלי)',
+            insulin_value: 'חיישן אינסולין פעיל (לא חובה)',
             show_prediction: 'תחזית גלוקוז',
             relative_time: 'הצג את גיל המדידה במקום השעה',
             dim_by_age: 'להתחיל לעמעם לפני שהמדידה מתיישנת',
@@ -1157,6 +1286,9 @@ export const languages = {
             fall_over: 'צפויה ירידה של יותר מ-{0} {1} תוך 15 דקות',
             fall_in: 'צפויה ירידה של {0} {1} תוך 15 דקות',
         },
+        insulin: {
+            active: 'אינסולין פעיל {0} {1}',
+        },
         common: {
             not_available: 'לא זמין',
             default_time: '00:00',
@@ -1172,6 +1304,7 @@ export const languages = {
             glucose_value: 'ग्लूकोज सेंसर',
             glucose_trend: 'रुझान सेंसर (स्वतः पहचाना गया)',
             timestamp_attribute: 'माप समय विशेषता (वैकल्पिक)',
+            insulin_value: 'सक्रिय इंसुलिन सेंसर (वैकल्पिक)',
             show_prediction: 'ग्लूकोज पूर्वानुमान',
             relative_time: 'घड़ी के बजाय माप की आयु दिखाएँ',
             dim_by_age: 'माप पुराना होने से पहले धुँधला करना शुरू करें',
@@ -1192,6 +1325,9 @@ export const languages = {
             fall_over: '15 मिनट में {0} {1} से अधिक गिरावट की उम्मीद है',
             fall_in: '15 मिनट में {0} {1} गिरावट की उम्मीद है',
         },
+        insulin: {
+            active: 'सक्रिय इंसुलिन {0} {1}',
+        },
         common: {
             not_available: 'उपलब्ध नहीं',
             default_time: '00:00',
@@ -1207,6 +1343,7 @@ export const languages = {
             glucose_value: 'Senzor glukoze',
             glucose_trend: 'Senzor trenda (automatski otkriven)',
             timestamp_attribute: 'Atribut vremena mjerenja (neobavezno)',
+            insulin_value: 'Senzor aktivnog inzulina (neobavezno)',
             show_prediction: 'Prognoza glukoze',
             relative_time: 'Prikaži starost mjerenja umjesto sata',
             dim_by_age: 'Priguši prije nego mjerenje zastari',
@@ -1227,6 +1364,9 @@ export const languages = {
             fall_over: 'Očekuje se pad veći od {0} {1} za 15 minuta',
             fall_in: 'Očekuje se pad od {0} {1} za 15 minuta',
         },
+        insulin: {
+            active: 'Aktivni inzulin {0} {1}',
+        },
         common: {
             not_available: 'N/D',
             default_time: '00:00',
@@ -1242,6 +1382,7 @@ export const languages = {
             glucose_value: 'Vércukorszenzor',
             glucose_trend: 'Trendszenzor (automatikusan felismert)',
             timestamp_attribute: 'A mérés idejének attribútuma (opcionális)',
+            insulin_value: 'Aktív inzulin érzékelő (opcionális)',
             show_prediction: 'Vércukor-előrejelzés',
             relative_time: 'A mérés kora az óra helyett',
             dim_by_age: 'Halványítás, mielőtt a mérés elavul',
@@ -1262,6 +1403,9 @@ export const languages = {
             fall_over: 'Várhatóan több mint {0} {1} csökkenés 15 perc alatt',
             fall_in: 'Várhatóan {0} {1} csökkenés 15 perc alatt',
         },
+        insulin: {
+            active: 'Aktív inzulin {0} {1}',
+        },
         common: {
             not_available: 'N/A',
             default_time: '00:00',
@@ -1277,6 +1421,7 @@ export const languages = {
             glucose_value: 'Գլյուկոզի սենսոր',
             glucose_trend: 'Միտման սենսոր (հայտնաբերվում է ավտոմատ)',
             timestamp_attribute: 'Չափման ժամանակի հատկանիշ (ըստ ցանկության)',
+            insulin_value: 'Ակտիվ ինսուլինի սենսոր (ընտրովի)',
             show_prediction: 'Գլյուկոզի կանխատեսում',
             relative_time: 'Ցուցադրել չափման վաղեմությունը ժամի փոխարեն',
             dim_by_age: 'Սկսել մթագնումը մինչ չափման հնանալը',
@@ -1297,6 +1442,9 @@ export const languages = {
             fall_over: 'Սպասվում է անկում ավելի քան {0} {1} 15 րոպեում',
             fall_in: 'Սպասվում է անկում {0} {1} 15 րոպեում',
         },
+        insulin: {
+            active: 'Ակտիվ ինսուլին {0} {1}',
+        },
         common: {
             not_available: 'Չկա',
             default_time: '00:00',
@@ -1312,6 +1460,7 @@ export const languages = {
             glucose_value: 'Sensor glukosa',
             glucose_trend: 'Sensor tren (terdeteksi otomatis)',
             timestamp_attribute: 'Atribut waktu pengukuran (opsional)',
+            insulin_value: 'Sensor insulin aktif (opsional)',
             show_prediction: 'Prakiraan glukosa',
             relative_time: 'Tampilkan usia pengukuran alih-alih jam',
             dim_by_age: 'Mulai meredup sebelum pembacaan usang',
@@ -1332,6 +1481,9 @@ export const languages = {
             fall_over: 'Diperkirakan turun lebih dari {0} {1} dalam 15 menit',
             fall_in: 'Diperkirakan turun {0} {1} dalam 15 menit',
         },
+        insulin: {
+            active: 'Insulin aktif {0} {1}',
+        },
         common: {
             not_available: 'T/A',
             default_time: '00:00',
@@ -1347,6 +1499,7 @@ export const languages = {
             glucose_value: 'Blóðsykursskynjari',
             glucose_trend: 'Þróunarskynjari (greindur sjálfkrafa)',
             timestamp_attribute: 'Eigindi mælingartíma (valfrjálst)',
+            insulin_value: 'Næmisti fyrir virkt insúlíni (valfrjálst)',
             show_prediction: 'Blóðsykursspá',
             relative_time: 'Sýna aldur mælingar í stað klukku',
             dim_by_age: 'Deyfa áður en mælingin úreldist',
@@ -1367,6 +1520,9 @@ export const languages = {
             fall_over: 'Búist við lækkun um meira en {0} {1} á 15 mínútum',
             fall_in: 'Búist við lækkun um {0} {1} á 15 mínútum',
         },
+        insulin: {
+            active: 'Virkt insúlín {0} {1}',
+        },
         common: {
             not_available: 'Á ekki við',
             default_time: '00:00',
@@ -1382,6 +1538,7 @@ export const languages = {
             glucose_value: '血糖センサー',
             glucose_trend: 'トレンドセンサー（自動検出）',
             timestamp_attribute: '測定時刻の属性（任意）',
+            insulin_value: 'アクティブインスリンセンサー（任意）',
             show_prediction: '血糖予測',
             relative_time: '時刻の代わりに経過時間を表示',
             dim_by_age: '測定が古くなる前から淡く表示',
@@ -1402,6 +1559,9 @@ export const languages = {
             fall_over: '15分で{0} {1}以上の下降が見込まれます',
             fall_in: '15分で{0} {1}の下降が見込まれます',
         },
+        insulin: {
+            active: 'アクティブインスリン {0} {1}',
+        },
         common: {
             not_available: '該当なし',
             default_time: '00:00',
@@ -1417,6 +1577,7 @@ export const languages = {
             glucose_value: 'გლუკოზის სენსორი',
             glucose_trend: 'ტენდენციის სენსორი (ავტომატურად აღმოჩენილი)',
             timestamp_attribute: 'გაზომვის დროის ატრიბუტი (არასავალდებულო)',
+            insulin_value: 'აქტიური ინსულინის სენსორი (არასავალდებულო)',
             show_prediction: 'გლუკოზის პროგნოზი',
             relative_time: 'აჩვენე გაზომვის ასაკი საათის ნაცვლად',
             dim_by_age: 'ჩაქრობის დაწყება გაზომვის დაძველებამდე',
@@ -1437,6 +1598,9 @@ export const languages = {
             fall_over: 'მოსალოდნელია კლება {0} {1}-ზე მეტით 15 წუთში',
             fall_in: 'მოსალოდნელია კლება {0} {1}-ით 15 წუთში',
         },
+        insulin: {
+            active: 'აქტიური ინსულინი {0} {1}',
+        },
         common: {
             not_available: 'მიუწვდ.',
             default_time: '00:00',
@@ -1452,6 +1616,7 @@ export const languages = {
             glucose_value: '혈당 센서',
             glucose_trend: '추세 센서 (자동 감지)',
             timestamp_attribute: '측정 시각 속성 (선택 사항)',
+            insulin_value: '활성 인슐린 센서(선택 사항)',
             show_prediction: '혈당 예측',
             relative_time: '시계 대신 측정 경과 시간 표시',
             dim_by_age: '측정이 오래되기 전부터 흐리게 표시',
@@ -1472,6 +1637,9 @@ export const languages = {
             fall_over: '15분 내 {0} {1} 이상 하강 예상',
             fall_in: '15분 내 {0} {1} 하강 예상',
         },
+        insulin: {
+            active: '활성 인슐린 {0} {1}',
+        },
         common: {
             not_available: '없음',
             default_time: '00:00',
@@ -1487,6 +1655,7 @@ export const languages = {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Trendsensor (automatesch erkannt)',
             timestamp_attribute: 'Attribut vun der Moosszäit (fakultativ)',
+            insulin_value: 'Sensor fir aktiv Insulin (optional)',
             show_prediction: 'Glukoseprognos',
             relative_time: 'Alter vun der Miessung amplaz vun der Auer weisen',
             dim_by_age: "Ofdunkelen, ier d'Miessung verwent ass",
@@ -1507,6 +1676,9 @@ export const languages = {
             fall_over: 'Erwaarte Fall vu méi wéi {0} {1} an 15 Minutten',
             fall_in: 'Erwaarte Fall vu {0} {1} an 15 Minutten',
         },
+        insulin: {
+            active: 'Aktiv Insulin {0} {1}',
+        },
         common: {
             not_available: 'N/A',
             default_time: '00:00',
@@ -1522,6 +1694,7 @@ export const languages = {
             glucose_value: 'Gliukozės jutiklis',
             glucose_trend: 'Tendencijos jutiklis (aptinkamas automatiškai)',
             timestamp_attribute: 'Matavimo laiko atributas (nebūtinas)',
+            insulin_value: 'Aktyvaus insulino jutiklis (pasirinktinai)',
             show_prediction: 'Gliukozės prognozė',
             relative_time: 'Rodyti matavimo amžių vietoj laikrodžio',
             dim_by_age: 'Pradėti temdyti prieš matavimui pasenstant',
@@ -1542,6 +1715,9 @@ export const languages = {
             fall_over: 'Tikimasi sumažėjimo daugiau nei {0} {1} per 15 minučių',
             fall_in: 'Tikimasi sumažėjimo {0} {1} per 15 minučių',
         },
+        insulin: {
+            active: 'Aktyvus insulinas {0} {1}',
+        },
         common: {
             not_available: 'Nėra',
             default_time: '00:00',
@@ -1557,6 +1733,7 @@ export const languages = {
             glucose_value: 'Glikozes sensors',
             glucose_trend: 'Tendences sensors (nosaka automātiski)',
             timestamp_attribute: 'Mērījuma laika atribūts (neobligāts)',
+            insulin_value: 'Aktīvā insulīna sensors (pēc izvēles)',
             show_prediction: 'Glikozes prognoze',
             relative_time: 'Rādīt mērījuma vecumu, nevis pulksteni',
             dim_by_age: 'Sākt aptumšot, pirms mērījums novecojis',
@@ -1577,6 +1754,9 @@ export const languages = {
             fall_over: 'Paredzams kritums par vairāk nekā {0} {1} 15 minūtēs',
             fall_in: 'Paredzams kritums par {0} {1} 15 minūtēs',
         },
+        insulin: {
+            active: 'Aktīvais insulīns {0} {1}',
+        },
         common: {
             not_available: 'Nav pieejams',
             default_time: '00:00',
@@ -1592,6 +1772,7 @@ export const languages = {
             glucose_value: 'Сензор за гликоза',
             glucose_trend: 'Сензор за тренд (автоматски откриен)',
             timestamp_attribute: 'Атрибут за време на мерење (опционално)',
+            insulin_value: 'Сензор за активен инсулин (опционално)',
             show_prediction: 'Прогноза за гликоза',
             relative_time: 'Прикажи старост на мерењето наместо часовникот',
             dim_by_age: 'Почни затемнување пред мерењето да застари',
@@ -1612,6 +1793,9 @@ export const languages = {
             fall_over: 'Се очекува пад поголем од {0} {1} за 15 минути',
             fall_in: 'Се очекува пад од {0} {1} за 15 минути',
         },
+        insulin: {
+            active: 'Активен инсулин {0} {1}',
+        },
         common: {
             not_available: 'Н/Д',
             default_time: '00:00',
@@ -1628,6 +1812,7 @@ export const languages = {
             glucose_trend: 'പ്രവണത സെൻസർ (സ്വയമേവ കണ്ടെത്തുന്നു)',
             timestamp_attribute:
                 'അളവെടുപ്പ് സമയത്തിന്റെ ആട്രിബ്യൂട്ട് (ഓപ്ഷണൽ)',
+            insulin_value: 'ആക്ടീവ് ഇൻസുലിൻ സെൻസർ (ഓപ്ഷണൽ)',
             show_prediction: 'ഗ്ലൂക്കോസ് പ്രവചനം',
             relative_time: 'ക്ലോക്കിനു പകരം അളവെടുപ്പിന്റെ പഴക്കം കാണിക്കുക',
             dim_by_age: 'അളവ് പഴകുന്നതിന് മുമ്പേ മങ്ങിക്കാൻ തുടങ്ങുക',
@@ -1648,6 +1833,9 @@ export const languages = {
             fall_over: '15 മിനിറ്റിൽ {0} {1}-ൽ കൂടുതൽ കുറവ് പ്രതീക്ഷിക്കുന്നു',
             fall_in: '15 മിനിറ്റിൽ {0} {1} കുറവ് പ്രതീക്ഷിക്കുന്നു',
         },
+        insulin: {
+            active: 'ആക്ടീവ് ഇൻസുലിൻ {0} {1}',
+        },
         common: {
             not_available: 'ലഭ്യമല്ല',
             default_time: '00:00',
@@ -1663,6 +1851,7 @@ export const languages = {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Trendsensor (oppdages automatisk)',
             timestamp_attribute: 'Attributt for måletidspunkt (valgfritt)',
+            insulin_value: 'Sensor for aktivt insulin (valgfritt)',
             show_prediction: 'Glukoseprognose',
             relative_time: 'Vis målingens alder i stedet for klokkeslett',
             dim_by_age: 'Demp før målingen blir foreldet',
@@ -1683,6 +1872,9 @@ export const languages = {
             fall_over: 'Forventet fall på mer enn {0} {1} på 15 minutter',
             fall_in: 'Forventet fall på {0} {1} på 15 minutter',
         },
+        insulin: {
+            active: 'Aktivt insulin {0} {1}',
+        },
         common: {
             not_available: 'Ikke tilgj.',
             default_time: '00:00',
@@ -1698,6 +1890,7 @@ export const languages = {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Trendsensor (blir oppdaga automatisk)',
             timestamp_attribute: 'Attributt for måletidspunkt (valfritt)',
+            insulin_value: 'Sensor for aktivt insulin (valfritt)',
             show_prediction: 'Glukoseprognose',
             relative_time: 'Vis alderen på målinga i staden for klokkeslett',
             dim_by_age: 'Demp før målinga blir forelda',
@@ -1718,6 +1911,9 @@ export const languages = {
             fall_over: 'Venta fall på meir enn {0} {1} på 15 minutt',
             fall_in: 'Venta fall på {0} {1} på 15 minutt',
         },
+        insulin: {
+            active: 'Aktivt insulin {0} {1}',
+        },
         common: {
             not_available: 'Ikkje tilgj.',
             default_time: '00:00',
@@ -1733,6 +1929,7 @@ export const languages = {
             glucose_value: 'Sensor de glicose',
             glucose_trend: 'Sensor de tendência (detectado automaticamente)',
             timestamp_attribute: 'Atributo da hora da medição (opcional)',
+            insulin_value: 'Sensor de insulina ativa (opcional)',
             show_prediction: 'Previsão de glicose',
             relative_time: 'Mostrar há quanto tempo em vez da hora',
             dim_by_age: 'Atenuar antes de a medição ficar desatualizada',
@@ -1753,6 +1950,9 @@ export const languages = {
             fall_over: 'Prevista queda de mais de {0} {1} em 15 minutos',
             fall_in: 'Prevista queda de {0} {1} em 15 minutos',
         },
+        insulin: {
+            active: 'Insulina ativa {0} {1}',
+        },
         common: {
             not_available: 'N/D',
             default_time: '00:00',
@@ -1768,6 +1968,7 @@ export const languages = {
             glucose_value: 'Senzor de glicemie',
             glucose_trend: 'Senzor de tendință (detectat automat)',
             timestamp_attribute: 'Atributul orei măsurării (opțional)',
+            insulin_value: 'Senzor de insulină activă (opțional)',
             show_prediction: 'Prognoza glicemiei',
             relative_time: 'Afișează vechimea măsurării în loc de oră',
             dim_by_age: 'Estompează înainte ca măsurarea să expire',
@@ -1788,6 +1989,9 @@ export const languages = {
             fall_over: 'Se așteaptă o scădere de peste {0} {1} în 15 minute',
             fall_in: 'Se așteaptă o scădere de {0} {1} în 15 minute',
         },
+        insulin: {
+            active: 'Insulină activă {0} {1}',
+        },
         common: {
             not_available: 'Indisp.',
             default_time: '00:00',
@@ -1803,6 +2007,7 @@ export const languages = {
             glucose_value: 'Senzor glykémie',
             glucose_trend: 'Senzor trendu (zistený automaticky)',
             timestamp_attribute: 'Atribút času merania (voliteľné)',
+            insulin_value: 'Senzor aktívneho inzulínu (voliteľné)',
             show_prediction: 'Predpoveď glykémie',
             relative_time: 'Zobraziť vek merania namiesto času',
             dim_by_age: 'Stlmiť skôr, než meranie zostarne',
@@ -1823,6 +2028,9 @@ export const languages = {
             fall_over: 'Očakáva sa pokles o viac ako {0} {1} za 15 minút',
             fall_in: 'Očakáva sa pokles o {0} {1} za 15 minút',
         },
+        insulin: {
+            active: 'Aktívny inzulín {0} {1}',
+        },
         common: {
             not_available: 'N/A',
             default_time: '00:00',
@@ -1838,6 +2046,7 @@ export const languages = {
             glucose_value: 'Senzor glukoze',
             glucose_trend: 'Senzor trenda (samodejno zaznan)',
             timestamp_attribute: 'Atribut časa meritve (izbirno)',
+            insulin_value: 'Senzor aktivnega insulina (neobvezno)',
             show_prediction: 'Napoved glukoze',
             relative_time: 'Prikaži starost meritve namesto ure',
             dim_by_age: 'Zatemni, preden meritev zastara',
@@ -1858,6 +2067,9 @@ export const languages = {
             fall_over: 'Pričakovan padec za več kot {0} {1} v 15 minutah',
             fall_in: 'Pričakovan padec za {0} {1} v 15 minutah',
         },
+        insulin: {
+            active: 'Aktivni insulin {0} {1}',
+        },
         common: {
             not_available: 'Ni na voljo',
             default_time: '00:00',
@@ -1873,6 +2085,7 @@ export const languages = {
             glucose_value: 'Sensori i glukozës',
             glucose_trend: 'Sensori i tendencës (zbulohet automatikisht)',
             timestamp_attribute: 'Atributi i kohës së matjes (opsional)',
+            insulin_value: 'Sensor i insulinës aktive (opsionale)',
             show_prediction: 'Parashikimi i glukozës',
             relative_time: 'Shfaq moshën e matjes në vend të orës',
             dim_by_age: 'Fillo zbehjen para se matja të vjetrohet',
@@ -1893,6 +2106,9 @@ export const languages = {
             fall_over: 'Pritet rënie me më shumë se {0} {1} në 15 minuta',
             fall_in: 'Pritet rënie me {0} {1} në 15 minuta',
         },
+        insulin: {
+            active: 'Insulinë aktive {0} {1}',
+        },
         common: {
             not_available: 'N/D',
             default_time: '00:00',
@@ -1908,6 +2124,7 @@ export const languages = {
             glucose_value: 'Сензор глукозе',
             glucose_trend: 'Сензор тренда (аутоматски откривен)',
             timestamp_attribute: 'Атрибут времена мерења (опционо)',
+            insulin_value: 'Сензор активног инсулина (опционо)',
             show_prediction: 'Прогноза глукозе',
             relative_time: 'Прикажи старост мерења уместо сата',
             dim_by_age: 'Почни пригушивање пре него мерење застари',
@@ -1928,6 +2145,9 @@ export const languages = {
             fall_over: 'Очекује се пад већи од {0} {1} за 15 минута',
             fall_in: 'Очекује се пад од {0} {1} за 15 минута',
         },
+        insulin: {
+            active: 'Активни инсулин {0} {1}',
+        },
         common: {
             not_available: 'Н/Д',
             default_time: '00:00',
@@ -1943,6 +2163,7 @@ export const languages = {
             glucose_value: 'Senzor glukoze',
             glucose_trend: 'Senzor trenda (automatski otkriven)',
             timestamp_attribute: 'Atribut vremena merenja (opciono)',
+            insulin_value: 'Sensor aktivnog inzulina (opciono)',
             show_prediction: 'Prognoza glukoze',
             relative_time: 'Prikaži starost merenja umesto sata',
             dim_by_age: 'Počni prigušivanje pre nego merenje zastari',
@@ -1963,6 +2184,9 @@ export const languages = {
             fall_over: 'Očekuje se pad veći od {0} {1} za 15 minuta',
             fall_in: 'Očekuje se pad od {0} {1} za 15 minuta',
         },
+        insulin: {
+            active: 'Aktivni inzulin {0} {1}',
+        },
         common: {
             not_available: 'N/D',
             default_time: '00:00',
@@ -1978,6 +2202,7 @@ export const languages = {
             glucose_value: 'குளுக்கோஸ் உணரி',
             glucose_trend: 'போக்கு உணரி (தானாகக் கண்டறியப்படும்)',
             timestamp_attribute: 'அளவீட்டு நேரப் பண்பு (விருப்பத்தேர்வு)',
+            insulin_value: 'செயல்பாட்டு இன்சுலின் சென்சார் (விருப்பம்)',
             show_prediction: 'குளுக்கோஸ் முன்னறிவிப்பு',
             relative_time: 'கடிகாரத்திற்குப் பதிலாக அளவீட்டின் வயதைக் காட்டு',
             dim_by_age: 'அளவீடு பழையதாகும் முன்பே மங்கலாக்கத் தொடங்கு',
@@ -2000,6 +2225,9 @@ export const languages = {
                 '15 நிமிடங்களில் {0} {1}-க்கு மேல் வீழ்ச்சி எதிர்பார்க்கப்படுகிறது',
             fall_in: '15 நிமிடங்களில் {0} {1} வீழ்ச்சி எதிர்பார்க்கப்படுகிறது',
         },
+        insulin: {
+            active: 'செயல்பாட்டு இன்சுலின் {0} {1}',
+        },
         common: {
             not_available: 'இல்லை',
             default_time: '00:00',
@@ -2015,6 +2243,7 @@ export const languages = {
             glucose_value: 'గ్లూకోజ్ సెన్సార్',
             glucose_trend: 'ధోరణి సెన్సార్ (స్వయంచాలకంగా గుర్తించబడింది)',
             timestamp_attribute: 'కొలత సమయ లక్షణం (ఐచ్ఛికం)',
+            insulin_value: 'యాక్టివ్ ఇన్సులిన్ సెన్సార్ (ఐచ్ఛికం)',
             show_prediction: 'గ్లూకోజ్ అంచనా',
             relative_time: 'గడియారానికి బదులుగా కొలత వయస్సును చూపు',
             dim_by_age: 'కొలత పాతబడక ముందే మసకబరచడం ప్రారంభించు',
@@ -2035,6 +2264,9 @@ export const languages = {
             fall_over: '15 నిమిషాల్లో {0} {1} కంటే ఎక్కువ తగ్గుదల అంచనా',
             fall_in: '15 నిమిషాల్లో {0} {1} తగ్గుదల అంచనా',
         },
+        insulin: {
+            active: 'యాక్టివ్ ఇన్సులిన్ {0} {1}',
+        },
         common: {
             not_available: 'అందుబాటులో లేదు',
             default_time: '00:00',
@@ -2050,6 +2282,7 @@ export const languages = {
             glucose_value: 'เซ็นเซอร์น้ำตาลในเลือด',
             glucose_trend: 'เซ็นเซอร์แนวโน้ม (ตรวจพบอัตโนมัติ)',
             timestamp_attribute: 'แอตทริบิวต์เวลาที่วัด (ไม่บังคับ)',
+            insulin_value: 'เซนเซอร์อินซูลินที่ใช้งานอยู่ (ไม่บังคับ)',
             show_prediction: 'การคาดการณ์ระดับน้ำตาล',
             relative_time: 'แสดงอายุของค่าที่วัดแทนนาฬิกา',
             dim_by_age: 'เริ่มหรี่ก่อนที่ค่าที่วัดจะเก่า',
@@ -2070,6 +2303,9 @@ export const languages = {
             fall_over: 'คาดว่าจะลดลงมากกว่า {0} {1} ใน 15 นาที',
             fall_in: 'คาดว่าจะลดลง {0} {1} ใน 15 นาที',
         },
+        insulin: {
+            active: 'อินซูลินที่ใช้งานอยู่ {0} {1}',
+        },
         common: {
             not_available: 'ไม่มีข้อมูล',
             default_time: '00:00',
@@ -2085,6 +2321,7 @@ export const languages = {
             glucose_value: 'Glukoz sensörü',
             glucose_trend: 'Eğilim sensörü (otomatik algılanır)',
             timestamp_attribute: 'Ölçüm zamanı özniteliği (isteğe bağlı)',
+            insulin_value: 'Aktif insülin sensörü (isteğe bağlı)',
             show_prediction: 'Glukoz tahmini',
             relative_time: 'Saat yerine ölçümün yaşını göster',
             dim_by_age: 'Ölçüm eskimeden soluklaştırmaya başla',
@@ -2106,6 +2343,9 @@ export const languages = {
             fall_over: '15 dakikada {0} {1} değerinden fazla düşme bekleniyor',
             fall_in: '15 dakikada {0} {1} düşme bekleniyor',
         },
+        insulin: {
+            active: 'Aktif insülin {0} {1}',
+        },
         common: {
             not_available: 'Yok',
             default_time: '00:00',
@@ -2121,6 +2361,7 @@ export const languages = {
             glucose_value: 'گلوکوز سینسر',
             glucose_trend: 'رجحان سینسر (خودکار طور پر پہچانا گیا)',
             timestamp_attribute: 'پیمائش کے وقت کی خصوصیت (اختیاری)',
+            insulin_value: 'فعال انسولین سینسر (اختیاری)',
             show_prediction: 'گلوکوز کی پیش گوئی',
             relative_time: 'گھڑی کے بجائے پیمائش کی عمر دکھائیں',
             dim_by_age: 'پیمائش پرانی ہونے سے پہلے دھندلانا شروع کریں',
@@ -2141,6 +2382,9 @@ export const languages = {
             fall_over: '15 منٹ میں {0} {1} سے زیادہ کمی کی توقع ہے',
             fall_in: '15 منٹ میں {0} {1} کمی کی توقع ہے',
         },
+        insulin: {
+            active: 'فعال انسولین {0} {1}',
+        },
         common: {
             not_available: 'دستیاب نہیں',
             default_time: '00:00',
@@ -2156,6 +2400,7 @@ export const languages = {
             glucose_value: 'Cảm biến đường huyết',
             glucose_trend: 'Cảm biến xu hướng (tự động phát hiện)',
             timestamp_attribute: 'Thuộc tính thời gian đo (tùy chọn)',
+            insulin_value: 'Cảm biến insulin đang hoạt động (tùy chọn)',
             show_prediction: 'Dự báo đường huyết',
             relative_time: 'Hiển thị thời gian trôi qua thay vì giờ',
             dim_by_age: 'Bắt đầu làm mờ trước khi số đo cũ',
@@ -2176,6 +2421,9 @@ export const languages = {
             fall_over: 'Dự kiến giảm hơn {0} {1} trong 15 phút',
             fall_in: 'Dự kiến giảm {0} {1} trong 15 phút',
         },
+        insulin: {
+            active: 'Insulin đang hoạt động {0} {1}',
+        },
         common: {
             not_available: 'Không có',
             default_time: '00:00',
@@ -2191,6 +2439,7 @@ export const languages = {
             glucose_value: '血糖传感器',
             glucose_trend: '趋势传感器（自动检测）',
             timestamp_attribute: '测量时间属性（可选）',
+            insulin_value: '活性胰岛素传感器（可选）',
             show_prediction: '血糖预测',
             relative_time: '显示读数经过时间而非时钟',
             dim_by_age: '在读数变旧前就开始淡化',
@@ -2211,6 +2460,9 @@ export const languages = {
             fall_over: '预计 15 分钟内下降超过 {0} {1}',
             fall_in: '预计 15 分钟内下降 {0} {1}',
         },
+        insulin: {
+            active: '活性胰岛素 {0} {1}',
+        },
         common: {
             not_available: '无数据',
             default_time: '00:00',
@@ -2226,6 +2478,7 @@ export const languages = {
             glucose_value: '血糖感測器',
             glucose_trend: '趨勢感測器（自動偵測）',
             timestamp_attribute: '量測時間屬性（選填）',
+            insulin_value: '活性胰島素感應器（選填）',
             show_prediction: '血糖預測',
             relative_time: '顯示讀數經過時間而非時鐘',
             dim_by_age: '在讀數變舊前就開始淡化',
@@ -2245,6 +2498,9 @@ export const languages = {
             rise_in: '預計 15 分鐘內上升 {0} {1}',
             fall_over: '預計 15 分鐘內下降超過 {0} {1}',
             fall_in: '預計 15 分鐘內下降 {0} {1}',
+        },
+        insulin: {
+            active: '活性胰島素 {0} {1}',
         },
         common: {
             not_available: '無資料',

@@ -89,7 +89,19 @@ export function normalizeTrend(rawTrend) {
     const key = String(rawTrend).toLowerCase().trim();
     // HA system states are not real trends
     if (key === 'unknown' || key === 'unavailable') return 'unknown';
-    return TREND_MAP[key] || key;
+    return (
+        TREND_MAP[key] ||
+        /*
+         * A direction decorated with a trailing glyph still names a trend:
+         * danudaru/HA_Nightscout publishes `direction` as "FortyFiveUp ↗",
+         * word plus icon, and the undecorated lookup missed both. The word is
+         * the datum and the glyph is presentation, so strip anything that is
+         * neither a word character nor a space (the map itself carries keys
+         * with spaces, like "rising quickly") and ask again.
+         */
+        TREND_MAP[key.replace(/[^\s\w]+/g, '').trim()] ||
+        key
+    );
 }
 
 /**

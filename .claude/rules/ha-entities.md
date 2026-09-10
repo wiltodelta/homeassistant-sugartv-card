@@ -43,6 +43,41 @@ Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this doma
   has three live shapes, from `sensor.last_glucose_level_mg_dl` to
   `sensor.john_doe_carelink_john_doe_last_glucose_level_mg_dl`. Use
   `siblingEntityId()`, never a prefix assumption or a bare `endsWith`.
+- **Auto-detection is for context the card needs, not for extras it could
+  show.** Every sibling the card finds on its own (trend, reading time) is
+  data without which the glucose itself renders wrong, so finding it is a fix.
+  Active insulin (#109) is a pump datum the glucose integrations do not
+  publish, and a line that appears on a Carelink install unasked is the card
+  growing layout overnight; it is `insulin_value` in the config or nothing,
+  with no sibling hunt. The test for any future auto-detection: does the card
+  render the READING wrong without it, or merely less?
+- **Where insulin entities actually live (verified 2026-09 against each
+  integration's source, not their READMEs).** Core HA has exactly two diabetes
+  integrations, `dexcom` and `nightscout`, and neither publishes insulin; the
+  core nightscout sensor.py creates one "Blood Sugar" entity, full stop. The
+  number comes from custom integrations, and their entity slugs converge on
+  two tails: `active_insulin` (Carelink `sensor.*active_insulin`, no unit;
+  Medtrum EasyView, U) and `insulin_on_board` (danudaru/HA_Nightscout as
+  `nightscout_insulin_on_board`, kleinig/nightscout-extended,
+  ryceg/nocturne-homeassistant, pannal/glucifer-ha which also has an `eiob`
+  "Active insulin", all U); savek-cc/ha-nightscout-v3 is the outlier with
+  `loop_iob` ("Loop IOB", U). If sibling detection is ever asked for, the
+  glucose and the insulin usually come from DIFFERENT integrations
+  (Nightscout glucose + AAPS insulin via a community nightscout custom), so a
+  tail-swap next to the glucose sensor is the wrong shape for this datum.
+- **A community Nightscout custom sends its direction with the icon glued
+  on.** danudaru/HA_Nightscout publishes the `direction` attribute as
+  `"FortyFiveUp \u2197"` (word plus glyph), which missed `TREND_MAP` on both
+  counts and left the card trendless; `normalizeTrend` now strips anything
+  that is neither a word character nor a space before the second lookup
+  (spaces are kept: the map itself has keys like `rising quickly`). The trend
+  entities of the other customs (`*_bg_direction`, `*_glucose_trend`) publish
+  bare Nightscout words and resolve through the `glucose_trend` override
+  without any help. Their reading time is where they genuinely fall short:
+  glucifer ships a `measurement_time` ENTITY (not an attribute, so
+  `timestamp_attribute` cannot see it) and nothing puts it in
+  `TIMESTAMP_SIBLINGS`, because the `glucose` tail it would hang off is the
+  most generic tail there is.
 
 ## Freshness (`last_updated` / `last_reported`)
 

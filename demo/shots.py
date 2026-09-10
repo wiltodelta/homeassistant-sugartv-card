@@ -126,6 +126,27 @@ FIGURES = {
             for trend in TRENDS
         ],
     ),
+    "insulin": (
+        "856,254",
+        "sugartv-card-insulin.png",
+        [
+            spec(
+                "340x130",
+                145,
+                "rising",
+                iob=1.25,
+                label="<b>insulin_value</b><br>under the forecast",
+            ),
+            spec(
+                "340x130",
+                145,
+                "rising",
+                iob=1.25,
+                pred=0,
+                label="<b>forecast off</b><br>insulin on its own",
+            ),
+        ],
+    ),
     "languages": (
         "1280,260",
         "sugartv-card-languages.png",

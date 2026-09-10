@@ -196,6 +196,10 @@ class SugarTvCard extends LitElement {
                     selector: { text: {} },
                 },
                 {
+                    name: 'insulin_value',
+                    selector: { entity: { domain: 'sensor' } },
+                },
+                {
                     name: 'show_prediction',
                     selector: { boolean: {} },
                 },
@@ -279,6 +283,7 @@ class SugarTvCard extends LitElement {
                     glucose_value: localize('editor.glucose_value'),
                     glucose_trend: localize('editor.glucose_trend'),
                     timestamp_attribute: localize('editor.timestamp_attribute'),
+                    insulin_value: localize('editor.insulin_value'),
                     show_prediction: localize('editor.show_prediction'),
                     relative_time: localize('editor.relative_time'),
                     dim_by_age: localize('editor.dim_by_age'),
@@ -361,6 +366,11 @@ class SugarTvCard extends LitElement {
             previous_value: null,
             previous_ingest_time: null,
             previous_trend: null,
+            // Active insulin, when an entity is configured: { value, unit } or
+            // null. There is nothing to auto-detect from -- the glucose
+            // integrations publish no insulin, so a missing config means the
+            // line is simply not shown rather than hunted for.
+            insulin: null,
         };
     }
 
@@ -848,7 +858,66 @@ class SugarTvCard extends LitElement {
         const currentState = this._getCurrentState(glucose_value);
 
         this._updateCurrentData(currentState);
+        this._data.insulin = this._readInsulin();
         this._fetchPreviousFromHistory();
+    }
+
+    /*
+     * Active insulin (#109), read from the entity the user pointed at.
+     *
+     * Deliberately not auto-detected. Every sibling the card finds on its own
+     * -- trend, reading time -- is context the card needs to render the
+     * glucose correctly, so finding it is a fix. This is an extra line of
+     * layout instead, and one that appears without being asked for reads as
+     * the card growing a row overnight. Only the supported integrations have
+     * known sibling shapes anyway, and of those only Carelink is a pump: its
+     * `sensor.*active_insulin` (the entity NAME is "Active insulin", per the
+     * rule that ids are slugified from names) is found by the user in the
+     * editor rather than guessed at by the card.
+     *
+     * The unit comes off the entity when it carries one, falling back to "U",
+     * because Carelink publishes the sensor without a unit at all. The state
+     * is parsed, not displayed raw, so a locale decimal comma in a template
+     * sensor does not end up inside a number the card formats itself.
+     */
+    _readInsulin() {
+        const entityId = this.config?.insulin_value;
+        if (!entityId) return null;
+
+        const state = this.hass?.states?.[entityId];
+        if (!state || !this._isValidValue(state.state)) return null;
+
+        const value = SugarTvCard.parseNumber(state.state);
+        if (!Number.isFinite(value)) return null;
+
+        const unit = state.attributes?.unit_of_measurement;
+        return {
+            value,
+            unit: typeof unit === 'string' && unit.trim() ? unit.trim() : 'U',
+        };
+    }
+
+    /*
+     * The line under the forecast: "Active insulin 1.25 U", phrased by the
+     * same translation table as the forecast above it. Two decimals fixed, so
+     * the line holds a steady width across readings the way the reading does;
+     * insulin doses move in halves and quarters and a whole unit would hide
+     * exactly the detail the line exists to show.
+     */
+    _insulinText() {
+        const { insulin } = this._data;
+        if (!insulin) return '';
+
+        const number = insulin.value.toLocaleString(this._numberLocale(), {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+            ...this._groupingOption(),
+        });
+        return getLocalizer(this.config, this.hass)(
+            'insulin.active',
+            number,
+            insulin.unit,
+        );
     }
 
     _validateEntities(glucose_value) {
@@ -1300,10 +1369,8 @@ class SugarTvCard extends LitElement {
             return null;
         }
 
-        const currentValue = parseFloat(String(value).replace(',', '.'));
-        const previousValue = parseFloat(
-            String(previous_value).replace(',', '.'),
-        );
+        const currentValue = SugarTvCard.parseNumber(value);
+        const previousValue = SugarTvCard.parseNumber(previous_value);
 
         if (isNaN(currentValue) || isNaN(previousValue)) {
             return null;
@@ -1346,6 +1413,15 @@ class SugarTvCard extends LitElement {
     // HA reports a missing reading with one of two sentinel states.
     static isValidValue(value) {
         return value && value !== 'unknown' && value !== 'unavailable';
+    }
+
+    /*
+     * A sensor state as a number, tolerating the locale decimal comma a
+     * template sensor can publish. NaN when the state is not a number at
+     * all; the sentinel states are the caller's job to reject first.
+     */
+    static parseNumber(raw) {
+        return parseFloat(String(raw).replace(',', '.'));
     }
 
     _isValidValue(value) {
@@ -1513,8 +1589,7 @@ class SugarTvCard extends LitElement {
             return localize('common.not_available');
         }
 
-        const sanitizedValue = String(value).replace(',', '.');
-        const numValue = parseFloat(sanitizedValue);
+        const numValue = SugarTvCard.parseNumber(value);
 
         if (isNaN(numValue)) {
             return localize('common.not_available');
@@ -1567,6 +1642,7 @@ class SugarTvCard extends LitElement {
         const prediction = trendInfo.prediction || '';
 
         const localize = getLocalizer(this.config, this.hass);
+        const insulin = this._insulinText();
         const ariaLabel = [
             this._formatValue(value),
             unit === SugarTvCard.UNITS.MMOLL
@@ -1574,6 +1650,7 @@ class SugarTvCard extends LitElement {
                 : localize('units.mgdl'),
             this._trendLabel(trend),
             this._calculateDelta(),
+            insulin,
         ]
             .filter(Boolean)
             .join(', ');
@@ -1607,9 +1684,28 @@ class SugarTvCard extends LitElement {
                         </div>
                     </div>
                     ${
-                        showPrediction && prediction
+                        insulin || (showPrediction && prediction)
                             ? html`
-                                  <div class="prediction">${prediction}</div>
+                                  <div class="footnotes">
+                                      ${
+                                          showPrediction && prediction
+                                              ? html`
+                                                    <div class="prediction">
+                                                        ${prediction}
+                                                    </div>
+                                                `
+                                              : ''
+                                      }
+                                      ${
+                                          insulin
+                                              ? html`
+                                                    <div class="insulin">
+                                                        ${insulin}
+                                                    </div>
+                                                `
+                                              : ''
+                                      }
+                                  </div>
                               `
                             : ''
                     }

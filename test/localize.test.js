@@ -14,6 +14,7 @@ const KEYS = [
     'editor.glucose_value',
     'editor.glucose_trend',
     'editor.timestamp_attribute',
+    'editor.insulin_value',
     'editor.show_prediction',
     'editor.relative_time',
     'editor.color_thresholds',
@@ -28,6 +29,7 @@ const KEYS = [
     'predictions.rise_in',
     'predictions.fall_over',
     'predictions.fall_in',
+    'insulin.active',
     'common.not_available',
     'common.default_time',
 ];
@@ -89,6 +91,26 @@ describe('forecast placeholders', () => {
                 /\{\d\}/,
             );
         }
+    });
+});
+
+/*
+ * The insulin line has the same two slots: the amount and the unit. Either one
+ * missing leaves the line saying a bare number under a reading, which reads as
+ * a stray figure rather than a sentence.
+ */
+describe('insulin placeholders', () => {
+    it.each(codes)('%s keeps both slots in the insulin line', (code) => {
+        const text = at(languages[code], 'insulin.active');
+
+        expect(text, code).toContain('{0}');
+        expect(text, code).toContain('{1}');
+    });
+
+    it.each(codes)('%s substitutes the insulin line cleanly', (code) => {
+        const t = getLocalizer({ locale: code }, {});
+
+        expect(t('insulin.active', '1.25', 'U'), code).not.toMatch(/\{\d\}/);
     });
 });
 

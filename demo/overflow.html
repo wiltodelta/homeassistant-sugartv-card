@@ -75,19 +75,29 @@
                     // 'rising' actually renders a prediction line; 'steady'
                     // has none, so it would not exercise the tallest stack.
                     'sensor.dexcom_glucose_trend': { state: 'rising' },
+                    // Carelink-shaped: the entity carries no unit at all.
+                    'sensor.carelink_active_insulin': { state: '1.25' },
                 },
                 callWS: async () => ({}),
             };
 
             const IDS = ['a', 'b', 'c', 'd'];
 
-            function apply(showPrediction) {
+            // insulin adds the second footnote line, so the tallest stack is
+            // forecast + insulin and the overflow question is asked of both.
+            function apply(showPrediction, insulin) {
                 for (const id of IDS) {
                     const card = document.getElementById(id);
                     card.setConfig({
                         type: 'custom:sugartv-card',
                         glucose_value: 'sensor.dexcom_glucose_value',
                         show_prediction: showPrediction,
+                        ...(insulin
+                            ? {
+                                  insulin_value:
+                                      'sensor.carelink_active_insulin',
+                              }
+                            : {}),
                     });
                     card.hass = hass;
                 }

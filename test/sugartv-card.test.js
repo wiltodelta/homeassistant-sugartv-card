@@ -205,6 +205,25 @@ describe('SugarTvCard', () => {
                 'someweirdtrend',
             );
         });
+
+        /*
+         * danudaru/HA_Nightscout publishes the direction attribute with the
+         * icon glued on: "FortyFiveUp ↗". The word is the datum and the glyph
+         * is presentation, and before the strip both were rejected together.
+         */
+        it('normalizes a direction decorated with a trailing glyph', () => {
+            expect(card._normalizeTrend('FortyFiveUp ↗')).toBe(
+                'rising_slightly',
+            );
+            expect(card._normalizeTrend('DoubleDown ↘')).toBe(
+                'falling_quickly',
+            );
+            expect(card._normalizeTrend('Flat →')).toBe('steady');
+            // Multi-word keys keep their spaces through the strip.
+            expect(card._normalizeTrend('rising quickly ↑')).toBe(
+                'rising_quickly',
+            );
+        });
     });
 
     // ── _resolveTrend ───────────────────────────────────────────────
@@ -227,6 +246,41 @@ describe('SugarTvCard', () => {
             expect(
                 card._resolveTrend('sensor.dexcom_glucose_value', glucoseState),
             ).toBe('rising');
+        });
+
+        /*
+         * End to end for a community Nightscout integration: danudaru's
+         * Blood Glucose entity carries `direction` as "FortyFiveUp ↗", and
+         * the card's Nightscout branch reads that attribute. The whole path
+         * has to survive the glued-on glyph, not just the normalizer.
+         */
+        it('reads a decorated direction attribute off the glucose entity', () => {
+            const card = createCard(
+                {},
+                {
+                    states: {
+                        'sensor.nightscout_blood_glucose': {
+                            state: '162',
+                            attributes: {
+                                unit_of_measurement: 'mg/dL',
+                                direction: 'FortyFiveUp ↗',
+                                delta: 8,
+                            },
+                            last_updated: new Date().toISOString(),
+                        },
+                    },
+                },
+            );
+            card.config.glucose_value = 'sensor.nightscout_blood_glucose';
+            const glucoseState =
+                card.hass.states['sensor.nightscout_blood_glucose'];
+
+            expect(
+                card._resolveTrend(
+                    'sensor.nightscout_blood_glucose',
+                    glucoseState,
+                ),
+            ).toBe('rising_slightly');
         });
 
         it('detects Dexcom sibling *_glucose_trend entity', () => {
@@ -1841,6 +1895,174 @@ describe('SugarTvCard', () => {
     });
 
     // ── _formatValue ────────────────────────────────────────────────
+    /*
+     * Active insulin (#109): an optional entity, a line under the forecast,
+     * and nothing at all when the entity is absent or unreadable. The card
+     * never guesses at an insulin entity, so every "hidden" case below is the
+     * same code path a user without a pump takes.
+     */
+    describe('the active insulin line', () => {
+        const INSULIN = 'sensor.jane_active_insulin';
+
+        const insulinCard = (
+            config = {},
+            state = '1.25',
+            attributes = {},
+            hass = {},
+        ) => {
+            const card = createCard(
+                { insulin_value: INSULIN, ...config },
+                {
+                    states: {
+                        'sensor.dexcom_glucose_value': {
+                            state: '120',
+                            attributes: { unit_of_measurement: 'mg/dL' },
+                            last_changed: new Date().toISOString(),
+                        },
+                        [INSULIN]: { state, attributes },
+                    },
+                    ...hass,
+                },
+            );
+            card._updateData();
+            return card;
+        };
+
+        it('phrases the line from the configured entity', () => {
+            const card = insulinCard();
+
+            // Carelink publishes the sensor with no unit at all; U is the
+            // fallback the line falls back to.
+            expect(card._insulinText()).toBe('Active insulin 1.25 U');
+        });
+
+        it('takes the unit off the entity when it carries one', () => {
+            const card = insulinCard({}, '2', { unit_of_measurement: 'units' });
+
+            expect(card._insulinText()).toBe('Active insulin 2.00 units');
+        });
+
+        it('parses a locale decimal comma in the raw state', () => {
+            const card = insulinCard({}, '1,25');
+
+            expect(card._insulinText()).toBe('Active insulin 1.25 U');
+        });
+
+        it('formats the amount in the number locale', () => {
+            const card = insulinCard({}, '1.25', {}, { language: 'ru' });
+
+            expect(card._insulinText()).toBe('Активный инсулин 1,25 U');
+        });
+
+        it.each(['unknown', 'unavailable', 'banana', ''])(
+            'hides the line when the entity reads %s',
+            (state) => {
+                const card = insulinCard({}, state);
+
+                expect(card._data.insulin).toBeNull();
+                expect(card._insulinText()).toBe('');
+            },
+        );
+
+        it('shows nothing when no entity is configured', () => {
+            const card = createCard(
+                {},
+                {
+                    states: {
+                        'sensor.dexcom_glucose_value': {
+                            state: '120',
+                            attributes: { unit_of_measurement: 'mg/dL' },
+                        },
+                    },
+                },
+            );
+            card._updateData();
+
+            expect(card._insulinText()).toBe('');
+        });
+
+        it('hides the line when the configured entity does not exist', () => {
+            const card = createCard(
+                { insulin_value: 'sensor.gone_active_insulin' },
+                {
+                    states: {
+                        'sensor.dexcom_glucose_value': {
+                            state: '120',
+                            attributes: { unit_of_measurement: 'mg/dL' },
+                        },
+                    },
+                },
+            );
+            card._updateData();
+
+            expect(card._data.insulin).toBeNull();
+        });
+
+        it('keeps a negative reading rather than clamping it', () => {
+            // A temporary basal below zero produces negative IOB on some
+            // systems; inventing a zero would be worse than showing it.
+            const card = insulinCard({}, '-0.35');
+
+            expect(card._insulinText()).toBe('Active insulin -0.35 U');
+        });
+
+        it('draws the line under the forecast, inside one footnotes block', () => {
+            const card = insulinCard(
+                {},
+                '1.25',
+                {},
+                {
+                    states: {
+                        'sensor.dexcom_glucose_value': {
+                            state: '120',
+                            attributes: { unit_of_measurement: 'mg/dL' },
+                            last_changed: new Date().toISOString(),
+                        },
+                        'sensor.dexcom_glucose_trend': { state: 'rising' },
+                        [INSULIN]: { state: '1.25', attributes: {} },
+                    },
+                },
+            );
+            card._updateData();
+            const markup = card.render();
+
+            expect(markup).toContain('class="footnotes"');
+            expect(markup).toContain('class="prediction"');
+            expect(markup).toContain('class="insulin"');
+            expect(markup.indexOf('prediction')).toBeLessThan(
+                markup.indexOf('insulin"'),
+            );
+        });
+
+        it('draws no footnotes block when there is nothing under the reading', () => {
+            const card = insulinCard(
+                { insulin_value: undefined, show_prediction: false },
+                '1.25',
+            );
+            const markup = card.render();
+
+            expect(markup).not.toContain('footnotes');
+        });
+
+        it('announces the line to the screen reader', () => {
+            const card = insulinCard();
+            const markup = card.render();
+
+            expect(markup).toContain('Active insulin 1.25 U');
+            expect(markup).toMatch(/aria-label="[^"]*Active insulin/);
+        });
+
+        it('offers the entity in the visual editor', () => {
+            const field = SugarTvCard.getConfigForm()
+                .schema.filter((f) => !f.type || f.type !== 'expandable')
+                .find((f) => f.name === 'insulin_value');
+
+            expect(field?.selector).toEqual({
+                entity: { domain: 'sensor' },
+            });
+        });
+    });
+
     describe('_formatValue', () => {
         let card;
         beforeEach(() => {

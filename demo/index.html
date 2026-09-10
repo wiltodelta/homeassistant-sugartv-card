@@ -178,6 +178,16 @@
                             checked
                         />Glucose forecast</label
                     >
+                    <!--
+                      Stages the optional entity rather than faking the line:
+                      the mock publishes a Carelink-shaped sensor (a number
+                      with no unit), and the card is pointed at it exactly the
+                      way a real config would be.
+                    -->
+                    <label
+                        ><input type="checkbox" id="insulin-toggle" />Active
+                        insulin line</label
+                    >
                     <label
                         ><input type="checkbox" id="relative-toggle" />Reading
                         age instead of the clock</label
@@ -344,6 +354,10 @@
                             last_changed: date.toISOString(),
                         },
                         'sensor.dexcom_glucose_trend': { state: trend },
+                        // The optional entity behind the insulin toggle. Off
+                        // by default there, because a real card shows the line
+                        // only when configured.
+                        'sensor.jane_active_insulin': { state: '1.25' },
                     },
                     // The card reads the previous reading from the history
                     // WebSocket API, so the mock has to answer callWS or the
@@ -436,6 +450,8 @@
                     document.getElementById('unit-select').value;
                 const showPrediction =
                     document.getElementById('prediction-toggle').checked;
+                const showInsulin =
+                    document.getElementById('insulin-toggle').checked;
                 const relativeTime =
                     document.getElementById('relative-toggle').checked;
                 const dimByAge = document.getElementById('dim-toggle').checked;
@@ -455,6 +471,9 @@
                     glucose_value: 'sensor.dexcom_glucose_value',
                     glucose_trend: 'sensor.dexcom_glucose_trend',
                     show_prediction: showPrediction,
+                    ...(showInsulin
+                        ? { insulin_value: 'sensor.jane_active_insulin' }
+                        : {}),
                     relative_time: relativeTime,
                     dim_by_age: dimByAge,
                     color_thresholds: colorThresholds,
@@ -689,6 +708,9 @@
                     });
                 document
                     .getElementById('prediction-toggle')
+                    .addEventListener('change', renderAllCards);
+                document
+                    .getElementById('insulin-toggle')
                     .addEventListener('change', renderAllCards);
                 document
                     .getElementById('relative-toggle')
