@@ -135,7 +135,7 @@ FIGURES = {
                 145,
                 "rising",
                 iob=1.25,
-                label="<b>insulin_value</b><br>under the forecast",
+                label="<b>insulin_value</b><br>above the reading",
             ),
             spec(
                 "340x130",

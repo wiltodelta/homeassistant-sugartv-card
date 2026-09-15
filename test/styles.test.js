@@ -112,9 +112,9 @@ describe('the age fade in the stylesheet', () => {
      * fades twice on a stale card. The forecast line used to carry 0.7, which
      * put it at 2.1:1 there -- below every threshold at any size. Hierarchy on
      * that line is font size now, and this pins it: re-adding an opacity here
-     * would silently reintroduce the compounding. The insulin line and the
-     * footnotes block that wraps them sit on the same spot of the card and
-     * would compound just the same, so they are held to the identical rule.
+     * would silently reintroduce the compounding. The insulin line sits above
+     * the reading and the forecast below it, but both are secondary lines that
+     * would compound just the same, so both are held to the identical rule.
      */
     it('leaves the secondary lines without an opacity to compound', () => {
         /*

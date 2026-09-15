@@ -898,11 +898,11 @@ class SugarTvCard extends LitElement {
     }
 
     /*
-     * The line under the forecast: "Active insulin 1.25 U", phrased by the
-     * same translation table as the forecast above it. Two decimals fixed, so
-     * the line holds a steady width across readings the way the reading does;
-     * insulin doses move in halves and quarters and a whole unit would hide
-     * exactly the detail the line exists to show.
+     * The line above the reading: "Active insulin 1.25 U", phrased by the
+     * same translation table as the forecast. Two decimals fixed, so the line
+     * holds a steady width across readings the way the reading does; insulin
+     * doses move in halves and quarters and a whole unit would hide exactly
+     * the detail the line exists to show.
      */
     _insulinText() {
         const { insulin } = this._data;
@@ -1664,6 +1664,11 @@ class SugarTvCard extends LitElement {
                 aria-label="${ariaLabel}"
             >
                 <div class="container">
+                    ${
+                        insulin
+                            ? html`<div class="insulin">${insulin}</div>`
+                            : ''
+                    }
                     <div class="line">
                         <div class="time">
                             ${this._formatTime(reading_time)}
@@ -1684,28 +1689,9 @@ class SugarTvCard extends LitElement {
                         </div>
                     </div>
                     ${
-                        insulin || (showPrediction && prediction)
+                        showPrediction && prediction
                             ? html`
-                                  <div class="footnotes">
-                                      ${
-                                          showPrediction && prediction
-                                              ? html`
-                                                    <div class="prediction">
-                                                        ${prediction}
-                                                    </div>
-                                                `
-                                              : ''
-                                      }
-                                      ${
-                                          insulin
-                                              ? html`
-                                                    <div class="insulin">
-                                                        ${insulin}
-                                                    </div>
-                                                `
-                                              : ''
-                                      }
-                                  </div>
+                                  <div class="prediction">${prediction}</div>
                               `
                             : ''
                     }

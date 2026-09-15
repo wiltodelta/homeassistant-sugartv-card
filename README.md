@@ -107,7 +107,7 @@ for example, builds the id from your account username, so it is
 | `glucose_value`       | entity id | required             | The sensor holding the reading. Everything else is derived from it.               |
 | `glucose_trend`       | entity id | auto-detected        | Point at the trend entity when the card cannot find it. YAML only.                |
 | `timestamp_attribute` | string    | auto-detected        | Attribute holding the measurement time, for an integration not listed above.      |
-| `insulin_value`       | entity id | none                 | An active insulin (IOB) sensor, drawn as a second line under the forecast.        |
+| `insulin_value`       | entity id | none                 | An active insulin (IOB) sensor, drawn as a line above the reading.                |
 | `show_prediction`     | boolean   | `true`               | The line of text under the reading.                                               |
 | `relative_time`       | boolean   | `false`              | Show the reading's age ("14 min ago") in place of the clock.                      |
 | `dim_by_age`          | boolean   | `false`              | Fade the card once a poll has been missed, ahead of the stale fade.               |
@@ -169,9 +169,12 @@ Carelink's spellings onto these.
 
 ### Active insulin
 
-Point the card at an insulin sensor and it draws a second line under the
-forecast: "Active insulin 1.25 U", phrased in the card's language like
-everything else on it.
+Point the card at an insulin sensor and it draws a line above the reading:
+"Active insulin 1.25 U", phrased in the card's language like everything else
+on it. Above, not under the forecast, because it is status rather than
+projection: what is on board now, ahead of the number the way the time is,
+while everything derived from the trend (the delta, the forecast) stays
+below.
 
 ![The insulin line with the forecast on, and on its own](sugartv-card-insulin.png)
 

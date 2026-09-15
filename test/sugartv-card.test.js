@@ -1896,7 +1896,7 @@ describe('SugarTvCard', () => {
 
     // ── _formatValue ────────────────────────────────────────────────
     /*
-     * Active insulin (#109): an optional entity, a line under the forecast,
+     * Active insulin (#109): an optional entity, a line above the reading,
      * and nothing at all when the entity is absent or unreadable. The card
      * never guesses at an insulin entity, so every "hidden" case below is the
      * same code path a user without a pump takes.
@@ -2006,7 +2006,7 @@ describe('SugarTvCard', () => {
             expect(card._insulinText()).toBe('Active insulin -0.35 U');
         });
 
-        it('draws the line under the forecast, inside one footnotes block', () => {
+        it('draws the line above the reading, the forecast below it', () => {
             const card = insulinCard(
                 {},
                 '1.25',
@@ -2026,22 +2026,25 @@ describe('SugarTvCard', () => {
             card._updateData();
             const markup = card.render();
 
-            expect(markup).toContain('class="footnotes"');
+            // Above the reading line, not inside anything under it.
+            expect(markup.indexOf('class="insulin"')).toBeLessThan(
+                markup.indexOf('class="line"'),
+            );
             expect(markup).toContain('class="prediction"');
-            expect(markup).toContain('class="insulin"');
-            expect(markup.indexOf('prediction')).toBeLessThan(
-                markup.indexOf('insulin"'),
+            expect(markup.indexOf('class="line"')).toBeLessThan(
+                markup.indexOf('class="prediction"'),
             );
         });
 
-        it('draws no footnotes block when there is nothing under the reading', () => {
+        it('draws nothing under the reading when the forecast is off', () => {
             const card = insulinCard(
                 { insulin_value: undefined, show_prediction: false },
                 '1.25',
             );
             const markup = card.render();
 
-            expect(markup).not.toContain('footnotes');
+            expect(markup).not.toContain('class="prediction"');
+            expect(markup).not.toContain('class="insulin"');
         });
 
         it('announces the line to the screen reader', () => {
