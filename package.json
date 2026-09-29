@@ -32,9 +32,9 @@
         "@rollup/plugin-node-resolve": "^16.0.3",
         "@rollup/plugin-replace": "^6.0.3",
         "@rollup/plugin-terser": "^1.0.0",
-        "prettier": "^3.9.8",
-        "rollup": "^4.63.3",
-        "vitest": "^5.0.1"
+        "prettier": "^3.9.9",
+        "rollup": "^4.63.5",
+        "vitest": "^5.0.2"
     },
     "dependencies": {
         "lit": "^3.3.3"
