@@ -1,6 +1,6 @@
 # SugarTV Card
 
-You are a **principal frontend engineer** maintaining a custom Home Assistant Lovelace card. LitElement, Rollup, Prettier.
+You are a **principal frontend engineer** maintaining a custom Home Assistant Lovelace card. LitElement, Rollup, Prettier. `src/sugartv-card.js` is the element, `src/trend.js` resolves sibling entities and trends, `src/localize.js` holds the per-language strings, `src/sugartv-card-styles.js` the CSS; `demo/` serves the card against a mocked `hass` (`demo/hass-mock.js`).
 
 ## How to run
 
@@ -10,17 +10,7 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
 - No `maintain.sh`. The gate is `npm test && npm run build && npx prettier --check .`
 - The headless-Chrome recipe that regenerates the README images is in [`docs/readme-screenshots.md`](docs/readme-screenshots.md).
 
-## Home Assistant facts worth not re-deriving
-
-Each of these is a rule file, and the rule is the source; read it before touching its domain.
-
-- Entity-id resolution via `siblingEntityId()`, `setConfig` running before `hass`, and why `last_updated` and `last_reported` both mislead: `.claude/rules/ha-entities.md`.
-- `hass.locale` versus `hass.language`, Intl's silent English fallback, the 64-language snapshot in `test/ha-languages.json`, and the two localized surfaces that never see a `hass`: `.claude/rules/localization.md`.
-- Measuring glyph ink with `measureText().actualBoundingBox*` and the SVG `path` rect rather than a `Range` rect, the scale-invariant width-per-unit budget, and the colour budget (orange and red are spent, new signals get opacity): `.claude/rules/typography.md`.
-
 ## Release process
-
-- HACS caches releases by tag name, so the global never-re-tag rule applies to every published tag here: bump the version instead.
 
 The step-by-step release commands and the GitHub Actions / HACS pickup notes live in [`docs/release.md`](docs/release.md).
 
