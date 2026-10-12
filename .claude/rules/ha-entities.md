@@ -92,11 +92,17 @@ Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this doma
   `EVENT_STATE_CHANGED` and would freeze; REST and `get_states` freeze too, as
   `State._as_dict` is an uninvalidated `under_cached_property`). It is still the
   wrong signal: it means "HA polled the API", not "the reading is recent".
-  Dexcom's coordinator never checks a reading's age, so an out-of-range
-  transmitter keeps `last_reported` advancing on a hours-old value. That turns
-  a safe failure (live sensor looks stale) into an unsafe one (dead sensor
-  looks live). The fix belongs upstream: `pydexcom` already exposes
+  Dexcom bounds the damage only by accident: its coordinator calls
+  `get_current_glucose_reading()`, which asks Share for the last 10 minutes
+  (pydexcom 0.5.1), so a dropped transmitter turns the sensors `unknown` after
+  10 to 13 minutes (the window plus one 180 s poll). Inside that window
+  `last_reported` still advances on a reading up to 10 minutes old, and an
+  integration without such a window would carry a dead sensor indefinitely.
+  The fix belongs upstream: `pydexcom` already exposes
   `GlucoseReading.datetime`, and the integration drops it.
+  home-assistant/core#176641 publishes it as a "Glucose reading time" sensor
+  (`*_glucose_reading_time`); once it ships in an HA release, pair it with
+  `glucose_value` in `TIMESTAMP_SIBLINGS` and update the README's Dexcom row.
 - **A measured cadence is a MEDIAN gap, and both other statistics fail loudly
   in opposite directions.** The average is dragged up by the double-width hole
   HA leaves when a reading repeats and writes no history entry. The smallest,
