@@ -9,7 +9,7 @@ description: Localization rules — hass.locale vs hass.language, Intl silent-fa
 
 # Localization rules
 
-Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this domain.
+Relocated from the repo root `CLAUDE.md`. Read before editing this domain.
 
 ## Locale resolution
 
@@ -36,8 +36,8 @@ Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this doma
   layout. `resolvedOptions().locale` is what gives the miss away — compare its
   base tag to the requested one and degrade deliberately (this card shows the
   clock). This is a property of the running engine, not of the language: Node
-  and Chrome disagree today, so ask at runtime and never carry a list. Ask each
-  formatter you actually use, since their data sets are separate.
+  and Chrome disagree today and each formatter has its own data set, so ask
+  every formatter you use at runtime.
 - **`Intl.RelativeTimeFormat` is the obvious tool for an age and the wrong one.**
   Its `narrow` style renders as a signed number in several languages (`-3 мин`),
   and a minus beside a glucose reading reads as a negative value; which locales
@@ -96,9 +96,10 @@ scheda...'`), so replacing just the line that starts with the key leaves the
   older" while gating only the middle rung of the ladder, so turning it off and
   watching a stale card still fade read as a broken control -- which is exactly
   how it was reported. The README had already been corrected; the 64 editor
-  strings had not, and the editor is the surface a user actually reads. When a
-  feature's scope changes, grep the translation table in the same pass as the
-  docs.
+  strings had not, and the editor is the surface a user actually reads.
+  Deviation from the global rules: when a feature's scope changes, the docs-sync
+  grep (pre-commit step 3) also covers the 64 translation blocks in
+  `src/localize.js`, because they sit outside README, `docs/` and docstrings.
 
 ## The three localized surfaces
 
