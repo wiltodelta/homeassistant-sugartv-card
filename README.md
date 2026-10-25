@@ -455,3 +455,5 @@ If this card is useful to you, please consider supporting its development:
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+Made by [Victor Kuznetsov](https://wiltodelta.com/).

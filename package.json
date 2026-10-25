@@ -25,7 +25,7 @@
         "lovelace",
         "custom-cards"
     ],
-    "author": "wiltodelta",
+    "author": "Victor Kuznetsov (https://wiltodelta.com/)",
     "license": "MIT",
     "devDependencies": {
         "@rollup/plugin-json": "^6.1.0",
