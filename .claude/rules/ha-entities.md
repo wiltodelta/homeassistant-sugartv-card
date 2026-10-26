@@ -2,82 +2,24 @@
 paths:
     - 'src/**/*.js'
     - 'test/**/*.js'
-description: Home Assistant integration facts — entity-id resolution, setConfig/hass ordering, state freshness (last_updated vs last_reported), sections-view grid sizing.
+    - 'README.md'
+description: Home Assistant integration facts — entity-id resolution, setConfig/hass ordering, state freshness (last_updated vs last_reported), the age ladder, sections-view grid sizing, where insulin entities live.
 ---
 
 # Home Assistant entity and lifecycle rules
 
-Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this domain.
-
 ## Config lifecycle
 
-- **Lovelace calls `setConfig` before it assigns `hass`, so nothing about the
-  entity is knowable there.** Anything derived from the entity's state or
-  attributes at config time is a guess. Deriving the unit there and baking the
-  matching thresholds into the config meant a mmol card carried mg/dL numbers
-  for good, so 8.1 read as urgent low and a dangerous 14.0 read as urgent low
-  too. Resolve unit-dependent defaults when the value is read, not when the
-  config is normalized, and treat thresholds that exactly equal another unit's
-  defaults as a stale guess rather than a choice. The test helper hid this for
-  years by assigning `card.config` directly instead of going through
-  `setConfig`; two tests even asserted the broken behaviour.
+- **Lovelace calls `setConfig` before it assigns `hass`, so resolve unit-dependent defaults (thresholds) when the value is read, never when the config is normalized.** Treat thresholds that exactly equal another unit's defaults as a stale guess, and test config-time behaviour through `setConfig`, since a helper assigning `card.config` bypasses it.
 
 ## Entity-id resolution
 
-- **Entity ids come from an integration's entity NAMES, not its internal keys.**
-  Carelink's `last_sg_mgdl` key is published as "Last glucose level mg/dl", so
-  the entity is `sensor.*last_glucose_level_mg_dl`. Trend auto-detection was
-  keyed on the key spelling and never matched. Read the integration's
-  `SensorEntityDescription(name=...)`, never the `key=`.
-- **Dexcom sets `has_entity_name = True` with the device name equal to your
-  account username, so its entity is `sensor.<username>_glucose_value` (entity
-  name "Glucose value"), with no `dexcom_` in the id.** The README examples and
-  `getStubConfig()` both once shipped `sensor.dexcom_glucose_value`, an id that
-  exists for nobody; both now use a `sensor.<username>_glucose_value`
-  placeholder. Match the `*_glucose_value` tail, never a literal `dexcom_` head.
-- **An entity id has no predictable head, so match its tail.** The same
-  integration yields different ids depending on when it was installed: HA only
-  consults `suggested_object_id` at first registration, so a rename upstream
-  never moves an existing id, and HA 2026.4 changed composition for entities
-  without `has_entity_name` (the device name is now prepended). Carelink alone
-  has three live shapes, from `sensor.last_glucose_level_mg_dl` to
-  `sensor.john_doe_carelink_john_doe_last_glucose_level_mg_dl`. Use
-  `siblingEntityId()`, never a prefix assumption or a bare `endsWith`.
-- **Auto-detection is for context the card needs, not for extras it could
-  show.** Every sibling the card finds on its own (trend, reading time) is
-  data without which the glucose itself renders wrong, so finding it is a fix.
-  Active insulin (#109) is a pump datum the glucose integrations do not
-  publish, and a line that appears on a Carelink install unasked is the card
-  growing layout overnight; it is `insulin_value` in the config or nothing,
-  with no sibling hunt. The test for any future auto-detection: does the card
-  render the READING wrong without it, or merely less?
-- **Where insulin entities actually live (verified 2026-09 against each
-  integration's source, not their READMEs).** Core HA has exactly two diabetes
-  integrations, `dexcom` and `nightscout`, and neither publishes insulin; the
-  core nightscout sensor.py creates one "Blood Sugar" entity, full stop. The
-  number comes from custom integrations, and their entity slugs converge on
-  two tails: `active_insulin` (Carelink `sensor.*active_insulin`, no unit;
-  Medtrum EasyView, U) and `insulin_on_board` (danudaru/HA_Nightscout as
-  `nightscout_insulin_on_board`, kleinig/nightscout-extended,
-  ryceg/nocturne-homeassistant, pannal/glucifer-ha which also has an `eiob`
-  "Active insulin", all U); savek-cc/ha-nightscout-v3 is the outlier with
-  `loop_iob` ("Loop IOB", U). If sibling detection is ever asked for, the
-  glucose and the insulin usually come from DIFFERENT integrations
-  (Nightscout glucose + AAPS insulin via a community nightscout custom), so a
-  tail-swap next to the glucose sensor is the wrong shape for this datum.
-- **A community Nightscout custom sends its direction with the icon glued
-  on.** danudaru/HA_Nightscout publishes the `direction` attribute as
-  `"FortyFiveUp \u2197"` (word plus glyph), which missed `TREND_MAP` on both
-  counts and left the card trendless; `normalizeTrend` now strips anything
-  that is neither a word character nor a space before the second lookup
-  (spaces are kept: the map itself has keys like `rising quickly`). The trend
-  entities of the other customs (`*_bg_direction`, `*_glucose_trend`) publish
-  bare Nightscout words and resolve through the `glucose_trend` override
-  without any help. Their reading time is where they genuinely fall short:
-  glucifer ships a `measurement_time` ENTITY (not an attribute, so
-  `timestamp_attribute` cannot see it) and nothing puts it in
-  `TIMESTAMP_SIBLINGS`, because the `glucose` tail it would hang off is the
-  most generic tail there is.
+- **Entity ids come from an integration's entity NAMES, not its internal keys.** Read `SensorEntityDescription(name=...)`, never `key=` (Carelink `last_sg_mgdl` is `sensor.*last_glucose_level_mg_dl`).
+- **Dexcom's entity is `sensor.<username>_glucose_value`, with no `dexcom_` in the id.** Match the `*_glucose_value` tail, never a literal `dexcom_` head.
+- **An entity id has no predictable head, so match its tail** with `siblingEntityId()`, never a prefix assumption or a bare `endsWith`.
+- **Auto-detect a sibling only when the card renders the READING wrong without it, not merely less.** Active insulin is `insulin_value` in the config or nothing, with no sibling hunt.
+- **If insulin sibling detection is ever asked for, do not tail-swap next to the glucose sensor:** glucose and insulin usually come from different integrations. Known insulin tails are `active_insulin`, `insulin_on_board` and `loop_iob`.
+- **glucifer's `measurement_time` is an ENTITY, not an attribute, so `timestamp_attribute` cannot see it; keep it out of `TIMESTAMP_SIBLINGS`,** because the `glucose` tail it would hang off is the most generic tail there is.
 
 ## Freshness (`last_updated` / `last_reported`)
 
@@ -86,75 +28,12 @@ Relocated verbatim from the repo root `CLAUDE.md`. Read before editing this doma
   early-returns and bumps `last_reported`, which the websocket never sends to
   the frontend. A flat glucose value on an attribute-less integration (Dexcom)
   therefore has no readable freshness.
-- **Do not reach for `last_reported` to fix that.** It is obtainable, via a
-  `render_template` subscription whose template calls `now()` to force a
-  per-minute re-render (a plain template only re-renders on
-  `EVENT_STATE_CHANGED` and would freeze; REST and `get_states` freeze too, as
-  `State._as_dict` is an uninvalidated `under_cached_property`). It is still the
-  wrong signal: it means "HA polled the API", not "the reading is recent".
-  Dexcom bounds the damage only by accident: its coordinator calls
-  `get_current_glucose_reading()`, which asks Share for the last 10 minutes
-  (pydexcom 0.5.1), so a dropped transmitter turns the sensors `unknown` after
-  10 to 13 minutes (the window plus one 180 s poll). Inside that window
-  `last_reported` still advances on a reading up to 10 minutes old, and an
-  integration without such a window would carry a dead sensor indefinitely.
-  The fix belongs upstream: `pydexcom` already exposes
-  `GlucoseReading.datetime`, and the integration drops it.
-  home-assistant/core#176641 publishes it as a "Glucose reading time" sensor
-  (`*_glucose_reading_time`); once it ships in an HA release, pair it with
-  `glucose_value` in `TIMESTAMP_SIBLINGS` and update the README's Dexcom row.
-- **A measured cadence is a MEDIAN gap, and both other statistics fail loudly
-  in opposite directions.** The average is dragged up by the double-width hole
-  HA leaves when a reading repeats and writes no history entry. The smallest,
-  which shipped for that reason, is dragged down by any single early poll: the
-  `MIN_CADENCE_MS` floor only rejects gaps under a minute, so one retry landing
-  at 90 seconds redefined a 5 minute sensor as a 90 second one for the whole
-  card. That collapsed staleness to 4.5 minutes and the quiet tier to 90
-  seconds, so only the sub-minute `now` string ever read as current, which is
-  the symptom that surfaced it. A cadence feeds every age tier at once, so a
-  wrong one is never a local error. Prefer the statistic that ignores outliers
-  on both sides, and resolve ties toward the tighter reading.
-- **The age fade runs ONE WAY, toward staleness, and getting that backwards is
-  the defect this ladder was rebuilt to remove.** v0.13.0 and v0.14.0 faded the
-  timestamp WHILE the reading was current and brought it up to full strength as
-  the reading aged, which is what #94 asked for verbatim. It still had to go: it
-  spent the card's only "something is off" signal on the state where nothing is
-  off, so a healthy sensor was the thing that looked unusual. The maintainer
-  read the README figure and called it a bug on sight, which is the real test. A
-  requested design is not automatically a correct one, and a monotonic signal is
-  legible without a legend where an inverted one is not. `_ageTier()` now
-  returns `current` / `aging` / `stale`, and a test asserts the ordering over a
-  sweep of ages rather than rung by rung, because the inversion is invisible in
-  any single-rung assertion.
-- **The age tiers are ONE ladder, and splitting them into predicates is how
-  they drift.** They were once `_isFresh` and `_isStale`, each reading its own
-  threshold and neither able to see the other, which is how the middle rung came
-  to be derived from the CAPPED stale window (`/ STALE_INTERVALS`) instead of
-  from the cadence. That inherited the 15 minute cap, so the rung could never
-  exceed 5 minutes and a 10 minute sensor announced a missed poll that had not
-  happened. `_ageTier()` is the single source; `_isStale` delegates to it. It
-  asks staleness FIRST so the rungs cannot overlap even if the thresholds are
-  ever mis-ordered, which makes "stale card wearing the lighter fade"
-  unreachable by construction rather than by arithmetic.
-- **State the no-history fallback as a CADENCE, not as a window.** Both
-  thresholds then start from the same kind of number, and the middle rung has an
-  interval to take one of; deriving it from the stale window is what inherited
-  the cap in the first place. `DEFAULT_CADENCE_MS` divides by `STALE_INTERVALS`
-  by name rather than by the 3 it equals, because `_staleThresholdMs` clamps to
-  `STALE_FALLBACK_MS` and would go on reading 15 minutes while a retune
-  silently moved the fade of every recorder-disabled install. A test pins the
-  identity on the constants; asserting it on either window stays green through
-  exactly that break, and with no history the old capped formula and the new one
-  agree exactly, which is why the original bug only ever showed on a sensor
-  slower than 5 minutes.
-- **The bottom rung of that ladder has no option, deliberately.** Whole-card
-  dimming on staleness predates the tiering (v0.9.3) and stays always-on:
-  a live sensor that looks stale is a harmless failure, a dead one that looks
-  live is not. `dim_by_age` gates the middle rung only. Any future "one switch
-  for all dimming" is that same unsafe trade wearing a tidier API. The option
-  was `dim_fresh_time` in v0.13.0 and `dim_by_age` from v0.14.0; the v0.15.0
-  reversal kept the v0.14.0 name, since the name still describes what it does
-  and a second rename inside three releases costs more than it explains.
+- **Do not use `last_reported` for freshness:** it means "HA polled the API", not "the reading is recent". Once home-assistant/core#176641 (`*_glucose_reading_time`) ships in an HA release, pair it with `glucose_value` in `TIMESTAMP_SIBLINGS` and update the README's Dexcom row.
+- **Measure cadence as the MEDIAN gap, never the average or the smallest, and resolve ties toward the tighter reading.** A cadence feeds every age tier at once.
+- **The age fade runs ONE WAY, toward staleness.** `_ageTier()` returns `current` / `aging` / `stale`; assert the ordering over a sweep of ages, never rung by rung.
+- **`_ageTier()` is the single source of the age tiers (`_isStale` delegates to it).** It asks staleness first, and the middle rung derives from the cadence, never from the capped stale window.
+- **State the no-history fallback as a CADENCE, not as a window.** `DEFAULT_CADENCE_MS` divides by `STALE_INTERVALS` by name; pin the identity on the constants, not on either window.
+- **Whole-card dimming on staleness has no option and stays always-on; `dim_by_age` gates the middle rung only.** Never add one switch for all dimming, and keep the `dim_by_age` name.
 
 ## Sections view (grid sizing)
 

@@ -1,10 +1,5 @@
 # Release process
 
-Relocated verbatim from the repo root `CLAUDE.md`. Never force-pushing a tag
-stays inline in `CLAUDE.md`, because HACS caching is the reason here; always
-incrementing the version is the global rule in `~/.claude/CLAUDE.md` under
-`Code quality`, phrased there as never re-tagging a published release.
-
 Steps:
 
 ```bash
