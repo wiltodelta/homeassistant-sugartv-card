@@ -14,4 +14,5 @@ gh release edit v<version> --notes "<notes>"  # add release notes
 
 - GitHub Actions (`build.yml`) triggers on `v*` tags, builds and creates GitHub Release
 - HACS picks up new releases automatically
+- Never force-push or move a published release tag: HACS caches releases by tag, so a fix ships as the next version
 - No emoji in release notes — `gh` CLI can corrupt them
