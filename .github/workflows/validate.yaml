@@ -4,9 +4,19 @@ on:
     push:
         branches:
             - main
+        paths-ignore:
+            - '.claude/**'
+            - 'docs/**'
     pull_request:
         branches:
             - main
+        paths-ignore:
+            - '.claude/**'
+            - 'docs/**'
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 jobs:
     validate:
