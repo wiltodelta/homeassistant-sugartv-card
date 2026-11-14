@@ -84,6 +84,9 @@ class SugarTvCard extends LitElement {
         // Carelink (Medtronic)
         [VALUE_SUFFIXES.carelinkMgdl, 'last_glucose_update'],
         [VALUE_SUFFIXES.carelinkMmol, 'last_glucose_update'],
+        // LibreLink (dodog): "Last Measurement Timestamp", in UTC. Without it a
+        // flat value freezes last_updated and a live sensor fades as stale.
+        [VALUE_SUFFIXES.librelinkDodog, 'last_measurement_timestamp'],
     ];
 
     // Siblings reporting an age in minutes rather than a timestamp.

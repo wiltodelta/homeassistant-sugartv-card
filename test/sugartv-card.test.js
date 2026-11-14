@@ -183,7 +183,27 @@ describe('SugarTvCard', () => {
             expect(card._normalizeTrend('FLAT')).toBe('steady');
             expect(card._normalizeTrend('UP_DOUBLE')).toBe('rising_quickly');
             expect(card._normalizeTrend('DOWN_DOUBLE')).toBe('falling_quickly');
-            expect(card._normalizeTrend('NONE')).toBe('steady');
+        });
+
+        it('normalizes dodog LibreLink trends', () => {
+            expect(card._normalizeTrend('Rising fast')).toBe('rising_quickly');
+            expect(card._normalizeTrend('Falling fast')).toBe(
+                'falling_quickly',
+            );
+        });
+
+        // Nightscout's words for "no arrow to draw". Carelink's NONE is the
+        // exception, and only its own detection path maps it to steady.
+        it.each([
+            'NONE',
+            'NONE ⊝',
+            'None',
+            'NOT COMPUTABLE',
+            'NotComputable',
+            'RATE OUT OF RANGE',
+            'RateOutOfRange',
+        ])('treats %s as no direction', (raw) => {
+            expect(card._normalizeTrend(raw)).toBe('unknown');
         });
 
         it('normalizes LibreView numeric trend values', () => {
@@ -281,6 +301,67 @@ describe('SugarTvCard', () => {
                     glucoseState,
                 ),
             ).toBe('rising_slightly');
+        });
+
+        /*
+         * One row per integration's entity shape: the value entity and where
+         * the trend sits beside it. The word variants are covered under
+         * _normalizeTrend; these check the detection path reaches them.
+         */
+        it.each([
+            [
+                'dodog LibreLink',
+                'sensor.jane_doe_measurement',
+                { 'sensor.jane_doe_trend': { state: 'Rising fast' } },
+                {},
+                'rising_quickly',
+            ],
+            [
+                'Nocturne',
+                'sensor.nocturne_current_glucose',
+                { 'sensor.nocturne_glucose_trend': { state: 'FortyFiveDown' } },
+                {},
+                'falling_slightly',
+            ],
+            [
+                'Nightscout NONE',
+                'sensor.blood_sugar',
+                {},
+                { direction: 'NONE' },
+                'unknown',
+            ],
+            [
+                'Carelink NONE',
+                'sensor.carelink_pump_last_glucose_level_mg_dl',
+                {
+                    'sensor.carelink_pump_last_glucose_trend': {
+                        state: 'NONE',
+                    },
+                },
+                {},
+                'steady',
+            ],
+        ])('resolves %s', (_name, valueId, siblings, attributes, expected) => {
+            const card = createCard(
+                {},
+                {
+                    states: {
+                        [valueId]: {
+                            state: '120',
+                            attributes: {
+                                unit_of_measurement: 'mg/dL',
+                                ...attributes,
+                            },
+                        },
+                        ...siblings,
+                    },
+                },
+            );
+            card.config.glucose_value = valueId;
+
+            expect(card._resolveTrend(valueId, card.hass.states[valueId])).toBe(
+                expected,
+            );
         });
 
         it('detects Dexcom sibling *_glucose_trend entity', () => {
@@ -2291,6 +2372,8 @@ describe('SugarTvCard', () => {
             'falling_slightly',
             'falling',
             'falling_quickly',
+            // A word that says there is no arrow (Nightscout's NONE).
+            'unknown',
         ];
 
         it('maps all values to valid internal trends', () => {

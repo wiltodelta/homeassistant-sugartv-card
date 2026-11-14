@@ -447,6 +447,20 @@ describe('Reading timestamp resolution', () => {
             expect(card._getCurrentState(value).reading_time).toBe(measured);
         });
 
+        it('reads the dodog LibreLink last measurement timestamp entity', () => {
+            const measured = iso(4 * MINUTE);
+            const card = withSibling(
+                'sensor.jane_doe_measurement',
+                'sensor.jane_doe_last_measurement_timestamp',
+                measured,
+            );
+
+            expect(
+                card._getCurrentState('sensor.jane_doe_measurement')
+                    .reading_time,
+            ).toBe(measured);
+        });
+
         it('falls back when the Carelink sibling is unavailable', () => {
             const card = withSibling(CARELINK, CARELINK_TIME, 'unavailable');
 

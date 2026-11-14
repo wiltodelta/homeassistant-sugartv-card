@@ -19,6 +19,8 @@ description: Home Assistant integration facts — entity-id resolution, setConfi
 - **An entity id has no predictable head, so match its tail** with `siblingEntityId()`, never a prefix assumption or a bare `endsWith`.
 - **Auto-detect a sibling only when the card renders the READING wrong without it, not merely less.** Active insulin is `insulin_value` in the config or nothing, with no sibling hunt.
 - **If insulin sibling detection is ever asked for, do not tail-swap next to the glucose sensor:** glucose and insulin usually come from different integrations. Known insulin tails are `active_insulin`, `insulin_on_board` and `loop_iob`.
+- **A trend word can mean different things per integration, so `TREND_MAP` holds its safe reading and a source that means more gets its own map on its detection path.** NONE is "no direction" (`unknown`) in `TREND_MAP`, as Nightscout means it; Carelink's NONE is "too slow for an arrow", so Carelink's patterns carry `CARELINK_TREND_MAP` (`steady`).
+- **A generic value tail is safe only beside a specific sibling name.** dodog's `measurement` tail is fine because its sibling, `last_measurement_timestamp`, exists nowhere else and must parse as a time.
 - **glucifer's `measurement_time` is an ENTITY, not an attribute, so `timestamp_attribute` cannot see it; keep it out of `TIMESTAMP_SIBLINGS`,** because the `glucose` tail it would hang off is the most generic tail there is.
 
 ## Freshness (`last_updated` / `last_reported`)

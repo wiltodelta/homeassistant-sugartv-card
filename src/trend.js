@@ -7,6 +7,8 @@ export const VALUE_SUFFIXES = {
     carelinkMgdl: 'last_glucose_level_mg_dl',
     carelinkMmol: 'last_glucose_level_mmol',
     librelink: 'glucose_measurement',
+    librelinkDodog: 'measurement',
+    nocturne: 'current_glucose',
 };
 
 // Resolve a sibling entity by swapping the tail of an entity id, keeping
@@ -74,6 +76,9 @@ export const TREND_MAP = {
     // LibreLink/gillesvs (separate trend entity — human-readable text)
     'decreasing fast': 'falling_quickly',
     'increasing fast': 'rising_quickly',
+    // LibreLink/dodog (separate trend entity)
+    'rising fast': 'rising_quickly',
+    'falling fast': 'falling_quickly',
     // Carelink/Medtronic trend values (raw API: UP, DOWN, FLAT)
     up: 'rising',
     up_up: 'rising_quickly',
@@ -81,16 +86,25 @@ export const TREND_MAP = {
     down: 'falling',
     down_down: 'falling_quickly',
     down_double: 'falling_quickly',
-    none: 'steady',
+    // No direction. Nightscout (and Nocturne) publish NONE, NOT COMPUTABLE and
+    // RATE OUT OF RANGE when there is no arrow to draw. Carelink's NONE means
+    // the opposite, a change too slow for an arrow, so it gets its own map.
+    none: 'unknown',
+    'not computable': 'unknown',
+    notcomputable: 'unknown',
+    'rate out of range': 'unknown',
+    rateoutofrange: 'unknown',
 };
 
-export function normalizeTrend(rawTrend) {
+export const CARELINK_TREND_MAP = { ...TREND_MAP, none: 'steady' };
+
+export function normalizeTrend(rawTrend, map = TREND_MAP) {
     if (!rawTrend) return 'unknown';
     const key = String(rawTrend).toLowerCase().trim();
     // HA system states are not real trends
     if (key === 'unknown' || key === 'unavailable') return 'unknown';
     return (
-        TREND_MAP[key] ||
+        map[key] ||
         /*
          * A direction decorated with a trailing glyph still names a trend:
          * danudaru/HA_Nightscout publishes `direction` as "FortyFiveUp ↗",
@@ -99,7 +113,7 @@ export function normalizeTrend(rawTrend) {
          * neither a word character nor a space (the map itself carries keys
          * with spaces, like "rising quickly") and ask again.
          */
-        TREND_MAP[key.replace(/[^\s\w]+/g, '').trim()] ||
+        map[key.replace(/[^\s\w]+/g, '').trim()] ||
         key
     );
 }
@@ -112,7 +126,9 @@ export function normalizeTrend(rawTrend) {
  *    - Carelink: *_last_glucose_level_mg_dl / *_last_glucose_level_mmol →
  *      *_last_glucose_trend (the *_last_sg_* spelling is the integration's
  *      internal keys, which never became entity ids)
+ *    - Nocturne: *_current_glucose → *_glucose_trend (Nightscout words)
  *    - LibreLink (gillesvs): *_glucose_measurement → find *_trend entity
+ *    - LibreLink (dodog): *_measurement → the same *_trend lookup
  * 3. Nightscout: attribute 'direction' on value entity
  * 4. LibreView (PTST): attribute 'trend' on value entity
  * 5. Fallback: 'unknown'
@@ -130,14 +146,15 @@ export function resolveTrend(glucose_value, glucoseState, config, hass) {
     const siblingPatterns = [
         // Dexcom: sensor.dexcom_*_glucose_value → sensor.dexcom_*_glucose_trend
         [VALUE_SUFFIXES.dexcom, 'glucose_trend'],
-        [VALUE_SUFFIXES.carelinkMgdl, 'last_glucose_trend'],
-        [VALUE_SUFFIXES.carelinkMmol, 'last_glucose_trend'],
+        [VALUE_SUFFIXES.carelinkMgdl, 'last_glucose_trend', CARELINK_TREND_MAP],
+        [VALUE_SUFFIXES.carelinkMmol, 'last_glucose_trend', CARELINK_TREND_MAP],
         // Kept for installs whose entities were renamed to the key spelling.
-        ['last_sg_mgdl', 'last_sg_trend'],
-        ['last_sg_mmol', 'last_sg_trend'],
+        ['last_sg_mgdl', 'last_sg_trend', CARELINK_TREND_MAP],
+        ['last_sg_mmol', 'last_sg_trend', CARELINK_TREND_MAP],
+        [VALUE_SUFFIXES.nocturne, 'glucose_trend'],
     ];
 
-    for (const [valueTail, trendTail] of siblingPatterns) {
+    for (const [valueTail, trendTail, map] of siblingPatterns) {
         const trendEntityId = siblingEntityId(
             glucose_value,
             valueTail,
@@ -147,7 +164,7 @@ export function resolveTrend(glucose_value, glucoseState, config, hass) {
 
         const trendState = hass.states[trendEntityId];
         if (trendState) {
-            return normalizeTrend(trendState.state);
+            return normalizeTrend(trendState.state, map);
         }
     }
 

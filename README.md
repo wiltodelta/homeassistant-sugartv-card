@@ -3,7 +3,7 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
 [![Open your Home Assistant instance and open SugarTV Card inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=wiltodelta&repository=homeassistant-sugartv-card)
 
-A custom Lovelace card for Home Assistant that displays CGM (Continuous Glucose Monitor) data. Supports **Dexcom**, **Nightscout**, **LibreView**, **LibreLink**, and **Carelink (Medtronic)** with automatic trend detection. [Live demo](https://wiltodelta.github.io/homeassistant-sugartv-card/demo/) · [Project page](https://wiltodelta.com/projects/sugartv/) · by [Victor Kuznetsov](https://wiltodelta.com/).
+A custom Lovelace card for Home Assistant that displays CGM (Continuous Glucose Monitor) data. Supports **Dexcom**, **Nightscout**, **Nocturne**, **LibreView**, **LibreLink**, and **Carelink (Medtronic)** with automatic trend detection. [Live demo](https://wiltodelta.github.io/homeassistant-sugartv-card/demo/) · [Project page](https://wiltodelta.com/projects/sugartv/) · by [Victor Kuznetsov](https://wiltodelta.com/).
 
 ![The same card in a wide slot and in a tall slot](sugartv-card-layouts.png)
 
@@ -11,7 +11,7 @@ One card and one config in two slots: it takes the shape it is given.
 
 ## Features
 
-- **Multi-sensor support** — Dexcom, Nightscout, LibreView, LibreLink, Carelink (auto-detected)
+- **Multi-sensor support** — Dexcom, Nightscout, Nocturne, LibreView, LibreLink, Carelink (auto-detected)
 - Displays: current glucose, delta from previous reading, trend direction, last update time, glucose prediction, active insulin (optional)
 - Color-coded glucose zones (AGP/TIR standard thresholds)
 - Fades as a reading ages, on three rungs measured against the sensor's own
@@ -32,6 +32,8 @@ One card and one config in two slots: it takes the shape it is given.
 | **Nightscout**           | `sensor.blood_sugar`               | Auto-detected from `direction` attribute        |
 | **LibreView** (PTST)     | `sensor.*_glucose_level`           | Auto-detected from `trend` attribute            |
 | **LibreLink** (gillesvs) | `sensor.*_glucose_measurement`     | Auto-detected from sibling `*_trend` entity     |
+| **LibreLink** (dodog)    | `sensor.*_measurement`             | Auto-detected from sibling `*_trend` entity     |
+| **Nocturne**             | `sensor.*_current_glucose`         | Auto-detected from `*_glucose_trend` entity     |
 | **Carelink** (Medtronic) | `sensor.*last_glucose_level_mg_dl` | Auto-detected from `*last_glucose_trend` entity |
 
 Just select your glucose sensor — the card figures out the rest automatically.
@@ -259,8 +261,9 @@ The card resolves it in this order:
 2. A `measurement_timestamp` attribute (LibreView).
 3. A `date` attribute, but only on a sensor that also carries Nightscout's
    `direction`/`delta` attributes, since `date` is a generic name.
-4. A sibling entity holding the time: `*last_glucose_update` (Carelink) or
-   `*_minutes_since_update` (LibreLink).
+4. A sibling entity holding the time: `*last_glucose_update` (Carelink),
+   `*_last_measurement_timestamp` (LibreLink, dodog) or
+   `*_minutes_since_update` (LibreLink, gillesvs).
 5. The entity's `last_updated`, then `last_changed`.
 
 Both ISO date strings and epoch values (seconds or milliseconds) are accepted;
@@ -273,15 +276,16 @@ that re-reports an identical value with identical attributes leaves both
 `last_reported`, which it does not send to the frontend, so a card cannot see
 it. That is why the card prefers a time the integration itself reports.
 
-| Integration      | Reading time                                                                   |
-| ---------------- | ------------------------------------------------------------------------------ |
-| LibreView (PTST) | Exact, from `measurement_timestamp`                                            |
-| Nightscout       | Exact, from `date`                                                             |
-| Carelink         | Exact, from the `*last_glucose_update` entity                                  |
-| LibreLink        | To the minute while the reading is recent, from `*_minutes_since_update`       |
-| Dexcom           | Approximate: it publishes no time at all, so a flat value can still look stale |
+| Integration          | Reading time                                                                   |
+| -------------------- | ------------------------------------------------------------------------------ |
+| LibreView (PTST)     | Exact, from `measurement_timestamp`                                            |
+| Nightscout           | Exact, from `date`                                                             |
+| Carelink             | Exact, from the `*last_glucose_update` entity                                  |
+| LibreLink (dodog)    | Exact, from the `*_last_measurement_timestamp` entity                          |
+| LibreLink (gillesvs) | To the minute while the reading is recent, from `*_minutes_since_update`       |
+| Dexcom, Nocturne     | Approximate: they publish no time at all, so a flat value can still look stale |
 
-LibreLink is the weak one. It reports an age rather than a time, and computes it
+LibreLink (gillesvs) is the weak one. It reports an age rather than a time, and computes it
 by subtracting a device-local reading time from the Home Assistant server's
 clock, so the number is wrong by the offset between the two timezones
 ([gillesvs/librelink#27](https://github.com/gillesvs/librelink/issues/27)
