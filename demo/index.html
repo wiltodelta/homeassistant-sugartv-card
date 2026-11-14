@@ -39,6 +39,18 @@
                 max-width: 1600px;
                 padding: 0;
             }
+            /* What this page is, for a visitor who arrives from a link. */
+            .intro {
+                margin-bottom: 1rem;
+            }
+            .intro h1 {
+                margin: 0 0 0.25rem;
+                font-size: 1.25rem;
+            }
+            .intro p {
+                margin: 0;
+                font-size: 0.875rem;
+            }
             /*
              * The panel is a control surface, not prose, so it runs a size down
              * from Pico's defaults. Left at them it stood 466px tall and pushed
@@ -160,6 +172,21 @@
     </head>
     <body>
         <div class="container">
+            <header class="intro">
+                <h1>SugarTV Card</h1>
+                <p>
+                    A glucose card for Home Assistant, running here on simulated
+                    readings. Change the options to see how it behaves.
+                    <a
+                        href="https://github.com/wiltodelta/homeassistant-sugartv-card#installation"
+                        >Install from HACS</a
+                    >
+                    ·
+                    <a href="https://wiltodelta.com/projects/sugartv/"
+                        >Project page</a
+                    >
+                </p>
+            </header>
             <!--
               Grouped by what a control actually is, not by type. The card's
               own options sit together, so a reader can tell at a glance which
@@ -295,8 +322,8 @@
             <div class="demo-grid horizontal" id="card-grid"></div>
         </div>
 
-        <script type="module" src="/demo/hass-mock.js"></script>
-        <script type="module" src="/dist/sugartv-card.js"></script>
+        <script type="module" src="./hass-mock.js"></script>
+        <script type="module" src="../dist/sugartv-card.js"></script>
         <script>
             // --- Helper Functions ---
             /*
@@ -654,8 +681,8 @@
              */
             async function fillLocales() {
                 const select = document.getElementById('locale-select');
-                const codes = await fetch('/test/ha-languages.json').then((r) =>
-                    r.json(),
+                const codes = await fetch('../test/ha-languages.json').then(
+                    (r) => r.json(),
                 );
                 for (const code of codes) {
                     if (code === 'en') continue; // already the seed option

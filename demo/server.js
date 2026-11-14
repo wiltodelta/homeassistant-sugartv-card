@@ -23,7 +23,13 @@ const server = createServer(async (req, res) => {
     try {
         // Strip the query string: it addresses the page, not the file on disk.
         const url = req.url.split('?')[0];
-        let filePath = url === '/' ? '/demo/index.html' : url;
+        // Assets are relative to /demo/, as on GitHub Pages.
+        if (url === '/') {
+            res.writeHead(302, { Location: '/demo/' });
+            res.end();
+            return;
+        }
+        let filePath = url.endsWith('/') ? `${url}index.html` : url;
 
         // Security: prevent directory traversal
         if (filePath.includes('..')) {

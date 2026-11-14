@@ -6,7 +6,7 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
 
 - `npm run build` - build the card
 - `npm test` - vitest suite (`test/*.test.js`)
-- `npm run demo` - local demo on http://localhost:3000
+- `npm run demo` - local demo on http://localhost:3000/demo/. Stable releases also publish it to GitHub Pages (`build.yml`, job `demo`), so its pages load assets by relative path; `test/demo-paths.test.js` enforces it
 - No `maintain.sh`. The gate is `npm test && npm run build && npx prettier --check . && osv-scanner --lockfile=package-lock.json`
 - The headless-Chrome recipe that regenerates the README images is in [`docs/readme-screenshots.md`](docs/readme-screenshots.md).
 

@@ -3,7 +3,7 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
 [![Open your Home Assistant instance and open SugarTV Card inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=wiltodelta&repository=homeassistant-sugartv-card)
 
-A custom Lovelace card for Home Assistant that displays CGM (Continuous Glucose Monitor) data. Supports **Dexcom**, **Nightscout**, **LibreView**, **LibreLink**, and **Carelink (Medtronic)** with automatic trend detection. [Project page](https://wiltodelta.com/projects/sugartv/) · by [Victor Kuznetsov](https://wiltodelta.com/).
+A custom Lovelace card for Home Assistant that displays CGM (Continuous Glucose Monitor) data. Supports **Dexcom**, **Nightscout**, **LibreView**, **LibreLink**, and **Carelink (Medtronic)** with automatic trend detection. [Live demo](https://wiltodelta.github.io/homeassistant-sugartv-card/demo/) · [Project page](https://wiltodelta.com/projects/sugartv/) · by [Victor Kuznetsov](https://wiltodelta.com/).
 
 ![The same card in a wide slot and in a tall slot](sugartv-card-layouts.png)
 

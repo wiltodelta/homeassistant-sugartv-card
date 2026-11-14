@@ -13,6 +13,9 @@ on:
             - '**.md'
             - 'docs/**'
             - '.claude/**'
+    # Republishes the demo from the chosen ref, for a demo-only change that
+    # should not wait for the next release.
+    workflow_dispatch:
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
@@ -72,6 +75,9 @@ jobs:
         runs-on: ubuntu-latest
         permissions:
             contents: write
+        env:
+            # The demo follows stable releases, so it shows what HACS installs.
+            PUBLISH_DEMO: ${{ (startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')) || github.event_name == 'workflow_dispatch' }}
         steps:
             - uses: actions/checkout@v7
               with:
@@ -92,6 +98,21 @@ jobs:
             - name: Run tests
               run: npm test
 
+            # Demo pages reach their assets by relative path, so the site keeps
+            # the repository's layout and its root only redirects to demo/.
+            - name: Assemble demo site
+              if: env.PUBLISH_DEMO == 'true'
+              run: |
+                  mkdir -p _site/demo _site/dist _site/test
+                  cp demo/index.html demo/hass-mock.js _site/demo/
+                  cp dist/sugartv-card.js _site/dist/
+                  cp test/ha-languages.json _site/test/
+                  printf '<!doctype html><meta http-equiv="refresh" content="0; url=demo/"><a href="demo/">SugarTV Card demo</a>\n' > _site/index.html
+
+            - name: Upload demo site
+              if: env.PUBLISH_DEMO == 'true'
+              uses: actions/upload-pages-artifact@v5
+
             - name: Create release
               if: startsWith(github.ref, 'refs/tags/v')
               uses: softprops/action-gh-release@v3
@@ -99,3 +120,21 @@ jobs:
                   files: dist/*
                   draft: false
                   prerelease: ${{ contains(github.ref, '-') }}
+
+    demo:
+        needs: build
+        if: (startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')) || github.event_name == 'workflow_dispatch'
+        runs-on: ubuntu-latest
+        permissions:
+            pages: write
+            id-token: write
+        concurrency:
+            group: pages
+            cancel-in-progress: false
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}demo/
+        steps:
+            - name: Deploy demo to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v5

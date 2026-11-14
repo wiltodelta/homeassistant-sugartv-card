@@ -19,6 +19,7 @@ EOF
 - The bundle's version comes from `git describe --tags`, not `package.json`: a local build before tagging still carries the previous version
 - GitHub Actions (`build.yml`) triggers on `v*` tags, builds and creates GitHub Release
 - HACS picks up new releases automatically
+- A stable tag also republishes the live demo on GitHub Pages. To republish it without a release, run `gh workflow run build.yml --ref main`
 - Never force-push or move a published release tag: HACS caches releases by tag, so a fix ships as the next version
 - No emoji in release notes — `gh` CLI can corrupt them
 - Keep the star line at the end of the notes: existing users read release notes in Home Assistant's update dialog, not the README
