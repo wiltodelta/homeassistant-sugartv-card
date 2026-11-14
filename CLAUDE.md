@@ -7,7 +7,7 @@ You are a **principal frontend engineer** maintaining a custom Home Assistant Lo
 - `npm run build` - build the card
 - `npm test` - vitest suite (`test/*.test.js`)
 - `npm run demo` - local demo on http://localhost:3000
-- No `maintain.sh`. The gate is `npm test && npm run build && npx prettier --check .`
+- No `maintain.sh`. The gate is `npm test && npm run build && npx prettier --check . && osv-scanner --lockfile=package-lock.json`
 - The headless-Chrome recipe that regenerates the README images is in [`docs/readme-screenshots.md`](docs/readme-screenshots.md).
 
 ## Release process

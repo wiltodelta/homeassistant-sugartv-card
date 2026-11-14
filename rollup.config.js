@@ -1,4 +1,4 @@
-import resolve from '@rollup/plugin-node-resolve';
+import oxc from 'rollup-plugin-oxc';
 import terser from '@rollup/plugin-terser';
 import json from '@rollup/plugin-json';
 import replace from '@rollup/plugin-replace';
@@ -37,7 +37,10 @@ export default {
             'process.env.VERSION': JSON.stringify(getVersion()),
             preventAssignment: true,
         }),
-        resolve(),
+        // Used only as a resolver: it replaces @rollup/plugin-node-resolve, whose
+        // deepmerge dependency has an unfixed advisory. transform: false skips a
+        // pass over every module that the source, plain JS, does not need.
+        oxc({ transform: false }),
         json(),
         terser({
             format: {
