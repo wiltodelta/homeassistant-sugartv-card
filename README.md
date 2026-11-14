@@ -1,6 +1,7 @@
 # SugarTV Card
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![Open your Home Assistant instance and open SugarTV Card inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=wiltodelta&repository=homeassistant-sugartv-card)
 
 A custom Lovelace card for Home Assistant that displays CGM (Continuous Glucose Monitor) data. Supports **Dexcom**, **Nightscout**, **LibreView**, **LibreLink**, and **Carelink (Medtronic)** with automatic trend detection. [Project page](https://wiltodelta.com/projects/sugartv/) · by [Victor Kuznetsov](https://wiltodelta.com/).
 
@@ -50,6 +51,10 @@ the clock falls back to `last_updated`.
 2. One of the CGM integrations in the table above, already set up and reporting
 
 ### Installing via HACS
+
+[![Open your Home Assistant instance and open SugarTV Card inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=wiltodelta&repository=homeassistant-sugartv-card)
+
+Or install it by hand:
 
 1. Open HACS in Home Assistant
 2. Navigate to "Frontend" section
@@ -446,7 +451,7 @@ npm under it, so it is free to change.
 
 - Found a bug? [Create an issue](https://github.com/wiltodelta/homeassistant-sugartv-card/issues)
 - Have an idea? [Suggest an improvement](https://github.com/wiltodelta/homeassistant-sugartv-card/issues)
-- Like the project? Star it on GitHub!
+- If the card works for you, a [star on GitHub](https://github.com/wiltodelta/homeassistant-sugartv-card) helps other CGM users find it.
 
 If this card is useful to you, please consider supporting its development:
 
