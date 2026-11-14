@@ -2010,7 +2010,7 @@ export const languages = {
             insulin_value: 'Senzor aktívneho inzulínu (voliteľné)',
             show_prediction: 'Predpoveď glykémie',
             relative_time: 'Zobraziť čas merania namiesto hodín',
-            dim_by_age: 'Stlmiť predtým, než meranie stane neaktuálnym',
+            dim_by_age: 'Stlmiť predtým, než sa meranie stane neaktuálnym',
             color_thresholds: 'Farebné zóny glykémie',
             urgent_low: 'Kriticky nízka',
             low: 'Nízka',
