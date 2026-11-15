@@ -2011,7 +2011,7 @@ export const languages = {
         card: {
             name: 'SugarTV Card',
             description:
-                'Zobrazuje údaje glykémie CGM s trendom, deltou a farebnými zónami. Funguje s Dexcom, Nightscout, LibreView, LibreLink a Carelink.',
+                'Zobrazuje údaje glykémie CGM s trendom, rozdielom a farebnými zónami. Funguje so systémami Dexcom, Nightscout, LibreView, LibreLink a Carelink.',
         },
         editor: {
             glucose_value: 'Senzor glykémie',
@@ -2019,14 +2019,15 @@ export const languages = {
             glucose_time: 'Senzor času merania (zistený automaticky)',
             insulin_value: 'Senzor aktívneho inzulínu (voliteľné)',
             show_prediction: 'Predpoveď glykémie',
-            relative_time: 'Zobraziť vek merania namiesto času',
-            dim_by_age: 'Stlmiť skôr, než meranie zostarne',
+            relative_time:
+                'Zobraziť uplynutý čas od posledného merania namiesto času merania',
+            dim_by_age: 'Stlmiť predtým, než sa meranie stane neaktuálnym',
             color_thresholds: 'Farebné zóny glykémie',
             urgent_low: 'Kriticky nízka',
             low: 'Nízka',
             high: 'Vysoká',
             urgent_high: 'Kriticky vysoká',
-            thresholds_title: 'Prahy glykémie (mg/dL alebo mmol/L)',
+            thresholds_title: 'Hraničné hodnoty glykémie (mg/dL alebo mmol/L)',
         },
         units: {
             mgdl: 'mg/dL',
@@ -2042,7 +2043,7 @@ export const languages = {
             active: 'Aktívny inzulín {0} {1}',
         },
         common: {
-            not_available: 'N/A',
+            not_available: 'nedostupné',
             default_time: '00:00',
         },
     },
