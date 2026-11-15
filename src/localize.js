@@ -2009,7 +2009,7 @@ export const languages = {
             timestamp_attribute: 'Atribút času merania (voliteľné)',
             insulin_value: 'Senzor aktívneho inzulínu (voliteľné)',
             show_prediction: 'Predpoveď glykémie',
-            relative_time: 'Zobraziť čas od posledného merania namiesto hodín',
+            relative_time: 'Zobraziť uplynutý čas od posledného merania namiesto času merania',
             dim_by_age: 'Stlmiť predtým, než sa meranie stane neaktuálnym',
             color_thresholds: 'Farebné zóny glykémie',
             urgent_low: 'Kriticky nízka',
