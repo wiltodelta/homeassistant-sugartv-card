@@ -21,6 +21,10 @@ concurrency:
 jobs:
     validate:
         name: HACS validate
+        # The action validates the PR's head repository through the API, not
+        # the checkout. A fork has no releases and dist/ is ignored, so it fails
+        # there whatever the change (PR #116). Validate our own branches only.
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v7
