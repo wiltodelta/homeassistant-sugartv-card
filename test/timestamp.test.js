@@ -461,6 +461,51 @@ describe('Reading timestamp resolution', () => {
             ).toBe(measured);
         });
 
+        // glucifer-style: the time sits in an entity no tail can reach.
+        describe('glucose_time picked in the editor', () => {
+            it('reads the picked entity for an unknown integration', () => {
+                const measured = iso(4 * MINUTE);
+                const card = withSibling(
+                    'sensor.kid_glucose',
+                    'sensor.kid_measurement_time',
+                    measured,
+                );
+                card.config.glucose_time = 'sensor.kid_measurement_time';
+
+                expect(
+                    card._getCurrentState('sensor.kid_glucose').reading_time,
+                ).toBe(measured);
+            });
+
+            it('wins over an auto-detected sibling', () => {
+                const picked = iso(2 * MINUTE);
+                const card = withSibling(
+                    CARELINK,
+                    CARELINK_TIME,
+                    iso(4 * MINUTE),
+                );
+                card.hass.states['sensor.picked_time'] = { state: picked };
+                card.config.glucose_time = 'sensor.picked_time';
+
+                expect(card._getCurrentState(CARELINK).reading_time).toBe(
+                    picked,
+                );
+            });
+
+            it('falls back to auto-detection when the picked entity is unavailable', () => {
+                const measured = iso(4 * MINUTE);
+                const card = withSibling(CARELINK, CARELINK_TIME, measured);
+                card.hass.states['sensor.picked_time'] = {
+                    state: 'unavailable',
+                };
+                card.config.glucose_time = 'sensor.picked_time';
+
+                expect(card._getCurrentState(CARELINK).reading_time).toBe(
+                    measured,
+                );
+            });
+        });
+
         it('falls back when the Carelink sibling is unavailable', () => {
             const card = withSibling(CARELINK, CARELINK_TIME, 'unavailable');
 

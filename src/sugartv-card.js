@@ -71,9 +71,7 @@ class SugarTvCard extends LitElement {
     static GLUCOSE_DEVICE_CLASS = 'blood_glucose_concentration';
 
     // Attributes carrying the true measurement time. Only the PTST libreview
-    // integration is known to publish one; Dexcom exposes no attributes on the
-    // glucose sensor at all, which is why timestamp_attribute exists as an
-    // escape hatch.
+    // integration is known to publish one.
     static TIMESTAMP_ATTRIBUTES = ['measurement_timestamp'];
 
     // Integrations that keep the reading time in a sibling entity instead of an
@@ -194,9 +192,17 @@ class SugarTvCard extends LitElement {
                     required: true,
                     selector: { entity: { domain: 'sensor' } },
                 },
+                // Overrides, only for when auto-detection misses. The editor
+                // offers sensors to pick, never a name to type.
                 {
-                    name: 'timestamp_attribute',
-                    selector: { text: {} },
+                    name: 'glucose_trend',
+                    selector: { entity: { domain: 'sensor' } },
+                },
+                {
+                    name: 'glucose_time',
+                    selector: {
+                        entity: { domain: 'sensor', device_class: 'timestamp' },
+                    },
                 },
                 {
                     name: 'insulin_value',
@@ -285,7 +291,7 @@ class SugarTvCard extends LitElement {
                 const labels = {
                     glucose_value: localize('editor.glucose_value'),
                     glucose_trend: localize('editor.glucose_trend'),
-                    timestamp_attribute: localize('editor.timestamp_attribute'),
+                    glucose_time: localize('editor.glucose_time'),
                     insulin_value: localize('editor.insulin_value'),
                     show_prediction: localize('editor.show_prediction'),
                     relative_time: localize('editor.relative_time'),
@@ -966,26 +972,32 @@ class SugarTvCard extends LitElement {
     // through to last_updated, which can read fresher than reality, so only
     // reject a value that is more likely wrong than merely stale.
     _resolveTimestamp(glucose_value, glucoseState) {
+        const fallback =
+            glucoseState.last_updated || glucoseState.last_changed || null;
+
+        const picked = SugarTvCard.parseTimestamp(
+            this.hass?.states?.[this.config?.glucose_time]?.state,
+        );
+        if (picked) return picked;
+
         const attributes = glucoseState.attributes || {};
         const configured = this.config?.timestamp_attribute;
-
         if (configured) {
-            const parsed = SugarTvCard.parseTimestamp(attributes[configured]);
-            if (parsed) return parsed;
-        } else {
-            for (const name of SugarTvCard.TIMESTAMP_ATTRIBUTES) {
-                const parsed = SugarTvCard.parseTimestamp(attributes[name]);
-                if (parsed) return parsed;
-            }
-
-            const nightscoutDate = this._nightscoutDate(attributes);
-            if (nightscoutDate) return nightscoutDate;
-
-            const sibling = this._timestampFromSibling(glucose_value);
-            if (sibling) return sibling;
+            return (
+                SugarTvCard.parseTimestamp(attributes[configured]) || fallback
+            );
         }
 
-        return glucoseState.last_updated || glucoseState.last_changed || null;
+        for (const name of SugarTvCard.TIMESTAMP_ATTRIBUTES) {
+            const parsed = SugarTvCard.parseTimestamp(attributes[name]);
+            if (parsed) return parsed;
+        }
+
+        return (
+            this._nightscoutDate(attributes) ||
+            this._timestampFromSibling(glucose_value) ||
+            fallback
+        );
     }
 
     // Nightscout publishes the reading time as `date`. That name is a generic

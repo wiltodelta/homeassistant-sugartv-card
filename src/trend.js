@@ -120,7 +120,7 @@ export function normalizeTrend(rawTrend, map = TREND_MAP) {
 
 /**
  * Auto-detect trend from multiple sources:
- * 1. YAML override: config.glucose_trend entity
+ * 1. The trend sensor picked in the editor (config.glucose_trend)
  * 2. Sibling entity patterns:
  *    - Dexcom: *_glucose_value → *_glucose_trend
  *    - Carelink: *_last_glucose_level_mg_dl / *_last_glucose_level_mmol →
@@ -134,11 +134,18 @@ export function normalizeTrend(rawTrend, map = TREND_MAP) {
  * 5. Fallback: 'unknown'
  */
 export function resolveTrend(glucose_value, glucoseState, config, hass) {
-    // 1. YAML override
+    // 1. The picked trend sensor. A Carelink one keeps Carelink's meaning of
+    // NONE, the same as when the card finds it by itself.
     if (config.glucose_trend) {
         const trendState = hass.states[config.glucose_trend];
         if (trendState) {
-            return normalizeTrend(trendState.state);
+            const carelink = /(^|[._])last_(glucose|sg)_trend$/.test(
+                config.glucose_trend,
+            );
+            return normalizeTrend(
+                trendState.state,
+                carelink ? CARELINK_TREND_MAP : TREND_MAP,
+            );
         }
     }
 

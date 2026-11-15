@@ -2,6 +2,12 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import haLanguages from './ha-languages.json';
 import { getLocalizer } from '../src/localize.js';
 
+// The editor's named fields, wherever grids and expandables nest them.
+const leafFields = (schema) =>
+    schema.flatMap((field) =>
+        field.schema ? leafFields(field.schema) : field.name ? [field] : [],
+    );
+
 // ── Mock LitElement before importing the card ──────────────────────────
 vi.mock('lit', () => {
     /*
@@ -246,9 +252,31 @@ describe('SugarTvCard', () => {
         });
     });
 
+    // ── getConfigForm ───────────────────────────────────────────────
+    // The editor offers things to pick, never a name to type.
+    describe('getConfigForm', () => {
+        const fields = leafFields(SugarTvCard.getConfigForm().schema);
+
+        it('only offers sensors to pick, switches and numbers', () => {
+            for (const field of fields) {
+                expect(['entity', 'boolean', 'number']).toContain(
+                    Object.keys(field.selector)[0],
+                );
+            }
+        });
+
+        it('offers the reading time as a timestamp sensor', () => {
+            expect(
+                fields.find((f) => f.name === 'glucose_time').selector,
+            ).toEqual({
+                entity: { domain: 'sensor', device_class: 'timestamp' },
+            });
+        });
+    });
+
     // ── _resolveTrend ───────────────────────────────────────────────
     describe('_resolveTrend', () => {
-        it('uses YAML override first (config.glucose_trend)', () => {
+        it('uses the picked trend sensor first (config.glucose_trend)', () => {
             const card = createCard(
                 { glucose_trend: 'sensor.my_trend' },
                 {
@@ -362,6 +390,28 @@ describe('SugarTvCard', () => {
             expect(card._resolveTrend(valueId, card.hass.states[valueId])).toBe(
                 expected,
             );
+        });
+
+        it('keeps Carelink NONE steady when its trend sensor is picked by hand', () => {
+            const card = createCard(
+                { glucose_trend: 'sensor.renamed_last_glucose_trend' },
+                {
+                    states: {
+                        'sensor.pump_glucose': {
+                            state: '120',
+                            attributes: { unit_of_measurement: 'mg/dL' },
+                        },
+                        'sensor.renamed_last_glucose_trend': { state: 'NONE' },
+                    },
+                },
+            );
+
+            expect(
+                card._resolveTrend(
+                    'sensor.pump_glucose',
+                    card.hass.states['sensor.pump_glucose'],
+                ),
+            ).toBe('steady');
         });
 
         it('detects Dexcom sibling *_glucose_trend entity', () => {
@@ -1124,15 +1174,6 @@ describe('SugarTvCard', () => {
          * label and correctly has none, so including it would assert the
          * opposite of the rule.
          */
-        const leafFields = (schema) =>
-            schema.flatMap((field) =>
-                field.schema
-                    ? leafFields(field.schema)
-                    : field.name
-                      ? [field]
-                      : [],
-            );
-
         it.each(
             leafFields(SugarTvCard.getConfigForm().schema).map((f) => [f.name]),
         )('translates the %s label off the frontend language', (name) => {

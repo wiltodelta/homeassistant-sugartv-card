@@ -8,7 +8,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glucose sensor',
             glucose_trend: 'Trend sensor (auto-detected)',
-            timestamp_attribute: 'Reading time attribute (optional)',
+            glucose_time: 'Reading time sensor (auto-detected)',
             insulin_value: 'Active insulin sensor (optional)',
             show_prediction: 'Glucose forecast',
             relative_time: 'Show reading age instead of the clock',
@@ -47,7 +47,8 @@ export const languages = {
         editor: {
             glucose_value: 'Сенсор глюкозы',
             glucose_trend: 'Сенсор тренда (определяется автоматически)',
-            timestamp_attribute: 'Атрибут времени измерения (необязательно)',
+            glucose_time:
+                'Сенсор времени измерения (определяется автоматически)',
             insulin_value: 'Сенсор активного инсулина (необязательно)',
             show_prediction: 'Прогноз глюкозы',
             relative_time: 'Показывать давность измерения вместо времени',
@@ -88,7 +89,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Trendsensor (automatisch erkannt)',
-            timestamp_attribute: 'Attribut der Messzeit (optional)',
+            glucose_time: 'Messzeit-Sensor (automatisch erkannt)',
             insulin_value: 'Sensor für aktives Insulin (optional)',
             show_prediction: 'Glukoseprognose',
             relative_time: 'Alter der Messung statt der Uhrzeit',
@@ -129,7 +130,8 @@ export const languages = {
         editor: {
             glucose_value: 'Capteur de glycémie',
             glucose_trend: 'Capteur de tendance (détecté automatiquement)',
-            timestamp_attribute: 'Attribut de l’heure de mesure (facultatif)',
+            glucose_time:
+                'Capteur de l’heure de mesure (détecté automatiquement)',
             insulin_value: "Capteur d'insuline active (facultatif)",
             show_prediction: 'Prévision de glycémie',
             relative_time: 'Afficher l’ancienneté plutôt que l’heure',
@@ -168,7 +170,8 @@ export const languages = {
         editor: {
             glucose_value: 'Sensor de glucosa',
             glucose_trend: 'Sensor de tendencia (detección automática)',
-            timestamp_attribute: 'Atributo de la hora de medición (opcional)',
+            glucose_time:
+                'Sensor de la hora de medición (detección automática)',
             insulin_value: 'Sensor de insulina activa (opcional)',
             show_prediction: 'Previsión de glucosa',
             relative_time: 'Mostrar la antigüedad en lugar de la hora',
@@ -207,7 +210,8 @@ export const languages = {
         editor: {
             glucose_value: 'Sensore glicemia',
             glucose_trend: 'Sensore tendenza (rilevato automaticamente)',
-            timestamp_attribute: 'Attributo ora di misurazione (facoltativo)',
+            glucose_time:
+                'Sensore ora di misurazione (rilevato automaticamente)',
             insulin_value: 'Sensore di insulina attiva (opzionale)',
             show_prediction: 'Previsione glicemia',
             relative_time: 'Mostra da quanto tempo invece dell’ora',
@@ -246,7 +250,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glucosesensor',
             glucose_trend: 'Trendsensor (automatisch gedetecteerd)',
-            timestamp_attribute: 'Attribuut met meettijd (optioneel)',
+            glucose_time: 'Meettijdsensor (automatisch gedetecteerd)',
             insulin_value: 'Actieve insuline-sensor (optioneel)',
             show_prediction: 'Glucoseverwachting',
             relative_time: 'Toon hoe oud de meting is in plaats van de klok',
@@ -285,7 +289,7 @@ export const languages = {
         editor: {
             glucose_value: 'Czujnik glikemii',
             glucose_trend: 'Czujnik trendu (wykrywany automatycznie)',
-            timestamp_attribute: 'Atrybut czasu pomiaru (opcjonalnie)',
+            glucose_time: 'Czujnik czasu pomiaru (wykrywany automatycznie)',
             insulin_value: 'Czujnik aktywnej insuliny (opcjonalnie)',
             show_prediction: 'Prognoza glikemii',
             relative_time: 'Pokazuj wiek odczytu zamiast godziny',
@@ -324,7 +328,7 @@ export const languages = {
         editor: {
             glucose_value: 'Сенсор глюкози',
             glucose_trend: 'Сенсор тренду (визначається автоматично)',
-            timestamp_attribute: 'Атрибут часу вимірювання (необов’язково)',
+            glucose_time: 'Сенсор часу вимірювання (визначається автоматично)',
             insulin_value: 'Сенсор активного інсуліну (опціонально)',
             show_prediction: 'Прогноз глюкози',
             relative_time: 'Показувати давність вимірювання замість часу',
@@ -363,7 +367,8 @@ export const languages = {
         editor: {
             glucose_value: 'Sensor de glicose',
             glucose_trend: 'Sensor de tendência (detetado automaticamente)',
-            timestamp_attribute: 'Atributo da hora de medição (opcional)',
+            glucose_time:
+                'Sensor da hora de medição (detetado automaticamente)',
             insulin_value: 'Sensor de insulina ativa (opcional)',
             show_prediction: 'Previsão de glicose',
             relative_time: 'Mostrar há quanto tempo em vez da hora',
@@ -402,7 +407,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glukossensor',
             glucose_trend: 'Trendsensor (identifieras automatiskt)',
-            timestamp_attribute: 'Attribut för mättid (valfritt)',
+            glucose_time: 'Mättidssensor (identifieras automatiskt)',
             insulin_value: 'Sensor för aktivt insulin (valfritt)',
             show_prediction: 'Glukosprognos',
             relative_time: 'Visa mätningens ålder i stället för klockan',
@@ -441,7 +446,7 @@ export const languages = {
         editor: {
             glucose_value: 'Senzor glykemie',
             glucose_trend: 'Senzor trendu (detekován automaticky)',
-            timestamp_attribute: 'Atribut času měření (volitelné)',
+            glucose_time: 'Senzor času měření (detekován automaticky)',
             insulin_value: 'Senzor aktivního inzulínu (volitelné)',
             show_prediction: 'Předpověď glykemie',
             relative_time: 'Zobrazit stáří měření místo času',
@@ -480,7 +485,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Tendenssensor (outomaties bespeur)',
-            timestamp_attribute: 'Attribuut vir metingstyd (opsioneel)',
+            glucose_time: 'Metingstydsensor (outomaties bespeur)',
             insulin_value: 'Aktiewe insulien-sensor (opsioneel)',
             show_prediction: 'Glukosevoorspelling',
             relative_time: 'Wys ouderdom van meting in plaas van die klok',
@@ -519,7 +524,7 @@ export const languages = {
         editor: {
             glucose_value: 'مستشعر الجلوكوز',
             glucose_trend: 'مستشعر الاتجاه (يُكتشف تلقائيًا)',
-            timestamp_attribute: 'خاصية وقت القياس (اختياري)',
+            glucose_time: 'مستشعر وقت القياس (يُكتشف تلقائيًا)',
             insulin_value: 'مستشعر الأنسولين النشط (اختياري)',
             show_prediction: 'توقع الجلوكوز',
             relative_time: 'عرض عمر القياس بدلاً من الساعة',
@@ -558,8 +563,8 @@ export const languages = {
         editor: {
             glucose_value: 'Сензор за глюкоза',
             glucose_trend: 'Сензор за тенденция (открива се автоматично)',
-            timestamp_attribute:
-                'Атрибут за време на измерване (незадължително)',
+            glucose_time:
+                'Сензор за време на измерване (открива се автоматично)',
             insulin_value: 'Сензор за активен инсулин (по избор)',
             show_prediction: 'Прогноза за глюкоза',
             relative_time: 'Показване на възрастта вместо часа',
@@ -598,7 +603,7 @@ export const languages = {
         editor: {
             glucose_value: 'গ্লুকোজ সেন্সর',
             glucose_trend: 'প্রবণতা সেন্সর (স্বয়ংক্রিয়ভাবে শনাক্ত)',
-            timestamp_attribute: 'পরিমাপের সময়ের অ্যাট্রিবিউট (ঐচ্ছিক)',
+            glucose_time: 'পরিমাপের সময়ের সেন্সর (স্বয়ংক্রিয়ভাবে শনাক্ত)',
             insulin_value: 'সক্রিয় ইনসুলিন সেন্সর (ঐচ্ছিক)',
             show_prediction: 'গ্লুকোজ পূর্বাভাস',
             relative_time: 'ঘড়ির বদলে পরিমাপের বয়স দেখান',
@@ -637,7 +642,7 @@ export const languages = {
         editor: {
             glucose_value: 'Senzor glukoze',
             glucose_trend: 'Senzor trenda (automatski otkriven)',
-            timestamp_attribute: 'Atribut vremena mjerenja (opcionalno)',
+            glucose_time: 'Senzor vremena mjerenja (automatski otkriven)',
             insulin_value: 'Sensor aktivnog inzulina (opciono)',
             show_prediction: 'Prognoza glukoze',
             relative_time: 'Prikaži starost mjerenja umjesto sata',
@@ -676,7 +681,8 @@ export const languages = {
         editor: {
             glucose_value: 'Sensor de glucosa',
             glucose_trend: 'Sensor de tendència (detectat automàticament)',
-            timestamp_attribute: 'Atribut de l’hora de mesura (opcional)',
+            glucose_time:
+                'Sensor de l’hora de mesura (detectat automàticament)',
             insulin_value: "Sensor d'insulina activa (opcional)",
             show_prediction: 'Previsió de glucosa',
             relative_time: 'Mostra l’antiguitat en lloc de l’hora',
@@ -715,7 +721,8 @@ export const languages = {
         editor: {
             glucose_value: 'Synhwyrydd glwcos',
             glucose_trend: 'Synhwyrydd tuedd (canfyddir yn awtomatig)',
-            timestamp_attribute: 'Priodoledd amser y mesuriad (dewisol)',
+            glucose_time:
+                'Synhwyrydd amser y mesuriad (canfyddir yn awtomatig)',
             insulin_value: 'Synhwyrydd inswlin weithredol (dewisol)',
             show_prediction: 'Rhagolwg glwcos',
             relative_time: "Dangos oedran y mesuriad yn lle'r cloc",
@@ -754,7 +761,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Tendenssensor (registreres automatisk)',
-            timestamp_attribute: 'Attribut for måletidspunkt (valgfrit)',
+            glucose_time: 'Sensor for måletidspunkt (registreres automatisk)',
             insulin_value: 'Sensor for aktivt insulin (valgfrit)',
             show_prediction: 'Glukoseprognose',
             relative_time: 'Vis målingens alder i stedet for klokkeslæt',
@@ -793,7 +800,7 @@ export const languages = {
         editor: {
             glucose_value: 'Αισθητήρας γλυκόζης',
             glucose_trend: 'Αισθητήρας τάσης (αυτόματος εντοπισμός)',
-            timestamp_attribute: 'Ιδιότητα ώρας μέτρησης (προαιρετικό)',
+            glucose_time: 'Αισθητήρας ώρας μέτρησης (αυτόματος εντοπισμός)',
             insulin_value: 'Αισθητήρας ενεργού ινσουλίνης (προαιρετικό)',
             show_prediction: 'Πρόβλεψη γλυκόζης',
             relative_time: 'Εμφάνιση ηλικίας μέτρησης αντί για ώρα',
@@ -832,7 +839,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glucose sensor',
             glucose_trend: 'Trend sensor (auto-detected)',
-            timestamp_attribute: 'Reading time attribute (optional)',
+            glucose_time: 'Reading time sensor (auto-detected)',
             insulin_value: 'Active insulin sensor (optional)',
             show_prediction: 'Glucose forecast',
             relative_time: 'Show reading age instead of the clock',
@@ -871,7 +878,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glukoza sensilo',
             glucose_trend: 'Tendenca sensilo (aŭtomate detektita)',
-            timestamp_attribute: 'Atributo de mezurtempo (nedeviga)',
+            glucose_time: 'Sensilo de mezurtempo (aŭtomate detektita)',
             insulin_value: 'Sensilo de aktiva insulino (opcia)',
             show_prediction: 'Glukoza prognozo',
             relative_time: 'Montri aĝon de mezuro anstataŭ horloĝon',
@@ -910,7 +917,8 @@ export const languages = {
         editor: {
             glucose_value: 'Sensor de glucosa',
             glucose_trend: 'Sensor de tendencia (detección automática)',
-            timestamp_attribute: 'Atributo de la hora de medición (opcional)',
+            glucose_time:
+                'Sensor de la hora de medición (detección automática)',
             insulin_value: 'Sensor de insulina activa (opcional)',
             show_prediction: 'Pronóstico de glucosa',
             relative_time: 'Mostrar la antigüedad en lugar de la hora',
@@ -949,7 +957,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glükoosiandur',
             glucose_trend: 'Trendiandur (tuvastatakse automaatselt)',
-            timestamp_attribute: 'Mõõtmisaja atribuut (valikuline)',
+            glucose_time: 'Mõõtmisaja andur (tuvastatakse automaatselt)',
             insulin_value: 'Aktiivse insuliini andur (valikuline)',
             show_prediction: 'Glükoosi prognoos',
             relative_time: 'Näita mõõtmise vanust kellaaja asemel',
@@ -988,7 +996,8 @@ export const languages = {
         editor: {
             glucose_value: 'Glukosa sentsorea',
             glucose_trend: 'Joera sentsorea (automatikoki hautemana)',
-            timestamp_attribute: 'Neurketa orduaren atributua (aukerakoa)',
+            glucose_time:
+                'Neurketa orduaren sentsorea (automatikoki hautemana)',
             insulin_value: 'Insulina aktiboaren sentsorea (aukerakoa)',
             show_prediction: 'Glukosa iragarpena',
             relative_time: 'Erakutsi neurketaren adina orduaren ordez',
@@ -1028,7 +1037,7 @@ export const languages = {
         editor: {
             glucose_value: 'حسگر قند خون',
             glucose_trend: 'حسگر روند (تشخیص خودکار)',
-            timestamp_attribute: 'ویژگی زمان اندازه‌گیری (اختیاری)',
+            glucose_time: 'حسگر زمان اندازه‌گیری (تشخیص خودکار)',
             insulin_value: 'حسگر انسولین فعال (اختیاری)',
             show_prediction: 'پیش‌بینی قند خون',
             relative_time: 'نمایش زمان سپری‌شده به جای ساعت',
@@ -1067,7 +1076,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glukoosianturi',
             glucose_trend: 'Trendianturi (tunnistetaan automaattisesti)',
-            timestamp_attribute: 'Mittausajan attribuutti (valinnainen)',
+            glucose_time: 'Mittausajan anturi (tunnistetaan automaattisesti)',
             insulin_value: 'Aktiivisen insuliinin anturi (valinnainen)',
             show_prediction: 'Glukoosiennuste',
             relative_time: 'Näytä mittauksen ikä kellonajan sijaan',
@@ -1106,7 +1115,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glukoazesensor',
             glucose_trend: 'Trendsensor (automatysk fûn)',
-            timestamp_attribute: 'Attribút fan de mjittiid (opsjoneel)',
+            glucose_time: 'Sensor fan de mjittiid (automatysk fûn)',
             insulin_value: 'Aktive ynsuline-sensor (opsjoneel)',
             show_prediction: 'Glukoazeferwachting',
             relative_time: 'Toan âldens fan de mjitting ynstee fan de klok',
@@ -1145,7 +1154,7 @@ export const languages = {
         editor: {
             glucose_value: 'Braiteoir glúcóis',
             glucose_trend: 'Braiteoir treochta (aimsithe go huathoibríoch)',
-            timestamp_attribute: 'Aitreabúid am an tomhais (roghnach)',
+            glucose_time: 'Braiteoir am an tomhais (aimsithe go huathoibríoch)',
             insulin_value: 'Mothaireoir inslin gníomhaigh (roghnach)',
             show_prediction: 'Réamhaisnéis glúcóis',
             relative_time: 'Taispeáin aois an tomhais in ionad an chloig',
@@ -1186,7 +1195,8 @@ export const languages = {
         editor: {
             glucose_value: 'Sensor de glicosa',
             glucose_trend: 'Sensor de tendencia (detectado automaticamente)',
-            timestamp_attribute: 'Atributo da hora de medición (opcional)',
+            glucose_time:
+                'Sensor da hora de medición (detectado automaticamente)',
             insulin_value: 'Sensor de insulina activa (opcional)',
             show_prediction: 'Previsión de glicosa',
             relative_time: 'Amosar a antigüidade en lugar da hora',
@@ -1225,7 +1235,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Trendsensor (automatisch erkennt)',
-            timestamp_attribute: 'Attribut vo de Mässziit (optional)',
+            glucose_time: 'Sensor für d Mässziit (automatisch erkennt)',
             insulin_value: 'Sensor für aktivi Insulin (optional)',
             show_prediction: 'Glukoseprognose',
             relative_time: 'Alter vo de Mässig statt de Uhrziit zeige',
@@ -1264,7 +1274,7 @@ export const languages = {
         editor: {
             glucose_value: 'חיישן גלוקוז',
             glucose_trend: 'חיישן מגמה (זיהוי אוטומטי)',
-            timestamp_attribute: 'מאפיין זמן המדידה (אופציונלי)',
+            glucose_time: 'חיישן זמן המדידה (זיהוי אוטומטי)',
             insulin_value: 'חיישן אינסולין פעיל (לא חובה)',
             show_prediction: 'תחזית גלוקוז',
             relative_time: 'הצג את גיל המדידה במקום השעה',
@@ -1303,7 +1313,7 @@ export const languages = {
         editor: {
             glucose_value: 'ग्लूकोज सेंसर',
             glucose_trend: 'रुझान सेंसर (स्वतः पहचाना गया)',
-            timestamp_attribute: 'माप समय विशेषता (वैकल्पिक)',
+            glucose_time: 'माप समय सेंसर (स्वतः पहचाना गया)',
             insulin_value: 'सक्रिय इंसुलिन सेंसर (वैकल्पिक)',
             show_prediction: 'ग्लूकोज पूर्वानुमान',
             relative_time: 'घड़ी के बजाय माप की आयु दिखाएँ',
@@ -1342,7 +1352,7 @@ export const languages = {
         editor: {
             glucose_value: 'Senzor glukoze',
             glucose_trend: 'Senzor trenda (automatski otkriven)',
-            timestamp_attribute: 'Atribut vremena mjerenja (neobavezno)',
+            glucose_time: 'Senzor vremena mjerenja (automatski otkriven)',
             insulin_value: 'Senzor aktivnog inzulina (neobavezno)',
             show_prediction: 'Prognoza glukoze',
             relative_time: 'Prikaži starost mjerenja umjesto sata',
@@ -1381,7 +1391,7 @@ export const languages = {
         editor: {
             glucose_value: 'Vércukorszenzor',
             glucose_trend: 'Trendszenzor (automatikusan felismert)',
-            timestamp_attribute: 'A mérés idejének attribútuma (opcionális)',
+            glucose_time: 'A mérés idejének szenzora (automatikusan felismert)',
             insulin_value: 'Aktív inzulin érzékelő (opcionális)',
             show_prediction: 'Vércukor-előrejelzés',
             relative_time: 'A mérés kora az óra helyett',
@@ -1420,7 +1430,7 @@ export const languages = {
         editor: {
             glucose_value: 'Գլյուկոզի սենսոր',
             glucose_trend: 'Միտման սենսոր (հայտնաբերվում է ավտոմատ)',
-            timestamp_attribute: 'Չափման ժամանակի հատկանիշ (ըստ ցանկության)',
+            glucose_time: 'Չափման ժամանակի սենսոր (հայտնաբերվում է ավտոմատ)',
             insulin_value: 'Ակտիվ ինսուլինի սենսոր (ընտրովի)',
             show_prediction: 'Գլյուկոզի կանխատեսում',
             relative_time: 'Ցուցադրել չափման վաղեմությունը ժամի փոխարեն',
@@ -1459,7 +1469,7 @@ export const languages = {
         editor: {
             glucose_value: 'Sensor glukosa',
             glucose_trend: 'Sensor tren (terdeteksi otomatis)',
-            timestamp_attribute: 'Atribut waktu pengukuran (opsional)',
+            glucose_time: 'Sensor waktu pengukuran (terdeteksi otomatis)',
             insulin_value: 'Sensor insulin aktif (opsional)',
             show_prediction: 'Prakiraan glukosa',
             relative_time: 'Tampilkan usia pengukuran alih-alih jam',
@@ -1498,7 +1508,7 @@ export const languages = {
         editor: {
             glucose_value: 'Blóðsykursskynjari',
             glucose_trend: 'Þróunarskynjari (greindur sjálfkrafa)',
-            timestamp_attribute: 'Eigindi mælingartíma (valfrjálst)',
+            glucose_time: 'Skynjari mælingartíma (greindur sjálfkrafa)',
             insulin_value: 'Næmisti fyrir virkt insúlíni (valfrjálst)',
             show_prediction: 'Blóðsykursspá',
             relative_time: 'Sýna aldur mælingar í stað klukku',
@@ -1537,7 +1547,7 @@ export const languages = {
         editor: {
             glucose_value: '血糖センサー',
             glucose_trend: 'トレンドセンサー（自動検出）',
-            timestamp_attribute: '測定時刻の属性（任意）',
+            glucose_time: '測定時刻センサー（自動検出）',
             insulin_value: 'アクティブインスリンセンサー（任意）',
             show_prediction: '血糖予測',
             relative_time: '時刻の代わりに経過時間を表示',
@@ -1576,7 +1586,7 @@ export const languages = {
         editor: {
             glucose_value: 'გლუკოზის სენსორი',
             glucose_trend: 'ტენდენციის სენსორი (ავტომატურად აღმოჩენილი)',
-            timestamp_attribute: 'გაზომვის დროის ატრიბუტი (არასავალდებულო)',
+            glucose_time: 'გაზომვის დროის სენსორი (ავტომატურად აღმოჩენილი)',
             insulin_value: 'აქტიური ინსულინის სენსორი (არასავალდებულო)',
             show_prediction: 'გლუკოზის პროგნოზი',
             relative_time: 'აჩვენე გაზომვის ასაკი საათის ნაცვლად',
@@ -1615,7 +1625,7 @@ export const languages = {
         editor: {
             glucose_value: '혈당 센서',
             glucose_trend: '추세 센서 (자동 감지)',
-            timestamp_attribute: '측정 시각 속성 (선택 사항)',
+            glucose_time: '측정 시각 센서 (자동 감지)',
             insulin_value: '활성 인슐린 센서(선택 사항)',
             show_prediction: '혈당 예측',
             relative_time: '시계 대신 측정 경과 시간 표시',
@@ -1654,7 +1664,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Trendsensor (automatesch erkannt)',
-            timestamp_attribute: 'Attribut vun der Moosszäit (fakultativ)',
+            glucose_time: 'Sensor fir d’Moosszäit (automatesch erkannt)',
             insulin_value: 'Sensor fir aktiv Insulin (optional)',
             show_prediction: 'Glukoseprognos',
             relative_time: 'Alter vun der Miessung amplaz vun der Auer weisen',
@@ -1693,7 +1703,7 @@ export const languages = {
         editor: {
             glucose_value: 'Gliukozės jutiklis',
             glucose_trend: 'Tendencijos jutiklis (aptinkamas automatiškai)',
-            timestamp_attribute: 'Matavimo laiko atributas (nebūtinas)',
+            glucose_time: 'Matavimo laiko jutiklis (aptinkamas automatiškai)',
             insulin_value: 'Aktyvaus insulino jutiklis (pasirinktinai)',
             show_prediction: 'Gliukozės prognozė',
             relative_time: 'Rodyti matavimo amžių vietoj laikrodžio',
@@ -1732,7 +1742,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glikozes sensors',
             glucose_trend: 'Tendences sensors (nosaka automātiski)',
-            timestamp_attribute: 'Mērījuma laika atribūts (neobligāts)',
+            glucose_time: 'Mērījuma laika sensors (nosaka automātiski)',
             insulin_value: 'Aktīvā insulīna sensors (pēc izvēles)',
             show_prediction: 'Glikozes prognoze',
             relative_time: 'Rādīt mērījuma vecumu, nevis pulksteni',
@@ -1771,7 +1781,7 @@ export const languages = {
         editor: {
             glucose_value: 'Сензор за гликоза',
             glucose_trend: 'Сензор за тренд (автоматски откриен)',
-            timestamp_attribute: 'Атрибут за време на мерење (опционално)',
+            glucose_time: 'Сензор за време на мерење (автоматски откриен)',
             insulin_value: 'Сензор за активен инсулин (опционално)',
             show_prediction: 'Прогноза за гликоза',
             relative_time: 'Прикажи старост на мерењето наместо часовникот',
@@ -1810,8 +1820,7 @@ export const languages = {
         editor: {
             glucose_value: 'ഗ്ലൂക്കോസ് സെൻസർ',
             glucose_trend: 'പ്രവണത സെൻസർ (സ്വയമേവ കണ്ടെത്തുന്നു)',
-            timestamp_attribute:
-                'അളവെടുപ്പ് സമയത്തിന്റെ ആട്രിബ്യൂട്ട് (ഓപ്ഷണൽ)',
+            glucose_time: 'അളവെടുപ്പ് സമയ സെൻസർ (സ്വയമേവ കണ്ടെത്തുന്നു)',
             insulin_value: 'ആക്ടീവ് ഇൻസുലിൻ സെൻസർ (ഓപ്ഷണൽ)',
             show_prediction: 'ഗ്ലൂക്കോസ് പ്രവചനം',
             relative_time: 'ക്ലോക്കിനു പകരം അളവെടുപ്പിന്റെ പഴക്കം കാണിക്കുക',
@@ -1850,7 +1859,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Trendsensor (oppdages automatisk)',
-            timestamp_attribute: 'Attributt for måletidspunkt (valgfritt)',
+            glucose_time: 'Sensor for måletidspunkt (oppdages automatisk)',
             insulin_value: 'Sensor for aktivt insulin (valgfritt)',
             show_prediction: 'Glukoseprognose',
             relative_time: 'Vis målingens alder i stedet for klokkeslett',
@@ -1889,7 +1898,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glukosesensor',
             glucose_trend: 'Trendsensor (blir oppdaga automatisk)',
-            timestamp_attribute: 'Attributt for måletidspunkt (valfritt)',
+            glucose_time: 'Sensor for måletidspunkt (blir oppdaga automatisk)',
             insulin_value: 'Sensor for aktivt insulin (valfritt)',
             show_prediction: 'Glukoseprognose',
             relative_time: 'Vis alderen på målinga i staden for klokkeslett',
@@ -1928,7 +1937,8 @@ export const languages = {
         editor: {
             glucose_value: 'Sensor de glicose',
             glucose_trend: 'Sensor de tendência (detectado automaticamente)',
-            timestamp_attribute: 'Atributo da hora da medição (opcional)',
+            glucose_time:
+                'Sensor da hora da medição (detectado automaticamente)',
             insulin_value: 'Sensor de insulina ativa (opcional)',
             show_prediction: 'Previsão de glicose',
             relative_time: 'Mostrar há quanto tempo em vez da hora',
@@ -1967,7 +1977,7 @@ export const languages = {
         editor: {
             glucose_value: 'Senzor de glicemie',
             glucose_trend: 'Senzor de tendință (detectat automat)',
-            timestamp_attribute: 'Atributul orei măsurării (opțional)',
+            glucose_time: 'Senzorul orei măsurării (detectat automat)',
             insulin_value: 'Senzor de insulină activă (opțional)',
             show_prediction: 'Prognoza glicemiei',
             relative_time: 'Afișează vechimea măsurării în loc de oră',
@@ -2006,7 +2016,7 @@ export const languages = {
         editor: {
             glucose_value: 'Senzor glykémie',
             glucose_trend: 'Senzor trendu (zistený automaticky)',
-            timestamp_attribute: 'Atribút času merania (voliteľné)',
+            glucose_time: 'Senzor času merania (zistený automaticky)',
             insulin_value: 'Senzor aktívneho inzulínu (voliteľné)',
             show_prediction: 'Predpoveď glykémie',
             relative_time: 'Zobraziť vek merania namiesto času',
@@ -2045,7 +2055,7 @@ export const languages = {
         editor: {
             glucose_value: 'Senzor glukoze',
             glucose_trend: 'Senzor trenda (samodejno zaznan)',
-            timestamp_attribute: 'Atribut časa meritve (izbirno)',
+            glucose_time: 'Senzor časa meritve (samodejno zaznan)',
             insulin_value: 'Senzor aktivnega insulina (neobvezno)',
             show_prediction: 'Napoved glukoze',
             relative_time: 'Prikaži starost meritve namesto ure',
@@ -2084,7 +2094,7 @@ export const languages = {
         editor: {
             glucose_value: 'Sensori i glukozës',
             glucose_trend: 'Sensori i tendencës (zbulohet automatikisht)',
-            timestamp_attribute: 'Atributi i kohës së matjes (opsional)',
+            glucose_time: 'Sensori i kohës së matjes (zbulohet automatikisht)',
             insulin_value: 'Sensor i insulinës aktive (opsionale)',
             show_prediction: 'Parashikimi i glukozës',
             relative_time: 'Shfaq moshën e matjes në vend të orës',
@@ -2123,7 +2133,7 @@ export const languages = {
         editor: {
             glucose_value: 'Сензор глукозе',
             glucose_trend: 'Сензор тренда (аутоматски откривен)',
-            timestamp_attribute: 'Атрибут времена мерења (опционо)',
+            glucose_time: 'Сензор времена мерења (аутоматски откривен)',
             insulin_value: 'Сензор активног инсулина (опционо)',
             show_prediction: 'Прогноза глукозе',
             relative_time: 'Прикажи старост мерења уместо сата',
@@ -2162,7 +2172,7 @@ export const languages = {
         editor: {
             glucose_value: 'Senzor glukoze',
             glucose_trend: 'Senzor trenda (automatski otkriven)',
-            timestamp_attribute: 'Atribut vremena merenja (opciono)',
+            glucose_time: 'Senzor vremena merenja (automatski otkriven)',
             insulin_value: 'Sensor aktivnog inzulina (opciono)',
             show_prediction: 'Prognoza glukoze',
             relative_time: 'Prikaži starost merenja umesto sata',
@@ -2201,7 +2211,7 @@ export const languages = {
         editor: {
             glucose_value: 'குளுக்கோஸ் உணரி',
             glucose_trend: 'போக்கு உணரி (தானாகக் கண்டறியப்படும்)',
-            timestamp_attribute: 'அளவீட்டு நேரப் பண்பு (விருப்பத்தேர்வு)',
+            glucose_time: 'அளவீட்டு நேர உணரி (தானாகக் கண்டறியப்படும்)',
             insulin_value: 'செயல்பாட்டு இன்சுலின் சென்சார் (விருப்பம்)',
             show_prediction: 'குளுக்கோஸ் முன்னறிவிப்பு',
             relative_time: 'கடிகாரத்திற்குப் பதிலாக அளவீட்டின் வயதைக் காட்டு',
@@ -2242,7 +2252,7 @@ export const languages = {
         editor: {
             glucose_value: 'గ్లూకోజ్ సెన్సార్',
             glucose_trend: 'ధోరణి సెన్సార్ (స్వయంచాలకంగా గుర్తించబడింది)',
-            timestamp_attribute: 'కొలత సమయ లక్షణం (ఐచ్ఛికం)',
+            glucose_time: 'కొలత సమయ సెన్సార్ (స్వయంచాలకంగా గుర్తించబడింది)',
             insulin_value: 'యాక్టివ్ ఇన్సులిన్ సెన్సార్ (ఐచ్ఛికం)',
             show_prediction: 'గ్లూకోజ్ అంచనా',
             relative_time: 'గడియారానికి బదులుగా కొలత వయస్సును చూపు',
@@ -2281,7 +2291,7 @@ export const languages = {
         editor: {
             glucose_value: 'เซ็นเซอร์น้ำตาลในเลือด',
             glucose_trend: 'เซ็นเซอร์แนวโน้ม (ตรวจพบอัตโนมัติ)',
-            timestamp_attribute: 'แอตทริบิวต์เวลาที่วัด (ไม่บังคับ)',
+            glucose_time: 'เซ็นเซอร์เวลาที่วัด (ตรวจพบอัตโนมัติ)',
             insulin_value: 'เซนเซอร์อินซูลินที่ใช้งานอยู่ (ไม่บังคับ)',
             show_prediction: 'การคาดการณ์ระดับน้ำตาล',
             relative_time: 'แสดงอายุของค่าที่วัดแทนนาฬิกา',
@@ -2320,7 +2330,7 @@ export const languages = {
         editor: {
             glucose_value: 'Glukoz sensörü',
             glucose_trend: 'Eğilim sensörü (otomatik algılanır)',
-            timestamp_attribute: 'Ölçüm zamanı özniteliği (isteğe bağlı)',
+            glucose_time: 'Ölçüm zamanı sensörü (otomatik algılanır)',
             insulin_value: 'Aktif insülin sensörü (isteğe bağlı)',
             show_prediction: 'Glukoz tahmini',
             relative_time: 'Saat yerine ölçümün yaşını göster',
@@ -2360,7 +2370,7 @@ export const languages = {
         editor: {
             glucose_value: 'گلوکوز سینسر',
             glucose_trend: 'رجحان سینسر (خودکار طور پر پہچانا گیا)',
-            timestamp_attribute: 'پیمائش کے وقت کی خصوصیت (اختیاری)',
+            glucose_time: 'پیمائش کے وقت کا سینسر (خودکار طور پر پہچانا گیا)',
             insulin_value: 'فعال انسولین سینسر (اختیاری)',
             show_prediction: 'گلوکوز کی پیش گوئی',
             relative_time: 'گھڑی کے بجائے پیمائش کی عمر دکھائیں',
@@ -2399,7 +2409,7 @@ export const languages = {
         editor: {
             glucose_value: 'Cảm biến đường huyết',
             glucose_trend: 'Cảm biến xu hướng (tự động phát hiện)',
-            timestamp_attribute: 'Thuộc tính thời gian đo (tùy chọn)',
+            glucose_time: 'Cảm biến thời gian đo (tự động phát hiện)',
             insulin_value: 'Cảm biến insulin đang hoạt động (tùy chọn)',
             show_prediction: 'Dự báo đường huyết',
             relative_time: 'Hiển thị thời gian trôi qua thay vì giờ',
@@ -2438,7 +2448,7 @@ export const languages = {
         editor: {
             glucose_value: '血糖传感器',
             glucose_trend: '趋势传感器（自动检测）',
-            timestamp_attribute: '测量时间属性（可选）',
+            glucose_time: '测量时间传感器（自动检测）',
             insulin_value: '活性胰岛素传感器（可选）',
             show_prediction: '血糖预测',
             relative_time: '显示读数经过时间而非时钟',
@@ -2477,7 +2487,7 @@ export const languages = {
         editor: {
             glucose_value: '血糖感測器',
             glucose_trend: '趨勢感測器（自動偵測）',
-            timestamp_attribute: '量測時間屬性（選填）',
+            glucose_time: '量測時間感測器（自動偵測）',
             insulin_value: '活性胰島素感應器（選填）',
             show_prediction: '血糖預測',
             relative_time: '顯示讀數經過時間而非時鐘',

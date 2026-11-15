@@ -13,7 +13,7 @@ const KEYS = [
     'card.description',
     'editor.glucose_value',
     'editor.glucose_trend',
-    'editor.timestamp_attribute',
+    'editor.glucose_time',
     'editor.insulin_value',
     'editor.show_prediction',
     'editor.relative_time',

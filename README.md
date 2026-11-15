@@ -40,10 +40,11 @@ Just select your glucose sensor — the card figures out the rest automatically.
 
 Community integrations beyond the table work as glucose sources too, with two
 limits. Their trend usually lives in a separate entity (`*_bg_direction`,
-`*_glucose_trend`) rather than an attribute, so point `glucose_trend` at it
+`*_glucose_trend`) rather than an attribute, so pick it as the trend sensor
 (the card already speaks the Nightscout directions those entities publish);
-and none of them reports the measurement time in a shape the card reads, so
-the clock falls back to `last_updated`.
+and none of them reports the measurement time where the card looks, so pick
+their timestamp sensor as the reading time sensor; otherwise the clock falls
+back to `last_updated`.
 
 ## Installation
 
@@ -73,6 +74,8 @@ Or install it by hand:
 2. Choose "Custom: SugarTV Card"
 3. Use the visual editor to configure:
     - Select glucose value sensor
+    - Pick a trend or a reading time sensor, only if the card does not find
+      them by itself
     - Point at an active insulin sensor, optionally
     - Toggle prediction display
     - Toggle color-coded glucose zones
@@ -90,8 +93,8 @@ glucose_value: sensor.jane_glucose_value
 # Full config with all options
 type: custom:sugartv-card
 glucose_value: sensor.jane_glucose_value
-glucose_trend: sensor.jane_glucose_trend # optional override
-timestamp_attribute: measurement_timestamp # optional override
+glucose_trend: sensor.jane_glucose_trend # only if not auto-detected
+glucose_time: sensor.jane_last_glucose_update # only if not auto-detected
 insulin_value: sensor.jane_active_insulin # optional
 show_prediction: true
 color_thresholds: true
@@ -112,8 +115,9 @@ for example, builds the id from your account username, so it is
 | Option                | Type      | Default              | What it does                                                                      |
 | --------------------- | --------- | -------------------- | --------------------------------------------------------------------------------- |
 | `glucose_value`       | entity id | required             | The sensor holding the reading. Everything else is derived from it.               |
-| `glucose_trend`       | entity id | auto-detected        | Point at the trend entity when the card cannot find it. YAML only.                |
-| `timestamp_attribute` | string    | auto-detected        | Attribute holding the measurement time, for an integration not listed above.      |
+| `glucose_trend`       | entity id | auto-detected        | Point at the trend entity when the card cannot find it.                           |
+| `glucose_time`        | entity id | auto-detected        | A timestamp sensor holding the measurement time, when the card cannot find it.    |
+| `timestamp_attribute` | string    | auto-detected        | An attribute of the glucose sensor holding the measurement time. YAML only.       |
 | `insulin_value`       | entity id | none                 | An active insulin (IOB) sensor, drawn as a line above the reading.                |
 | `show_prediction`     | boolean   | `true`               | The line of text under the reading.                                               |
 | `relative_time`       | boolean   | `false`              | Show the reading's age ("14 min ago") in place of the clock.                      |
@@ -122,8 +126,8 @@ for example, builds the id from your account username, so it is
 | `thresholds`          | object    | AGP/TIR for the unit | `urgent_low`, `low`, `high`, `urgent_high`, in whatever unit your sensor reports. |
 | `locale`              | string    | your HA language     | Formats the clock and the number, for example `en-GB` or `ru-RU`. YAML only.      |
 
-`glucose_trend` and `locale` are the two you have to write by hand; the rest are
-in the visual editor.
+`timestamp_attribute` and `locale` are the two you have to write by hand; the
+rest are in the visual editor.
 
 #### Where the clock format and the decimal separator come from
 
@@ -257,14 +261,15 @@ dimming of stale data.
 
 The card resolves it in this order:
 
-1. The attribute named by `timestamp_attribute`, if you set one.
-2. A `measurement_timestamp` attribute (LibreView).
-3. A `date` attribute, but only on a sensor that also carries Nightscout's
+1. The sensor picked as `glucose_time`, if you set one.
+2. The attribute named by `timestamp_attribute`, if you set one.
+3. A `measurement_timestamp` attribute (LibreView).
+4. A `date` attribute, but only on a sensor that also carries Nightscout's
    `direction`/`delta` attributes, since `date` is a generic name.
-4. A sibling entity holding the time: `*last_glucose_update` (Carelink),
+5. A sibling entity holding the time: `*last_glucose_update` (Carelink),
    `*_last_measurement_timestamp` (LibreLink, dodog) or
    `*_minutes_since_update` (LibreLink, gillesvs).
-5. The entity's `last_updated`, then `last_changed`.
+6. The entity's `last_updated`, then `last_changed`.
 
 Both ISO date strings and epoch values (seconds or milliseconds) are accepted;
 anything unparseable falls back to the next step.
@@ -293,8 +298,8 @@ reports -118 minutes). A wrong age cannot be told apart from an old reading, so
 the card only trusts an age below the staleness threshold. Past it, the age and
 `last_updated` both say "stale" anyway.
 
-If your integration reports the measurement time under some other attribute of
-the glucose sensor, point the card at it with `timestamp_attribute`.
+For an integration not listed above, pick its timestamp sensor as the reading
+time sensor, or name the attribute in YAML with `timestamp_attribute`.
 
 #### Showing the age instead of the clock
 
@@ -419,7 +424,7 @@ is why the table above matches the tail of an id rather than the whole thing.
 
 **The trend is a question mark.** The card could not find a trend to go with the
 reading. It looks for a sibling entity next to your glucose sensor, so a renamed
-entity breaks the link. Set `glucose_trend` explicitly.
+entity breaks the link. Pick the trend sensor in the editor (`glucose_trend`).
 
 **The colours look wrong for my unit.** Thresholds are stored as plain numbers,
 so a set written for mg/dL means something very different against a mmol

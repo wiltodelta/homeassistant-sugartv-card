@@ -534,7 +534,7 @@ describe('Missing data scenarios', () => {
             );
             const glucoseState =
                 card.hass.states['sensor.dexcom_glucose_value'];
-            // The YAML override entity doesn't exist, so it falls through
+            // The picked trend entity doesn't exist, so it falls through
             expect(
                 card._resolveTrend('sensor.dexcom_glucose_value', glucoseState),
             ).toBe('unknown');
