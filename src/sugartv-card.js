@@ -312,6 +312,7 @@ class SugarTvCard extends LitElement {
     constructor() {
         super();
         this._data = this._getInitialDataState();
+        this._valueScale = 1;
     }
 
     connectedCallback() {
@@ -669,6 +670,7 @@ class SugarTvCard extends LitElement {
     }
 
     updated() {
+        this._measureValueFit();
         this._measureValueWidth();
         this._measureValueDescent();
         this._measureTimeFit();
@@ -700,22 +702,18 @@ class SugarTvCard extends LitElement {
         const text = time?.textContent?.trim();
         if (!wrapper || !container || !line || !value || !text) return;
 
-        const valueFont = parseFloat(getComputedStyle(value).fontSize);
+        const unit = this._valueUnitPx(value);
         const available =
-            container.clientWidth -
-            2 *
-                SugarTvCard.PADDING_UNITS *
-                (valueFont / SugarTvCard.VALUE_UNITS);
+            container.clientWidth - 2 * SugarTvCard.PADDING_UNITS * unit;
         const others =
             line.getBoundingClientRect().width -
             time.getBoundingClientRect().width;
-        if (!valueFont || !(available > 0)) return;
+        if (!unit || !(available > 0)) return;
 
         const context = SugarTvCard.measuringContext();
         if (!context) return;
         const style = getComputedStyle(time);
-        const unscaled =
-            SugarTvCard.TIME_UNITS * (valueFont / SugarTvCard.VALUE_UNITS);
+        const unscaled = SugarTvCard.TIME_UNITS * unit;
         context.font = `${style.fontWeight} ${unscaled}px ${style.fontFamily}`;
         const natural = context.measureText(text).width;
         if (!natural) return;
@@ -757,25 +755,21 @@ class SugarTvCard extends LitElement {
         const wrapper = this.renderRoot?.querySelector?.('.wrapper');
         const value = this.renderRoot?.querySelector?.('.value');
         if (!wrapper || !value) return;
+        // A word's per-character width says nothing about a number's. The word
+        // is fitted to the budget instead (_measureValueFit), which stays put.
+        if (!this._isReadable(this._data?.value)) return;
 
         const text = value.textContent?.trim();
         if (!text) return;
 
-        // .value is defined as 20u, which is how --u is recovered: the custom
-        // property itself reads back as the unresolved min() expression.
-        const fontSize = parseFloat(getComputedStyle(value).fontSize);
+        const unit = this._valueUnitPx(value);
         const width = value.getBoundingClientRect().width;
-        if (!fontSize || !width) return;
+        if (!unit || !width) return;
 
         // Tabular figures give every glyph the same advance, so a per-character
         // width taken from whatever is on screen holds for any other reading.
-        const perChar =
-            width / text.length / (fontSize / SugarTvCard.VALUE_UNITS);
-        const widest =
-            this._data.unit === SugarTvCard.UNITS.MMOLL
-                ? SugarTvCard.WIDEST_MMOL_CHARS
-                : SugarTvCard.WIDEST_MGDL_CHARS;
-        const widthInUnits = perChar * widest;
+        const perChar = width / text.length / unit;
+        const widthInUnits = perChar * this._widestChars();
         if (!Number.isFinite(widthInUnits) || widthInUnits <= 0) return;
 
         // Container padding is 5u a side, plus a unit of slack so a subpixel
@@ -820,23 +814,70 @@ class SugarTvCard extends LitElement {
         const text = value?.textContent?.trim();
         if (!wrapper || !text) return;
 
-        const style = getComputedStyle(value);
-        const fontSize = parseFloat(style.fontSize);
-        if (!fontSize) return;
-
-        const context = SugarTvCard.measuringContext();
+        const unit = this._valueUnitPx(value);
+        const context = unit && SugarTvCard.measuringContextFor(value);
         if (!context) return;
-        context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
 
         const ink = context.measureText(text).actualBoundingBoxDescent;
         if (!Number.isFinite(ink)) return;
 
-        const unit = fontSize / SugarTvCard.VALUE_UNITS;
         const descent = Math.round(Math.max(0, ink / unit) * 100) / 100;
         if (descent === this._valueDescent) return;
 
         this._valueDescent = descent;
         wrapper.style.setProperty('--value-descent', String(descent));
+    }
+
+    /**
+     * Shrink the not-available word to the width of the widest reading.
+     *
+     * --u is sized so a number fits beside the time and the trend, and the line
+     * may not wrap. A word in the number's place ("nedostupné", "Ikke
+     * tilgæng.", "غير متاح") overran the card and was clipped at both edges.
+     * Giving the word exactly the width the widest reading would take leaves
+     * every other measurement where a number would put it.
+     *
+     * Both widths are measured in the same font, so their ratio does not depend
+     * on the scale already applied and cannot oscillate.
+     */
+    _measureValueFit() {
+        const wrapper = this.renderRoot?.querySelector?.('.wrapper');
+        const value = this.renderRoot?.querySelector?.('.value');
+        const text = value?.textContent?.trim();
+        if (!wrapper || !text) return;
+
+        let scale = 1;
+        if (!this._isReadable(this._data?.value)) {
+            const context = SugarTvCard.measuringContextFor(value);
+            if (!context) return;
+            const natural = context.measureText(text).width;
+            const widest = context.measureText(
+                '0'.repeat(this._widestChars()),
+            ).width;
+            if (!natural || !widest) return;
+            // Floored, so rounding can never hand back the overflow.
+            scale = Math.min(1, Math.floor((widest / natural) * 100) / 100);
+        }
+        if (scale === this._valueScale) return;
+
+        this._valueScale = scale;
+        wrapper.style.setProperty('--value-scale', String(scale));
+    }
+
+    /*
+     * One --u in pixels. .value is defined as 20u times --value-scale, which is
+     * how --u is recovered: the custom property itself reads back as the
+     * unresolved min() expression.
+     */
+    _valueUnitPx(value) {
+        const fontSize = parseFloat(getComputedStyle(value).fontSize);
+        return fontSize / (SugarTvCard.VALUE_UNITS * this._valueScale) || 0;
+    }
+
+    _widestChars() {
+        return this._data?.unit === SugarTvCard.UNITS.MMOLL
+            ? SugarTvCard.WIDEST_MMOL_CHARS
+            : SugarTvCard.WIDEST_MGDL_CHARS;
     }
 
     // One canvas for the life of the page. Measuring is cheap; allocating a
@@ -853,6 +894,15 @@ class SugarTvCard extends LitElement {
             SugarTvCard._measuringContext = null;
         }
         return SugarTvCard._measuringContext;
+    }
+
+    // The shared canvas, set to the font an element renders in.
+    static measuringContextFor(element) {
+        const context = SugarTvCard.measuringContext();
+        if (!context) return null;
+        const style = getComputedStyle(element);
+        context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+        return context;
     }
 
     _updateData() {
@@ -1445,6 +1495,13 @@ class SugarTvCard extends LitElement {
         return SugarTvCard.isValidValue(value);
     }
 
+    // Whether the value renders as a number rather than the not-available word.
+    _isReadable(value) {
+        return (
+            this._isValidValue(value) && !isNaN(SugarTvCard.parseNumber(value))
+        );
+    }
+
     /**
      * Recover the sensor's polling interval from the gaps between its history
      * entries.
@@ -1601,18 +1658,11 @@ class SugarTvCard extends LitElement {
         this.dispatchEvent(event);
     }
     _formatValue(value) {
-        const localize = getLocalizer(this.config, this.hass);
-        if (!this._isValidValue(value)) {
-            return localize('common.not_available');
+        if (!this._isReadable(value)) {
+            return getLocalizer(this.config, this.hass)('common.not_available');
         }
 
         const numValue = SugarTvCard.parseNumber(value);
-
-        if (isNaN(numValue)) {
-            return localize('common.not_available');
-        }
-
-        const locale = this._locale();
         const isMmol = this._data.unit === SugarTvCard.UNITS.MMOLL;
 
         return numValue.toLocaleString(this._numberLocale(), {
@@ -1623,15 +1673,11 @@ class SugarTvCard extends LitElement {
     }
 
     _getGlucoseZone(value) {
-        if (!this._isValidValue(value)) {
+        if (!this._isReadable(value)) {
             return '';
         }
 
-        const numValue = parseFloat(String(value).replace(',', '.'));
-        if (isNaN(numValue)) {
-            return '';
-        }
-
+        const numValue = SugarTvCard.parseNumber(value);
         const unit = this._data.unit || SugarTvCard.UNITS.MGDL;
         const defaults =
             SugarTvCard.DEFAULT_THRESHOLDS[unit] ||

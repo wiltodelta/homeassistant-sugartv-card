@@ -152,8 +152,12 @@ export const cardStyles = css`
         white-space: nowrap;
     }
 
+    /*
+     * --value-scale is measured, and is 1 unless the value is the not-available
+     * word, which is shrunk to the width of the widest reading.
+     */
     .value {
-        font-size: calc(20 * var(--u));
+        font-size: calc(20 * var(--u) * var(--value-scale, 1));
     }
 
     .trend,

@@ -23,7 +23,8 @@ description: Type and layout metrics — measure ink not boxes, Range rect vs me
 
 ## Width budget
 
-- **Size the column budget from `width / --u`, measured once (it is scale-invariant), for the widest string the CURRENT UNIT allows.** Recover `--u` from `.value`'s font-size (20u); the custom property reads back unresolved.
+- **Size the column budget from `width / --u`, measured once (it is scale-invariant), for the widest string the CURRENT UNIT allows.** Recover `--u` through `_valueUnitPx()`, which divides `.value`'s font-size (20u times `--value-scale`) by both; the custom property reads back unresolved.
+- **A word in the reading's place (`common.not_available`) is shrunk to the widest reading's width by `--value-scale`, never left to clip.** Size the rest of the line for numbers; the column budget skips the word.
 
 ## Colour budget
 

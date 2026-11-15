@@ -100,9 +100,15 @@ function stubRenderRoot(card, { text = '145', fontSize = 80, width = 135 }) {
 
 function cardWithUnit(unit) {
     const card = new SugarTvCard();
-    card._data = { unit };
+    card._data = { unit, value: '145' };
     return card;
 }
+
+// The LAST write of one property, or null if it was never written.
+const lastWrite = (setProperty, name) => {
+    const calls = setProperty.mock.calls.filter(([n]) => n === name);
+    return calls.length ? Number(calls.at(-1)[1]) : null;
+};
 
 const lastBudget = (setProperty) => Number(setProperty.mock.calls.at(-1)[1]);
 
@@ -229,7 +235,7 @@ describe('column width budget', () => {
         });
 
         card._measureValueWidth();
-        card._data = { unit: 'mmol/L' };
+        card._data = { unit: 'mmol/L', value: '7.8' };
         card._measureValueWidth();
 
         expect(setProperty).toHaveBeenCalledTimes(2);
@@ -505,12 +511,7 @@ describe('fitting the reading time beside the reading', () => {
 
     // The LAST write, not the first: the settling test measures twice and it is
     // the second answer that says whether the result is stable.
-    const scaleOf = (setProperty) => {
-        const calls = setProperty.mock.calls.filter(
-            ([name]) => name === '--time-scale',
-        );
-        return calls.length ? Number(calls[calls.length - 1][1]) : null;
-    };
+    const scaleOf = (setProperty) => lastWrite(setProperty, '--time-scale');
 
     it('leaves a phrase that fits alone', () => {
         const card = new SugarTvCard();
@@ -602,5 +603,127 @@ describe('fitting the reading time beside the reading', () => {
         SugarTvCard._measuringContext = null;
 
         expect(() => card._measureTimeFit()).not.toThrow();
+    });
+});
+
+/*
+ * The line may not wrap and --u is sized for a number, so a word in the
+ * number's place ("nedostupné") ran off both edges of the card. The word is
+ * shrunk to the width the widest reading of the unit would take.
+ */
+describe('fitting the not-available word', () => {
+    let realGetComputedStyle;
+
+    beforeEach(() => {
+        realGetComputedStyle = globalThis.getComputedStyle;
+        SugarTvCard._measuringContext = undefined;
+    });
+
+    afterEach(() => {
+        globalThis.getComputedStyle = realGetComputedStyle;
+        SugarTvCard._measuringContext = undefined;
+    });
+
+    // Every digit is 10px wide, every other character 12px.
+    function stubWidths() {
+        SugarTvCard._measuringContext = {
+            font: '',
+            measureText: (text) => ({
+                width: [...text].reduce(
+                    (sum, ch) => sum + (/\d/.test(ch) ? 10 : 12),
+                    0,
+                ),
+            }),
+        };
+    }
+
+    const lastScale = (setProperty) => lastWrite(setProperty, '--value-scale');
+
+    it('shrinks a long word to the widest mg/dL reading', () => {
+        const card = new SugarTvCard();
+        card._data = { unit: 'mg/dL', value: 'unavailable' };
+        const { setProperty } = stubRenderRoot(card, { text: 'nedostupné' });
+        stubWidths();
+
+        card._measureValueFit();
+
+        // "000" is 30px against 120px of word.
+        expect(lastScale(setProperty)).toBe(0.25);
+    });
+
+    it('gives an mmol/L card the room of four characters', () => {
+        const card = new SugarTvCard();
+        card._data = { unit: 'mmol/L', value: 'unknown' };
+        const { setProperty } = stubRenderRoot(card, { text: 'nedostupné' });
+        stubWidths();
+
+        card._measureValueFit();
+
+        expect(lastScale(setProperty)).toBe(0.33);
+    });
+
+    it('leaves a word that already fits at full size', () => {
+        const card = new SugarTvCard();
+        card._data = { unit: 'mmol/L', value: 'unavailable' };
+        const { setProperty } = stubRenderRoot(card, { text: 'N/A' });
+        stubWidths();
+
+        card._measureValueFit();
+
+        expect(lastScale(setProperty)).toBe(null);
+        expect(card._valueScale).toBe(1);
+    });
+
+    it('restores the full size once a reading arrives', () => {
+        const card = new SugarTvCard();
+        card._data = { unit: 'mg/dL', value: 'unavailable' };
+        stubWidths();
+        const first = stubRenderRoot(card, { text: 'nedostupné' });
+        card._measureValueFit();
+        expect(lastScale(first.setProperty)).toBe(0.25);
+
+        card._data = { unit: 'mg/dL', value: '145' };
+        const second = stubRenderRoot(card, { text: '145' });
+        card._measureValueFit();
+
+        expect(lastScale(second.setProperty)).toBe(1);
+    });
+
+    it('never shrinks a number', () => {
+        const card = new SugarTvCard();
+        card._data = { unit: 'mg/dL', value: '145' };
+        const { setProperty } = stubRenderRoot(card, { text: '145' });
+        stubWidths();
+
+        card._measureValueFit();
+
+        expect(lastScale(setProperty)).toBe(null);
+    });
+
+    // A word's per-character width says nothing about a number's, so the
+    // column budget keeps the one the last reading set.
+    it('keeps the column budget while the word is shown', () => {
+        const card = new SugarTvCard();
+        card._data = { unit: 'mg/dL', value: 'unavailable' };
+        const { setProperty } = stubRenderRoot(card, {
+            text: 'nedostupné',
+            width: 300,
+        });
+
+        card._measureValueWidth();
+
+        expect(setProperty).not.toHaveBeenCalled();
+    });
+
+    // The shrunk font must not shrink --u with it, or the time and the descent
+    // would be measured against a unit a quarter of the real one.
+    it('recovers --u through the applied scale', () => {
+        const card = new SugarTvCard();
+        card._valueScale = 0.25;
+        stubRenderRoot(card, { text: 'nedostupné', fontSize: 20 });
+        const value = card.renderRoot.querySelector('.value');
+
+        // 20px at a quarter of 20u is the 80px a number would get: 4px a unit.
+        expect(card._valueUnitPx(value)).toBe(4);
     });
 });

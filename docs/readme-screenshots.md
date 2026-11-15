@@ -33,6 +33,11 @@ comma is already taken.
 | `loc`   | The card's locale. Default `en-US`.                           |
 | `label` | Caption under the card. `<b>` and `<br>` are allowed.         |
 
+VALUE may be a state rather than a number: `unavailable` renders the
+`common.not_available` word in the card's `loc`. The unit is one per page,
+`?unit=mmol/L` beside `?specs=` (default `mg/dL`), so a decimal VALUE without it
+is drawn as a rounded mg/dL reading.
+
 `shots.py` URL-encodes labels for you, and rejects one containing a comma, which
 would otherwise split the spec it belongs to.
 
