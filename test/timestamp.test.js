@@ -447,6 +447,19 @@ describe('Reading timestamp resolution', () => {
             expect(card._getCurrentState(value).reading_time).toBe(measured);
         });
 
+        it('reads the Dexcom glucose reading time entity (HA 2026.11+)', () => {
+            const measured = iso(4 * MINUTE);
+            const card = withSibling(
+                'sensor.jane_glucose_value',
+                'sensor.jane_glucose_reading_time',
+                measured,
+            );
+
+            expect(
+                card._getCurrentState('sensor.jane_glucose_value').reading_time,
+            ).toBe(measured);
+        });
+
         it('reads the dodog LibreLink last measurement timestamp entity', () => {
             const measured = iso(4 * MINUTE);
             const card = withSibling(

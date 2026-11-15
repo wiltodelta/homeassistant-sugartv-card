@@ -266,7 +266,8 @@ The card resolves it in this order:
 3. A `measurement_timestamp` attribute (LibreView).
 4. A `date` attribute, but only on a sensor that also carries Nightscout's
    `direction`/`delta` attributes, since `date` is a generic name.
-5. A sibling entity holding the time: `*last_glucose_update` (Carelink),
+5. A sibling entity holding the time: `*_glucose_reading_time` (Dexcom),
+   `*last_glucose_update` (Carelink),
    `*_last_measurement_timestamp` (LibreLink, dodog) or
    `*_minutes_since_update` (LibreLink, gillesvs).
 6. The entity's `last_updated`, then `last_changed`.
@@ -288,7 +289,8 @@ it. That is why the card prefers a time the integration itself reports.
 | Carelink             | Exact, from the `*last_glucose_update` entity                                  |
 | LibreLink (dodog)    | Exact, from the `*_last_measurement_timestamp` entity                          |
 | LibreLink (gillesvs) | To the minute while the reading is recent, from `*_minutes_since_update`       |
-| Dexcom, Nocturne     | Approximate: they publish no time at all, so a flat value can still look stale |
+| Dexcom               | Exact from `*_glucose_reading_time` (HA 2026.11+); approximate before          |
+| Nocturne             | Approximate: it publishes no time at all, so a flat value can still look stale |
 
 LibreLink (gillesvs) is the weak one. It reports an age rather than a time, and computes it
 by subtracting a device-local reading time from the Home Assistant server's
@@ -433,9 +435,9 @@ but it cannot second-guess numbers you chose yourself. Clear `thresholds` to
 fall back to the standard ones for your unit.
 
 **The clock is behind, or the card greys out while the sensor is fine.** The
-card can only show a time its integration reports. Dexcom publishes none, so the
-card falls back to when Home Assistant last saw the value change, and a reading
-that repeats leaves that frozen. The table under Reading time above says what
+card can only show a time its integration reports. When there is none, the card
+falls back to when Home Assistant last saw the value change, and a reading that
+repeats leaves that frozen. The table under Reading time above says what
 each integration offers.
 
 **I wanted the vertical layout.** It follows the shape of the slot, not a

@@ -79,6 +79,8 @@ class SugarTvCard extends LitElement {
     // not its internal keys: Carelink's `last_sg_timestamp` key is published as
     // "Last glucose update".
     static TIMESTAMP_SIBLINGS = [
+        // Dexcom (HA 2026.11+): "Glucose reading time"
+        [VALUE_SUFFIXES.dexcom, 'glucose_reading_time'],
         // Carelink (Medtronic)
         [VALUE_SUFFIXES.carelinkMgdl, 'last_glucose_update'],
         [VALUE_SUFFIXES.carelinkMmol, 'last_glucose_update'],

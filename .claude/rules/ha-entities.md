@@ -28,9 +28,9 @@ description: Home Assistant integration facts — entity-id resolution, setConfi
 - **`last_updated` is not "when the sensor was last polled."** HA only advances
   it when the state or an attribute actually changes; an identical rewrite
   early-returns and bumps `last_reported`, which the websocket never sends to
-  the frontend. A flat glucose value on an attribute-less integration (Dexcom)
-  therefore has no readable freshness.
-- **Do not use `last_reported` for freshness:** it means "HA polled the API", not "the reading is recent". Once home-assistant/core#176641 (`*_glucose_reading_time`) ships in an HA release, pair it with `glucose_value` in `TIMESTAMP_SIBLINGS` and update the README's Dexcom row.
+  the frontend. A flat glucose value on an integration that publishes no
+  reading time (Dexcom before HA 2026.11) therefore has no readable freshness.
+- **Do not use `last_reported` for freshness:** it means "HA polled the API", not "the reading is recent".
 - **Measure cadence as the MEDIAN gap, never the average or the smallest, and resolve ties toward the tighter reading.** A cadence feeds every age tier at once.
 - **The age fade runs ONE WAY, toward staleness.** `_ageTier()` returns `current` / `aging` / `stale`; assert the ordering over a sweep of ages, never rung by rung.
 - **`_ageTier()` is the single source of the age tiers (`_isStale` delegates to it).** It asks staleness first, and the middle rung derives from the cadence, never from the capped stale window.
