@@ -31,8 +31,8 @@
         "@rollup/plugin-json": "^6.1.0",
         "@rollup/plugin-replace": "^6.0.3",
         "@rollup/plugin-terser": "^1.0.2",
-        "prettier": "^3.9.10",
-        "rollup": "^4.68.0",
+        "prettier": "^3.10.1",
+        "rollup": "^4.68.3",
         "rollup-plugin-oxc": "^0.9.0",
         "vitest": "^5.1.0"
     },
