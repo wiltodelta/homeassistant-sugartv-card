@@ -79,6 +79,9 @@ export const TREND_MAP = {
     // LibreLink/dodog (separate trend entity)
     'rising fast': 'rising_quickly',
     'falling fast': 'falling_quickly',
+    // LibreLinkUp/rumpelbaer (separate trend entity)
+    rising_rapidly: 'rising_quickly',
+    falling_rapidly: 'falling_quickly',
     // Carelink/Medtronic trend values (raw API: UP, DOWN, FLAT)
     up: 'rising',
     up_up: 'rising_quickly',
@@ -129,6 +132,7 @@ export function normalizeTrend(rawTrend, map = TREND_MAP) {
  *    - Nocturne: *_current_glucose → *_glucose_trend (Nightscout words)
  *    - LibreLink (gillesvs): *_glucose_measurement → find *_trend entity
  *    - LibreLink (dodog): *_measurement → the same *_trend lookup
+ *    - LibreLinkUp (rumpelbaer): *_glucose → the same *_trend lookup
  * 3. Nightscout: attribute 'direction' on value entity
  * 4. LibreView (PTST): attribute 'trend' on value entity
  * 5. Fallback: 'unknown'

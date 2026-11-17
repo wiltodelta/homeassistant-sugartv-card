@@ -26,15 +26,16 @@ One card and one config in two slots: it takes the shape it is given.
 
 ## Supported integrations
 
-| Integration              | Value Entity                       | Trend Detection                                 |
-| ------------------------ | ---------------------------------- | ----------------------------------------------- |
-| **Dexcom**               | `sensor.*_glucose_value`           | Auto-detected from `*_glucose_trend` entity     |
-| **Nightscout**           | `sensor.blood_sugar`               | Auto-detected from `direction` attribute        |
-| **LibreView** (PTST)     | `sensor.*_glucose_level`           | Auto-detected from `trend` attribute            |
-| **LibreLink** (gillesvs) | `sensor.*_glucose_measurement`     | Auto-detected from sibling `*_trend` entity     |
-| **LibreLink** (dodog)    | `sensor.*_measurement`             | Auto-detected from sibling `*_trend` entity     |
-| **Nocturne**             | `sensor.*_current_glucose`         | Auto-detected from `*_glucose_trend` entity     |
-| **Carelink** (Medtronic) | `sensor.*last_glucose_level_mg_dl` | Auto-detected from `*last_glucose_trend` entity |
+| Integration                                                                  | Value Entity                       | Trend Detection                                 |
+| ---------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------------- |
+| **Dexcom**                                                                   | `sensor.*_glucose_value`           | Auto-detected from `*_glucose_trend` entity     |
+| **Nightscout**                                                               | `sensor.blood_sugar`               | Auto-detected from `direction` attribute        |
+| **LibreView** (PTST)                                                         | `sensor.*_glucose_level`           | Auto-detected from `trend` attribute            |
+| **LibreLink** (gillesvs)                                                     | `sensor.*_glucose_measurement`     | Auto-detected from sibling `*_trend` entity     |
+| **LibreLink** (dodog)                                                        | `sensor.*_measurement`             | Auto-detected from sibling `*_trend` entity     |
+| **LibreLinkUp** ([rumpelbaer](https://github.com/rumpelbaer/ha-librelinkup)) | `sensor.*_glucose`                 | Auto-detected from sibling `*_trend` entity     |
+| **Nocturne**                                                                 | `sensor.*_current_glucose`         | Auto-detected from `*_glucose_trend` entity     |
+| **Carelink** (Medtronic)                                                     | `sensor.*last_glucose_level_mg_dl` | Auto-detected from `*last_glucose_trend` entity |
 
 Just select your glucose sensor — the card figures out the rest automatically.
 

@@ -23,3 +23,14 @@ EOF
 - Never force-push or move a published release tag: HACS caches releases by tag, so a fix ships as the next version
 - No emoji in release notes — `gh` CLI can corrupt them
 - Keep the star line at the end of the notes: existing users read release notes in Home Assistant's update dialog, not the README
+
+## Build dependency security
+
+The `picomatch` override in `package.json` pins the published
+`@ryotsu/picomatch` fork, which fixes the repeated-wildcard extglob ReDoS in
+[CVE-2026-112366](https://github.com/advisories/GHSA-fc5q-39xc-vjpf).
+Its runtime diff and npm provenance were checked against the original package.
+`test/build-dependencies.test.js` runs the attack patterns in a bounded child
+process and guards the actual installed matcher used by Rollup and Vitest.
+Keep the default extglob safeguard enabled. Remove the override only after an
+upstream replacement passes that regression test and the fatal OSV scan.

@@ -496,6 +496,34 @@ describe('SugarTvCard', () => {
             // This would actually fall through. Let me test with the correct entity name:
         });
 
+        it.each([
+            ['falling_rapidly', 'falling_quickly', 'mdi:chevron-double-down'],
+            ['rising_rapidly', 'rising_quickly', 'mdi:chevron-double-up'],
+        ])(
+            'renders the rumpelbaer LibreLinkUp %s trend',
+            (raw, expected, icon) => {
+                const card = createCard(
+                    { glucose_value: 'sensor.x_glucose' },
+                    {
+                        states: {
+                            'sensor.x_glucose': {
+                                state: '120',
+                                attributes: { unit_of_measurement: 'mg/dL' },
+                            },
+                            'sensor.x_trend': { state: raw },
+                        },
+                    },
+                );
+                const current = card._getCurrentState('sensor.x_glucose');
+                expect(current.trend).toBe(expected);
+                const description = card._getTrendDescriptions(current.unit)[
+                    current.trend
+                ];
+                expect(description.icon).toBe(icon);
+                expect(description.prediction).toContain('45');
+            },
+        );
+
         it('detects LibreLink generic prefix match for trend entity', () => {
             // The entity is sensor.librelink_john_trend (prefix before last underscore of glucose entity)
             const card = createCard(
@@ -899,9 +927,7 @@ describe('SugarTvCard', () => {
         // Hindi marks an abbreviation with U+0970 rather than a full stop, and
         // it reads as a dot, so a strip that only knew about "." would leave it.
         it('drops the Devanagari abbreviation sign as well', () => {
-            expect(SugarTvCard.formatAgo('hi', 14, 'minute')).toBe(
-                '14 मि पहले',
-            );
+            expect(SugarTvCard.formatAgo('hi', 14, 'minute')).toBe('14 मि पहले');
         });
 
         // Nothing may touch a decimal point inside a number.
