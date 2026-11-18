@@ -21,7 +21,8 @@ One card and one config in two slots: it takes the shape it is given.
 - Automatic local time format and unit support (mmol/L and mg/dL)
 - Adapts to the space it is given: a wide slot lays the reading out in a row, a
   tall or square one stacks it into a column, and the type scales to fill either.
-  No layout option and no font sizes to set.
+  No orientation option and no font sizes to set; a `view` option picks
+  between the classic row and a compact one with the time on top.
 - Visual configuration editor
 
 ## Supported integrations
@@ -120,6 +121,7 @@ for example, builds the id from your account username, so it is
 | `glucose_time`        | entity id | auto-detected        | A timestamp sensor holding the measurement time, when the card cannot find it.    |
 | `timestamp_attribute` | string    | auto-detected        | An attribute of the glucose sensor holding the measurement time. YAML only.       |
 | `insulin_value`       | entity id | none                 | An active insulin (IOB) sensor, drawn as a line above the reading.                |
+| `view`                | string    | `classic`            | `classic` or `compact`: where the time and the trend sit in a wide slot.          |
 | `show_prediction`     | boolean   | `true`               | The line of text under the reading.                                               |
 | `relative_time`       | boolean   | `false`              | Show the reading's age ("14 min ago") in place of the clock.                      |
 | `dim_by_age`          | boolean   | `false`              | Fade the card once a poll has been missed, ahead of the stale fade.               |
@@ -230,10 +232,10 @@ and hiding that would be worse than showing it.
 
 ### Layout
 
-There is no layout option, on purpose. The card reads the shape of the slot it
-is given and picks the arrangement that fills it, so it stays right when you
-rearrange a dashboard instead of needing to be told again. The two arrangements
-are the pair at the top of this page.
+There is no orientation option, on purpose. The card reads the shape of the
+slot it is given and picks the arrangement that fills it, so it stays right when
+you rearrange a dashboard instead of needing to be told again. The two
+arrangements are the pair at the top of this page.
 
 | Slot              | Layout                                     |
 | ----------------- | ------------------------------------------ |
@@ -254,6 +256,22 @@ larger reading than the row.
   proportions there and always lays out as a row.
 - **Panel and full-screen views** follow the same rule as any other slot: a tall
   narrow panel gets the column, a wide one gets the row.
+
+#### Views
+
+`view` changes how the row reads; the column looks the same in both.
+
+![The classic and the compact view side by side](sugartv-card-views.png)
+
+| View      | Row                                                                    |
+| --------- | ---------------------------------------------------------------------- |
+| `classic` | Time, reading, trend and delta on one line. The default.               |
+| `compact` | The time on a line of its own above the reading, the trend over delta. |
+
+The compact view gives the number the whole line, so a long time phrasing
+("14 perccel ezelőtt") no longer has to shrink beside it. The extra line costs
+a little height: in a one-row card the number comes out about 5% smaller, and
+in masonry the card is about 5% taller.
 
 ### Reading time
 

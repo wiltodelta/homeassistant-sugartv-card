@@ -257,12 +257,29 @@ describe('SugarTvCard', () => {
     describe('getConfigForm', () => {
         const fields = leafFields(SugarTvCard.getConfigForm().schema);
 
-        it('only offers sensors to pick, switches and numbers', () => {
+        it('only offers sensors to pick, switches, numbers and the view', () => {
             for (const field of fields) {
-                expect(['entity', 'boolean', 'number']).toContain(
+                expect(['entity', 'boolean', 'number', 'select']).toContain(
                     Object.keys(field.selector)[0],
                 );
             }
+            // A dropdown is a closed list, which is still picking, not typing.
+            expect(
+                fields.filter((f) => 'select' in f.selector).map((f) => f.name),
+            ).toEqual(['view']);
+        });
+
+        it('offers every view, labelled, with classic as the default', () => {
+            const view = fields.find((f) => f.name === 'view');
+
+            expect(view.default).toBe('classic');
+            expect(view.selector.select.options).toEqual([
+                { value: 'classic', label: 'Classic' },
+                { value: 'compact', label: 'Compact' },
+            ]);
+            expect(
+                SugarTvCard.getConfigForm().computeLabel({ name: 'view' }),
+            ).toBe('View');
         });
 
         it('offers the reading time as a timestamp sensor', () => {
@@ -271,6 +288,66 @@ describe('SugarTvCard', () => {
             ).toEqual({
                 entity: { domain: 'sensor', device_class: 'timestamp' },
             });
+        });
+    });
+
+    // ── view ────────────────────────────────────────────────────────
+    /*
+     * Two arrangements of the same reading. Classic keeps the time on the
+     * reading's line; compact lifts it onto a line of its own above, and the
+     * host class carries the rest (the trend over the delta, the taller
+     * height budget) into the stylesheet.
+     */
+    describe('the view option', () => {
+        const viewCard = (view) => {
+            const card = createCard(view === undefined ? {} : { view }, {
+                states: {
+                    'sensor.dexcom_glucose_value': {
+                        state: '120',
+                        attributes: { unit_of_measurement: 'mg/dL' },
+                        last_changed: new Date().toISOString(),
+                    },
+                },
+            });
+            card.willUpdate(new Map([['config', undefined]]));
+            return card;
+        };
+
+        it('keeps the time on the reading line by default', () => {
+            const card = viewCard();
+            const markup = card.render();
+
+            expect(card.classList.contains('view-compact')).toBe(false);
+            expect(markup.indexOf('class="line"')).toBeLessThan(
+                markup.indexOf('class="time"'),
+            );
+        });
+
+        it('lifts the time above the reading line when compact', () => {
+            const card = viewCard('compact');
+            const markup = card.render();
+
+            expect(card.classList.contains('view-compact')).toBe(true);
+            expect(markup.indexOf('class="time"')).toBeLessThan(
+                markup.indexOf('class="line"'),
+            );
+            // Moved, not copied.
+            expect(markup.split('class="time"')).toHaveLength(2);
+        });
+
+        it('treats an unknown view as classic rather than blanking', () => {
+            const card = viewCard('tiles');
+
+            expect(card._view()).toBe('classic');
+            expect(card.classList.contains('view-compact')).toBe(false);
+        });
+
+        it('drops the class again when the view goes back to classic', () => {
+            const card = viewCard('compact');
+            card.config = { ...card.config, view: 'classic' };
+            card.willUpdate(new Map([['config', undefined]]));
+
+            expect(card.classList.contains('view-compact')).toBe(false);
         });
     });
 

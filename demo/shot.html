@@ -103,6 +103,7 @@
              *   pred   0 to drop the forecast line
              *   iob    units of active insulin to show above the reading
              *          (omitted: no insulin entity, no line)
+             *   view   the card's view (default classic)
              *   loc    the card's locale (default en-US)
              *   label  caption under the card; <b> is allowed
              */
@@ -129,6 +130,7 @@
                         dim: opt.dim === '1',
                         prediction: opt.pred !== '0',
                         iob: opt.iob === undefined ? null : opt.iob,
+                        view: opt.view || 'classic',
                         locale: opt.loc || 'en-US',
                         label: opt.label ? decodeURIComponent(opt.label) : '',
                     };
@@ -200,6 +202,7 @@
                         show_prediction: spec.prediction,
                         relative_time: spec.relative,
                         dim_by_age: spec.dim,
+                        view: spec.view,
                         ...(spec.iob !== null
                             ? {
                                   insulin_value: 'sensor.jane_active_insulin',

@@ -30,6 +30,7 @@ comma is already taken.
 | `rel`   | `1` shows the age in place of the clock (`relative_time`).    |
 | `dim`   | `1` enables `dim_by_age`.                                     |
 | `pred`  | `0` drops the forecast line.                                  |
+| `view`  | The card's `view`. Default `classic`.                         |
 | `loc`   | The card's locale. Default `en-US`.                           |
 | `label` | Caption under the card. `<b>` and `<br>` are allowed.         |
 

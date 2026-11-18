@@ -7,9 +7,9 @@ import { css } from 'lit';
  * active insulin line (when configured), the time, the value, a .tail carrying
  * the trend and delta, and the forecast line under the reading. Wide boxes lay
  * the reading out as a row with the forecast wrapped onto its own line; tall
- * and square boxes stack them into a column. Nothing here is configurable:
- * the card reads the shape it was given and picks the orientation that fills
- * it.
+ * and square boxes stack them into a column. Orientation is not configurable:
+ * the card reads the shape it was given and picks the one that fills it. The
+ * `view` option only changes the row (see the compact view below).
  *
  * Optical geometry
  * ----------------
@@ -130,6 +130,34 @@ export const cardStyles = css`
     /* Flattened in the row so the trend and delta sit inline with the value. */
     .tail {
         display: contents;
+    }
+
+    /*
+     * The compact view. The time moves onto a line of its own above the value
+     * (the markup does that), and the trend sits over the delta in a two-line
+     * block beside the value. The arrow (10u, trimmed to ~6.6u of ink), the
+     * delta's ~4.3u cap height and this gap come to about the value's 14.2u
+     * cap height, so the block reads as one piece the height of the number.
+     * Left-aligned so the sign of the delta lines up under the arrow.
+     *
+     * The time's extra line costs height: padding 10u, time 4.3u, value 14.2u,
+     * forecast 1.9u and two 2.5u gaps come to about 35.6u, past the classic
+     * 34.7 budget and into the padding of a one-row card. 36.5 gives the
+     * padding back with a little slack, which also makes a masonry card in
+     * this view about 5% taller than a classic one.
+     */
+    :host(.view-compact) {
+        --stack: 36.5;
+    }
+
+    /* Row only: the column draws the trend and delta the same in both views. */
+    @container not (max-aspect-ratio: 5 / 3) {
+        :host(.view-compact) .tail {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: calc(1.5 * var(--u));
+        }
     }
 
     /*

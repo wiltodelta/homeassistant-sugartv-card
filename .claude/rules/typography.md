@@ -14,7 +14,7 @@ description: Type and layout metrics — measure ink not boxes, Range rect vs me
 
 ## The host belongs to more than this card
 
-- **Own only `stale`, `aging` and the four `zone-*` classes on the host:** `classList.toggle` each from `willUpdate`, never assign `this.className`.
+- **Own only `stale`, `aging`, `view-compact` and the four `zone-*` classes on the host (`HOST_CLASSES`):** `classList.toggle` each from `willUpdate`, never assign `this.className`.
 - **Never put a transition on `:host`:** cards created in one synchronous burst hold the transition's start value. `test/styles.test.js` guards the shape.
 
 ## Sign glyphs

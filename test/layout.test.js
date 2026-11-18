@@ -477,12 +477,16 @@ describe('fitting the reading time beside the reading', () => {
             naturalTime,
             text = '14 min. ago',
             valueFont = 80,
+            timeOnLine = true,
         },
     ) {
         const setProperty = vi.fn();
         const wrapper = { style: { setProperty } };
         const container = { clientWidth: containerWidth };
-        const line = { getBoundingClientRect: () => ({ width: lineWidth }) };
+        const line = {
+            getBoundingClientRect: () => ({ width: lineWidth }),
+            contains: () => timeOnLine,
+        };
         const time = {
             textContent: text,
             getBoundingClientRect: () => ({ width: timeWidth }),
@@ -590,6 +594,25 @@ describe('fitting the reading time beside the reading', () => {
         card._measureTimeFit();
 
         expect(scaleOf(setProperty)).toBe(SugarTvCard.MIN_TIME_SCALE);
+    });
+
+    /*
+     * The compact view puts the time on a line of its own. The same phrase that
+     * has to shrink beside the number has the whole card there.
+     */
+    it('gives the phrase the whole width in the compact view', () => {
+        const card = new SugarTvCard();
+        const { setProperty } = stubLine(card, {
+            timeOnLine: false,
+            containerWidth: 400,
+            lineWidth: 400,
+            timeWidth: 200,
+            naturalTime: 200,
+        });
+
+        card._measureTimeFit();
+
+        expect(scaleOf(setProperty)).toBe(1);
     });
 
     it('survives an environment with no canvas', () => {

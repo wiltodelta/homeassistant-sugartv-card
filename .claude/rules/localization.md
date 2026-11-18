@@ -28,6 +28,7 @@ description: Localization rules — hass.locale vs hass.language, Intl silent-fa
 ## Editing every language block by script
 
 - **`localize.js` is prettier-formatted, so never edit it line by line.** Match the whole property (key, optional newline, either quote style, trailing comma) inside its language block, assert the replacement count equals the number of language blocks before writing, then run `node --check src/localize.js`.
+- **A new editor key (field label or select option) goes into every language block AND into `KEYS` in `test/localize.test.js`:** the completeness test checks only listed keys, so an unlisted one falls back to English silently.
 - **A narrowed feature narrows its label.** Deviation from the global rules: when a feature's scope changes, the docs-sync grep (pre-commit step 3) also covers every language block in `src/localize.js`, because they sit outside README, `docs/` and docstrings.
 
 ## The three localized surfaces

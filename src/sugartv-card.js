@@ -211,6 +211,19 @@ class SugarTvCard extends LitElement {
                     selector: { entity: { domain: 'sensor' } },
                 },
                 {
+                    name: 'view',
+                    default: 'classic',
+                    selector: {
+                        select: {
+                            mode: 'dropdown',
+                            options: SugarTvCard.VIEWS.map((view) => ({
+                                value: view,
+                                label: localize(`editor.view_${view}`),
+                            })),
+                        },
+                    },
+                },
+                {
                     name: 'show_prediction',
                     selector: { boolean: {} },
                 },
@@ -295,6 +308,7 @@ class SugarTvCard extends LitElement {
                     glucose_trend: localize('editor.glucose_trend'),
                     glucose_time: localize('editor.glucose_time'),
                     insulin_value: localize('editor.insulin_value'),
+                    view: localize('editor.view'),
                     show_prediction: localize('editor.show_prediction'),
                     relative_time: localize('editor.relative_time'),
                     dim_by_age: localize('editor.dim_by_age'),
@@ -628,7 +642,26 @@ class SugarTvCard extends LitElement {
         'zone-low',
         'zone-high',
         'zone-urgent-high',
+        'view-compact',
     ];
+
+    /*
+     * The arrangements the card can draw a reading in. Orientation stays
+     * automatic in both, from the shape of the slot; the view only decides
+     * where the time goes and how the trend sits beside the number in the row.
+     *
+     *   classic  time, value, trend and delta on one line.
+     *   compact  the time on a line of its own above the value, and the trend
+     *            over the delta in a two-line block beside it.
+     */
+    static VIEWS = ['classic', 'compact'];
+
+    // An unknown or missing view is the classic one, so a typo never blanks
+    // the card and every config written before the option existed keeps its look.
+    _view() {
+        const view = this.config?.view;
+        return SugarTvCard.VIEWS.includes(view) ? view : 'classic';
+    }
 
     /**
      * Put the card's own state on the host.
@@ -662,6 +695,7 @@ class SugarTvCard extends LitElement {
 
         this.classList.toggle('stale', ageTier === 'stale');
         this.classList.toggle('aging', isAging);
+        this.classList.toggle('view-compact', this._view() === 'compact');
         for (const candidate of SugarTvCard.HOST_CLASSES) {
             if (candidate.startsWith('zone-')) {
                 this.classList.toggle(candidate, candidate === zoneClass);
@@ -705,9 +739,13 @@ class SugarTvCard extends LitElement {
         const unit = this._valueUnitPx(value);
         const available =
             container.clientWidth - 2 * SugarTvCard.PADDING_UNITS * unit;
-        const others =
-            line.getBoundingClientRect().width -
-            time.getBoundingClientRect().width;
+        // Read off the markup rather than the config, so the fit follows
+        // wherever render() put the time: on a line of its own it shares the
+        // width with nothing and may take all of it.
+        const others = line.contains(time)
+            ? line.getBoundingClientRect().width -
+              time.getBoundingClientRect().width
+            : 0;
         if (!unit || !(available > 0)) return;
 
         const context = SugarTvCard.measuringContext();
@@ -1703,6 +1741,12 @@ class SugarTvCard extends LitElement {
             trendSymbols.unknown;
         const trendIcon = trendInfo.icon;
         const prediction = trendInfo.prediction || '';
+        // One element, placed by the view: inside the reading's line in the
+        // classic view, on a line of its own above it in the compact one.
+        const compact = this._view() === 'compact';
+        const time = html`<div class="time">
+            ${this._formatTime(reading_time)}
+        </div>`;
 
         const localize = getLocalizer(this.config, this.hass);
         const insulin = this._insulinText();
@@ -1732,10 +1776,9 @@ class SugarTvCard extends LitElement {
                             ? html`<div class="insulin">${insulin}</div>`
                             : ''
                     }
+                    ${compact ? time : ''}
                     <div class="line">
-                        <div class="time">
-                            ${this._formatTime(reading_time)}
-                        </div>
+                        ${compact ? '' : time}
                         <div class="value">${this._formatValue(value)}</div>
                         <div class="tail">
                             <div class="trend" data-icon="${trendIcon}">

@@ -53,6 +53,14 @@ FIGURES = {
         "sugartv-card-layouts.png",
         [spec("560x200", 145, "rising"), spec("260x300", 145, "rising")],
     ),
+    "views": (
+        "1300,290",
+        "sugartv-card-views.png",
+        [
+            spec("560x200", 145, "rising", label="<b>classic</b>"),
+            spec("560x200", 145, "rising", view="compact", label="<b>compact</b>"),
+        ],
+    ),
     "zones": (
         "1152,216",
         "sugartv-card-zones.png",
