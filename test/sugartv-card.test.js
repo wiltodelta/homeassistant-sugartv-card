@@ -198,16 +198,49 @@ describe('SugarTvCard', () => {
             );
         });
 
-        // Nightscout's words for "no arrow to draw". Carelink's NONE is the
-        // exception, and only its own detection path maps it to steady.
+        it('normalizes Sugar Sense snake_case trends', () => {
+            expect(card._normalizeTrend('rising_fast')).toBe('rising_quickly');
+            expect(card._normalizeTrend('falling_fast')).toBe(
+                'falling_quickly',
+            );
+        });
+
+        it('normalizes Medtrum EasyView rapid trends', () => {
+            expect(card._normalizeTrend('increasing_very_fast')).toBe(
+                'rising_quickly',
+            );
+            expect(card._normalizeTrend('decreasing_very_fast')).toBe(
+                'falling_quickly',
+            );
+        });
+
+        it('normalizes Nightscout Extended snake_case trends', () => {
+            expect(card._normalizeTrend('double_up')).toBe('rising_quickly');
+            expect(card._normalizeTrend('single_up')).toBe('rising');
+            expect(card._normalizeTrend('forty_five_up')).toBe(
+                'rising_slightly',
+            );
+            expect(card._normalizeTrend('flat')).toBe('steady');
+            expect(card._normalizeTrend('forty_five_down')).toBe(
+                'falling_slightly',
+            );
+            expect(card._normalizeTrend('single_down')).toBe('falling');
+            expect(card._normalizeTrend('double_down')).toBe('falling_quickly');
+        });
+
+        // Words for "no arrow to draw". Carelink's NONE is the exception, and
+        // only its own detection path maps it to steady.
         it.each([
             'NONE',
             'NONE ⊝',
             'None',
             'NOT COMPUTABLE',
             'NotComputable',
+            'not_computable',
             'RATE OUT OF RANGE',
             'RateOutOfRange',
+            'rate_out_of_range',
+            'not_determined',
         ])('treats %s as no direction', (raw) => {
             expect(card._normalizeTrend(raw)).toBe('unknown');
         });
@@ -429,6 +462,120 @@ describe('SugarTvCard', () => {
                 'falling_slightly',
             ],
             [
+                'LibreLinkUp not_determined',
+                'sensor.jane_glucose',
+                { 'sensor.jane_trend': { state: 'not_determined' } },
+                {},
+                'unknown',
+            ],
+            [
+                'LibreLinkUp bare entity id',
+                'sensor.glucose',
+                { 'sensor.trend': { state: 'rising_rapidly' } },
+                {},
+                'rising_quickly',
+            ],
+            [
+                'Sugar Sense',
+                'sensor.sugar_sense_glucose',
+                { 'sensor.sugar_sense_trend': { state: 'falling_fast' } },
+                {},
+                'falling_quickly',
+            ],
+            [
+                'Nightscout Extended',
+                'sensor.ns_glucose',
+                { 'sensor.ns_glucose_trend': { state: 'forty_five_up' } },
+                {},
+                'rising_slightly',
+            ],
+            [
+                'Nightscout Extended bare entity id',
+                'sensor.glucose',
+                { 'sensor.glucose_trend': { state: 'double_down' } },
+                {},
+                'falling_quickly',
+            ],
+            [
+                'Nightscout Extended direction fallback when trend entity is disabled',
+                'sensor.ns_glucose',
+                {},
+                { direction: 'FortyFiveUp', delta: 4 },
+                'rising_slightly',
+            ],
+            [
+                'Tandem mg/dL rate of change',
+                'sensor.tslim_last_glucose_level_mg_dl',
+                {
+                    'sensor.tslim_cgm_rate_of_change': {
+                        state: '2.4',
+                        attributes: { unit_of_measurement: 'mg/dL/min' },
+                    },
+                },
+                {},
+                'rising',
+            ],
+            [
+                'Tandem mmol/L rate of change',
+                'sensor.tslim_last_glucose_level_mmol',
+                {
+                    'sensor.tslim_cgm_rate_of_change': {
+                        state: '-3.4',
+                        attributes: { unit_of_measurement: 'mg/dL/min' },
+                    },
+                },
+                {},
+                'falling_quickly',
+            ],
+            [
+                'Medtrum EasyView',
+                'sensor.medtrum_glucose',
+                {
+                    'sensor.medtrum_glucose_trend': {
+                        state: 'increasing_very_fast',
+                    },
+                },
+                {},
+                'rising_quickly',
+            ],
+            [
+                'Nightscout v3',
+                'sensor.ns_bg_current',
+                { 'sensor.ns_bg_direction': { state: 'SingleDown' } },
+                {},
+                'falling',
+            ],
+            [
+                'Gluroo',
+                'sensor.gluroo_blood_glucose',
+                { 'sensor.gluroo_glucose_trend': { state: 'FortyFiveUp' } },
+                {},
+                'rising_slightly',
+            ],
+            [
+                'Nightscout Extended (kleinig)',
+                'sensor.nightscout_extended_blood_glucose',
+                {
+                    'sensor.nightscout_extended_bg_direction': {
+                        state: 'FortyFiveDown',
+                    },
+                },
+                {},
+                'falling_slightly',
+            ],
+            [
+                'Glucifer rate_of_change fallback (mmol/L/min)',
+                'sensor.juggluco_glucose',
+                {
+                    'sensor.juggluco_rate_of_change': {
+                        state: '0.15',
+                        attributes: { unit_of_measurement: 'mmol/L/min' },
+                    },
+                },
+                {},
+                'rising',
+            ],
+            [
                 'Nightscout NONE',
                 'sensor.blood_sugar',
                 {},
@@ -490,6 +637,56 @@ describe('SugarTvCard', () => {
                 ),
             ).toBe('steady');
         });
+
+        it.each([
+            ['-3.1', 'mg/dL/min', 'falling_quickly'],
+            ['-3.0', 'mg/dL/min', 'falling'],
+            ['-2.0', 'mg/dL/min', 'falling'],
+            ['-1.9', 'mg/dL/min', 'falling_slightly'],
+            ['-1.0', 'mg/dL/min', 'falling_slightly'],
+            ['-0.9', 'mg/dL/min', 'steady'],
+            [0, 'mg/dL/min', 'steady'],
+            ['0.9', 'mg/dL/min', 'steady'],
+            ['1.0', 'mg/dL/min', 'rising_slightly'],
+            ['1.9', 'mg/dL/min', 'rising_slightly'],
+            // '2' without /min is LibreView's rising_quickly code; with
+            // mg/dL/min it is 2 mg/dL per minute, which is single-arrow rising.
+            ['2', 'mg/dL/min', 'rising'],
+            ['2,5', 'mg/dL/min', 'rising'],
+            ['3.0', 'mg/dL/min', 'rising'],
+            ['3.1', 'mg/dL/min', 'rising_quickly'],
+            ['-0.12', 'mmol/L/min', 'falling'],
+            ['-0.20', 'mmol/L/min', 'falling_quickly'],
+            ['unavailable', 'mg/dL/min', 'unknown'],
+            ['unknown', 'mg/dL/min', 'unknown'],
+            ['not a rate', 'mg/dL/min', 'unknown'],
+        ])(
+            'derives %s (%s) -> %s when a rate sensor is picked in glucose_trend',
+            (state, unit_of_measurement, expected) => {
+                const card = createCard(
+                    { glucose_trend: 'sensor.my_rate' },
+                    {
+                        states: {
+                            'sensor.dexcom_glucose_value': {
+                                state: '120',
+                                attributes: { unit_of_measurement: 'mg/dL' },
+                            },
+                            'sensor.my_rate': {
+                                state,
+                                attributes: { unit_of_measurement },
+                            },
+                        },
+                    },
+                );
+
+                expect(
+                    card._resolveTrend(
+                        'sensor.dexcom_glucose_value',
+                        card.hass.states['sensor.dexcom_glucose_value'],
+                    ),
+                ).toBe(expected);
+            },
+        );
 
         it('detects Dexcom sibling *_glucose_trend entity', () => {
             const card = createCard(
@@ -2571,6 +2768,55 @@ describe('SugarTvCard', () => {
         it('has entries for LibreLink human-readable trends', () => {
             const ll = ['decreasing fast', 'increasing fast', 'stable'];
             for (const t of ll) {
+                expect(SugarTvCard.TREND_MAP[t]).toBeDefined();
+            }
+        });
+
+        it.each([
+            [
+                'LibreLinkUp (rumpelbaer)',
+                [
+                    'not_determined',
+                    'falling_rapidly',
+                    'falling',
+                    'stable',
+                    'rising',
+                    'rising_rapidly',
+                ],
+            ],
+            [
+                'Sugar Sense',
+                ['falling_fast', 'falling', 'steady', 'rising', 'rising_fast'],
+            ],
+            [
+                'Nightscout Extended',
+                [
+                    'double_up',
+                    'single_up',
+                    'forty_five_up',
+                    'flat',
+                    'forty_five_down',
+                    'single_down',
+                    'double_down',
+                    'not_computable',
+                    'rate_out_of_range',
+                    'none',
+                ],
+            ],
+            [
+                'Medtrum EasyView',
+                [
+                    'stable',
+                    'increasing',
+                    'increasing_fast',
+                    'increasing_very_fast',
+                    'decreasing',
+                    'decreasing_fast',
+                    'decreasing_very_fast',
+                ],
+            ],
+        ])('has entries for all %s trends', (_name, trends) => {
+            for (const t of trends) {
                 expect(SugarTvCard.TREND_MAP[t]).toBeDefined();
             }
         });

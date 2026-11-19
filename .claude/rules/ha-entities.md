@@ -20,8 +20,8 @@ description: Home Assistant integration facts — entity-id resolution, setConfi
 - **Auto-detect a sibling only when the card renders the READING wrong without it, not merely less.** Active insulin is `insulin_value` in the config or nothing, with no sibling hunt.
 - **If insulin sibling detection is ever asked for, do not tail-swap next to the glucose sensor:** glucose and insulin usually come from different integrations. Known insulin tails are `active_insulin`, `insulin_on_board` and `loop_iob`.
 - **A trend word can mean different things per integration, so `TREND_MAP` holds its safe reading and a source that means more gets its own map on its detection path.** NONE is "no direction" (`unknown`) in `TREND_MAP`, as Nightscout means it; Carelink's NONE is "too slow for an arrow", so Carelink's patterns carry `CARELINK_TREND_MAP` (`steady`).
-- **A generic value tail is safe only beside a specific sibling name.** dodog's `measurement` tail is fine because its sibling, `last_measurement_timestamp`, exists nowhere else and must parse as a time.
-- **glucifer's `measurement_time` is an ENTITY, not an attribute: its users pick it as `glucose_time` in the editor; keep it out of `TIMESTAMP_SIBLINGS`,** because the `glucose` tail it would hang off is the most generic tail there is.
+- **A generic value tail is safe only beside a specific, validated sibling.** `measurement` pairs with `last_measurement_timestamp` (dodog), and `glucose` pairs with `last_reading` (LibreLinkUp, Sugar Sense, Nightscout Extended) and `measurement_time` (Glucifer); every timestamp sibling must pass `parseTimestamp()`.
+- **Distinguish rate-of-change sensors from LibreView's numeric trend codes (`2`..`8`) by unit (`* /min`) or by a dedicated rate sibling (`cgm_rate_of_change`, `rate_of_change`).** Never pass a `/min` rate into `TREND_MAP`, where `'2'` means `rising_quickly` rather than `2 mg/dL/min` (`rising`); convert `mmol/L/min` by `18.0182` before applying the 1/2/3 mg/dL/min thresholds.
 
 ## Freshness (`last_updated` / `last_reported`)
 

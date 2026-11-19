@@ -70,9 +70,9 @@ class SugarTvCard extends LitElement {
     // Set by both core glucose integrations, and by nothing else in core.
     static GLUCOSE_DEVICE_CLASS = 'blood_glucose_concentration';
 
-    // Attributes carrying the true measurement time. Only the PTST libreview
-    // integration is known to publish one.
-    static TIMESTAMP_ATTRIBUTES = ['measurement_timestamp'];
+    // Attributes carrying the true measurement time: PTST libreview
+    // (`measurement_timestamp`) and Gluroo (`measured_at`).
+    static TIMESTAMP_ATTRIBUTES = ['measurement_timestamp', 'measured_at'];
 
     // Integrations that keep the reading time in a sibling entity instead of an
     // attribute. Entity ids are slugified from the integration's entity NAMES,
@@ -81,18 +81,26 @@ class SugarTvCard extends LitElement {
     static TIMESTAMP_SIBLINGS = [
         // Dexcom (HA 2026.11+): "Glucose reading time"
         [VALUE_SUFFIXES.dexcom, 'glucose_reading_time'],
-        // Carelink (Medtronic)
+        // Carelink (Medtronic) and Tandem (ha-tandem-pump)
         [VALUE_SUFFIXES.carelinkMgdl, 'last_glucose_update'],
         [VALUE_SUFFIXES.carelinkMmol, 'last_glucose_update'],
         // LibreLink (dodog): "Last Measurement Timestamp", in UTC. Without it a
         // flat value freezes last_updated and a live sensor fades as stale.
         [VALUE_SUFFIXES.librelinkDodog, 'last_measurement_timestamp'],
+        // LibreLinkUp (rumpelbaer), Sugar Sense, Nightscout Extended: "Last reading"
+        [VALUE_SUFFIXES.glucose, 'last_reading'],
+        // Glucifer (Juggluco bridge): "Measurement time"
+        [VALUE_SUFFIXES.glucose, 'measurement_time'],
     ];
 
     // Siblings reporting an age in minutes rather than a timestamp.
     static AGE_SIBLINGS = [
         // LibreLink (gillesvs)
         [VALUE_SUFFIXES.librelink, 'minutes_since_update'],
+        // Medtrum EasyView
+        [VALUE_SUFFIXES.glucose, 'minutes_since_update'],
+        // Nightscout v3 (savek-cc)
+        [VALUE_SUFFIXES.nightscoutV3, 'bg_stale_minutes'],
     ];
 
     // LibreLink derives its age by subtracting a device-local reading time from
@@ -968,11 +976,11 @@ class SugarTvCard extends LitElement {
      * -- trend, reading time -- is context the card needs to render the
      * glucose correctly, so finding it is a fix. This is an extra line of
      * layout instead, and one that appears without being asked for reads as
-     * the card growing a row overnight. Only the supported integrations have
-     * known sibling shapes anyway, and of those only Carelink is a pump: its
-     * `sensor.*active_insulin` (the entity NAME is "Active insulin", per the
-     * rule that ids are slugified from names) is found by the user in the
-     * editor rather than guessed at by the card.
+     * the card growing a row overnight. Most glucose integrations publish no
+     * insulin anyway, and on pump integrations (Carelink's
+     * `sensor.*active_insulin`, Tandem's `sensor.*active_insulin_iob`) the
+     * entity is found by the user in the editor rather than guessed at by the
+     * card.
      *
      * The unit comes off the entity when it carries one, falling back to "U",
      * because Carelink publishes the sensor without a unit at all. The state

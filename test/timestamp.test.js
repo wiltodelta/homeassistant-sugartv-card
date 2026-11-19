@@ -173,6 +173,23 @@ describe('Reading timestamp resolution', () => {
             expect(card._getCurrentState(ENTITY).reading_time).toBe(measured);
         });
 
+        it('prefers Gluroo measured_at over last_updated', () => {
+            const measured = iso(3 * MINUTE);
+            const card = createCard(
+                {},
+                {
+                    attributes: {
+                        unit_of_measurement: 'mg/dL',
+                        measured_at: measured,
+                    },
+                    last_changed: iso(12 * MINUTE),
+                    last_updated: iso(1 * MINUTE),
+                },
+            );
+
+            expect(card._getCurrentState(ENTITY).reading_time).toBe(measured);
+        });
+
         it('falls back to last_updated when the attribute is unparseable', () => {
             const card = createCard(
                 {},
@@ -474,16 +491,63 @@ describe('Reading timestamp resolution', () => {
             ).toBe(measured);
         });
 
-        // glucifer-style: the time sits in an entity no tail can reach.
+        it.each([
+            [
+                'prefixed *_glucose (LibreLinkUp, Sugar Sense, Nightscout Extended)',
+                'sensor.jane_glucose',
+                'sensor.jane_last_reading',
+            ],
+            ['bare sensor.glucose', 'sensor.glucose', 'sensor.last_reading'],
+            [
+                'Glucifer measurement_time',
+                'sensor.kid_glucose',
+                'sensor.kid_measurement_time',
+            ],
+            [
+                'bare Glucifer measurement_time',
+                'sensor.glucose',
+                'sensor.measurement_time',
+            ],
+        ])('reads the %s entity', (_name, value, sibling) => {
+            const measured = iso(3 * MINUTE);
+            const card = withSibling(value, sibling, measured);
+
+            const current = card._getCurrentState(value);
+            expect(current.reading_time).toBe(measured);
+            expect(card._isStale(current.reading_time)).toBe(false);
+        });
+
+        it.each([
+            [
+                'Medtrum EasyView minutes_since_update',
+                'sensor.medtrum_glucose',
+                'sensor.medtrum_minutes_since_update',
+            ],
+            [
+                'Nightscout v3 bg_stale_minutes',
+                'sensor.ns_bg_current',
+                'sensor.ns_bg_stale_minutes',
+            ],
+        ])('derives a timestamp from %s', (_name, value, ageSibling) => {
+            const card = withSibling(value, ageSibling, '3');
+
+            const resolved = new Date(
+                card._getCurrentState(value).reading_time,
+            ).getTime();
+            const expected = Date.now() - 3 * MINUTE;
+            expect(Math.abs(resolved - expected)).toBeLessThan(2000);
+        });
+
+        // An integration whose time sits in an entity no known tail can reach.
         describe('glucose_time picked in the editor', () => {
             it('reads the picked entity for an unknown integration', () => {
                 const measured = iso(4 * MINUTE);
                 const card = withSibling(
                     'sensor.kid_glucose',
-                    'sensor.kid_measurement_time',
+                    'sensor.kid_reading_at',
                     measured,
                 );
-                card.config.glucose_time = 'sensor.kid_measurement_time';
+                card.config.glucose_time = 'sensor.kid_reading_at';
 
                 expect(
                     card._getCurrentState('sensor.kid_glucose').reading_time,
