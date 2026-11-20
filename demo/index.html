@@ -59,7 +59,10 @@
              */
             .controls {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                grid-template-columns: repeat(
+                    auto-fit,
+                    minmax(min(100%, 300px), 1fr)
+                );
                 gap: 1rem;
                 align-items: start;
                 margin-bottom: 1.5rem;
@@ -70,6 +73,8 @@
                 --pico-spacing: 0.6rem;
             }
             .controls fieldset {
+                min-width: 0;
+                container-type: inline-size;
                 margin: 0;
                 padding: 0 0.9rem 0.7rem;
                 border: 1px solid var(--pico-muted-border-color);
@@ -98,32 +103,44 @@
              */
             .thresholds {
                 display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 0 0.4rem;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 0.25rem 0.4rem;
                 margin-top: 0.2rem;
             }
             .thresholds .group-label {
                 grid-column: 1 / -1;
-                margin-bottom: 0.15rem;
+                margin-bottom: 0.05rem;
                 font-weight: 500;
             }
+            .thresholds .th-field {
+                min-width: 0;
+            }
             .thresholds label {
-                grid-row: 2;
-                margin: 0;
+                display: block;
+                margin: 0 0 0.15rem;
                 font-size: 0.6875rem;
                 color: var(--pico-muted-color);
                 white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
             .thresholds input {
-                grid-row: 3;
-                margin-bottom: 0.4rem;
+                width: 100%;
+                min-width: 0;
+                margin-bottom: 0.25rem;
+                padding-inline: 0.35rem;
                 text-align: center;
+            }
+            @container (max-width: 19rem) {
+                .thresholds {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
             }
             .thresholds button {
                 grid-column: 1 / -1;
                 justify-self: start;
                 width: auto;
-                margin: 0;
+                margin: 0.1rem 0 0;
                 padding: 0.25rem 0.9rem;
                 font-size: 0.75rem;
             }
@@ -140,6 +157,7 @@
                 gap: 32px;
             }
             .demo-card {
+                min-width: 0;
                 background: var(--pico-card-background-color);
                 border-radius: var(--pico-border-radius);
                 padding: 1.25rem;
@@ -154,19 +172,40 @@
              * these are container sizes, not card options.
              */
             .demo-grid.horizontal {
-                grid-template-columns: repeat(auto-fill, minmax(560px, 1fr));
+                grid-template-columns: repeat(
+                    auto-fill,
+                    minmax(min(100%, 560px), 1fr)
+                );
             }
             .demo-grid.horizontal sugartv-card {
                 width: 100%;
                 height: 200px;
             }
             .demo-grid.vertical {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                grid-template-columns: repeat(
+                    auto-fill,
+                    minmax(min(100%, 280px), 1fr)
+                );
             }
             .demo-grid.vertical sugartv-card {
-                width: 240px;
-                height: 360px;
+                width: min(100%, 240px);
+                aspect-ratio: 2 / 3;
+                height: auto;
                 margin: 0 auto;
+            }
+            @media (max-width: 640px) {
+                body {
+                    padding: 1rem;
+                }
+                .demo-grid {
+                    gap: 20px;
+                }
+                .demo-card {
+                    padding: 0.875rem;
+                }
+                .demo-grid.horizontal sugartv-card {
+                    height: auto;
+                }
             }
         </style>
     </head>
@@ -198,6 +237,11 @@
             <div class="controls">
                 <fieldset>
                     <legend>Card options</legend>
+                    <label for="view-select">View</label>
+                    <select id="view-select">
+                        <option value="classic">Classic</option>
+                        <option value="compact">Compact</option>
+                    </select>
                     <label
                         ><input
                             type="checkbox"
@@ -248,14 +292,30 @@
                     -->
                     <div class="thresholds">
                         <span class="group-label">Thresholds</span>
-                        <label for="th-urgent-low">Urgent low</label>
-                        <input type="number" id="th-urgent-low" step="0.1" />
-                        <label for="th-low">Low</label>
-                        <input type="number" id="th-low" step="0.1" />
-                        <label for="th-high">High</label>
-                        <input type="number" id="th-high" step="0.1" />
-                        <label for="th-urgent-high">Urgent high</label>
-                        <input type="number" id="th-urgent-high" step="0.1" />
+                        <div class="th-field">
+                            <label for="th-urgent-low">Urgent low</label>
+                            <input
+                                type="number"
+                                id="th-urgent-low"
+                                step="0.1"
+                            />
+                        </div>
+                        <div class="th-field">
+                            <label for="th-low">Low</label>
+                            <input type="number" id="th-low" step="0.1" />
+                        </div>
+                        <div class="th-field">
+                            <label for="th-high">High</label>
+                            <input type="number" id="th-high" step="0.1" />
+                        </div>
+                        <div class="th-field">
+                            <label for="th-urgent-high">Urgent high</label>
+                            <input
+                                type="number"
+                                id="th-urgent-high"
+                                step="0.1"
+                            />
+                        </div>
                         <button type="button" id="th-reset">Reset</button>
                     </div>
                 </fieldset>
@@ -320,6 +380,22 @@
             </div>
 
             <div class="demo-grid horizontal" id="card-grid"></div>
+            <dialog id="more-info-dialog">
+                <article>
+                    <header>
+                        <button
+                            type="button"
+                            aria-label="Close"
+                            rel="prev"
+                            id="more-info-close"
+                        ></button>
+                        <strong id="more-info-title"
+                            >Home Assistant more-info</strong
+                        >
+                    </header>
+                    <p id="more-info-body"></p>
+                </article>
+            </dialog>
         </div>
 
         <script type="module" src="./hass-mock.js"></script>
@@ -468,13 +544,20 @@
                 );
             }
 
+            let dialogTrigger = null;
+
             // --- Main Render Function ---
             function renderAllCards() {
                 const grid = document.getElementById('card-grid');
+                if (!document.getElementById('more-info-dialog').open) {
+                    dialogTrigger = null;
+                }
                 grid.innerHTML = ''; // Clear existing cards
 
                 const selectedUnit =
                     document.getElementById('unit-select').value;
+                const selectedView =
+                    document.getElementById('view-select').value;
                 const showPrediction =
                     document.getElementById('prediction-toggle').checked;
                 const showInsulin =
@@ -487,6 +570,13 @@
                 const ageMinutes = Number(
                     document.getElementById('age-select').value,
                 );
+                const selectedLocale =
+                    document.getElementById('locale-select').value || 'en';
+                grid.dir = customElements
+                    .get('sugartv-card')
+                    .isRtl(selectedLocale)
+                    ? 'rtl'
+                    : 'ltr';
 
                 /*
                  * No `locale` here on purpose. The picker sets Home Assistant's
@@ -497,6 +587,7 @@
                 const config = {
                     glucose_value: 'sensor.dexcom_glucose_value',
                     glucose_trend: 'sensor.dexcom_glucose_trend',
+                    view: selectedView,
                     show_prediction: showPrediction,
                     ...(showInsulin
                         ? { insulin_value: 'sensor.jane_active_insulin' }
@@ -734,6 +825,9 @@
                         renderAllCards();
                     });
                 document
+                    .getElementById('view-select')
+                    .addEventListener('change', renderAllCards);
+                document
                     .getElementById('prediction-toggle')
                     .addEventListener('change', renderAllCards);
                 document
@@ -760,6 +854,38 @@
                 document
                     .getElementById('layout-select')
                     .addEventListener('change', applyLayout);
+
+                const dialog = document.getElementById('more-info-dialog');
+                const dialogBody = document.getElementById('more-info-body');
+                dialog.addEventListener('close', () => {
+                    const trigger = dialogTrigger;
+                    dialogTrigger = null;
+                    trigger?.focus?.();
+                });
+                document
+                    .getElementById('more-info-close')
+                    .addEventListener('click', () => dialog.close());
+                dialog.addEventListener('click', (e) => {
+                    if (e.target === dialog) dialog.close();
+                });
+                document
+                    .getElementById('card-grid')
+                    .addEventListener('hass-more-info', (e) => {
+                        const card =
+                            e.target.closest?.('sugartv-card') || e.target;
+                        dialogTrigger =
+                            card?.shadowRoot?.querySelector?.('.wrapper') ||
+                            card;
+                        const entityId = e.detail?.entityId || '';
+                        const reading =
+                            card?.hass?.states?.[entityId]?.state ?? '';
+                        const unit =
+                            card?.hass?.states?.[entityId]?.attributes
+                                ?.unit_of_measurement ?? '';
+                        dialogBody.textContent = `In Home Assistant, activating this card opens the history graph dialog (hass-more-info) for ${entityId} (current state: ${reading}${unit ? ' ' + unit : ''}).`;
+                        dialog.showModal();
+                    });
+
                 applyLayout();
                 fillThresholds(document.getElementById('unit-select').value);
                 renderAllCards();

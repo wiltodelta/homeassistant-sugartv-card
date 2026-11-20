@@ -441,9 +441,9 @@ Colors can be customized via CSS custom properties in your HA theme:
 
 ```yaml
 # In your HA theme
-sugartv-urgent-bg: '#c62828'
+sugartv-urgent-bg: '#941818'
 sugartv-urgent-text: '#ffffff'
-sugartv-warning-text: '#e65100'
+sugartv-warning-text: 'light-dark(#7c2200, #ffa73b)'
 ```
 
 ## Troubleshooting

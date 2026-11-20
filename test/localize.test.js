@@ -20,6 +20,7 @@ const KEYS = [
     'editor.view_compact',
     'editor.show_prediction',
     'editor.relative_time',
+    'editor.dim_by_age',
     'editor.color_thresholds',
     'editor.urgent_low',
     'editor.low',
@@ -33,8 +34,16 @@ const KEYS = [
     'predictions.fall_over',
     'predictions.fall_in',
     'insulin.active',
+    'trends.rising_quickly',
+    'trends.rising',
+    'trends.rising_slightly',
+    'trends.steady',
+    'trends.falling_slightly',
+    'trends.falling',
+    'trends.falling_quickly',
     'common.not_available',
     'common.default_time',
+    'common.stale',
 ];
 
 const PREDICTIONS = [

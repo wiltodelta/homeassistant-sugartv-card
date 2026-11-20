@@ -69,7 +69,9 @@ export const cardStyles = css`
     }
 
     .wrapper {
+        --descent-extra: max(0, var(--value-descent, 0) - 0.5);
         --u: min(1cqi, calc(100cqh / var(--stack)));
+        position: relative;
         display: flex;
         flex-direction: column;
         width: 100%;
@@ -77,6 +79,24 @@ export const cardStyles = css`
         align-items: center;
         justify-content: center;
         cursor: pointer;
+    }
+
+    .wrapper:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: -4px;
+        border-radius: var(--ha-card-border-radius, 12px);
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
     }
 
     .container {
@@ -150,6 +170,15 @@ export const cardStyles = css`
         --stack: 36.5;
     }
 
+    .wrapper:has(.insulin):has(.prediction),
+    :host(.view-compact) .wrapper {
+        --stack: calc(36.5 + var(--descent-extra));
+    }
+
+    :host(.view-compact) .wrapper:has(.insulin) {
+        --stack: calc(43 + var(--descent-extra));
+    }
+
     /* Row only: the column draws the trend and delta the same in both views. */
     @container not (max-aspect-ratio: 5 / 3) {
         :host(.view-compact) .tail {
@@ -181,6 +210,17 @@ export const cardStyles = css`
     }
 
     /*
+     * Keep signed numbers and decimals in left-to-right glyph order inside RTL
+     * dashboards; otherwise U+2212 and + resolve to the right of the digits
+     * ("12−" in place of "−12").
+     */
+    .value,
+    .delta {
+        direction: ltr;
+        unicode-bidi: isolate;
+    }
+
+    /*
      * --value-scale is measured, and is 1 unless the value is the not-available
      * word, which is shrunk to the width of the widest reading.
      */
@@ -193,6 +233,11 @@ export const cardStyles = css`
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+
+    .trend,
+    .delta:has(ha-icon) {
+        overflow: clip;
     }
 
     .trend {
@@ -225,7 +270,8 @@ export const cardStyles = css`
         --icon-trim: 0.22;
     }
 
-    .trend[data-icon$='help-circle-outline'] {
+    .trend[data-icon$='help-circle-outline'],
+    .delta ha-icon {
         --icon-trim: 0.083;
     }
 
@@ -331,11 +377,12 @@ export const cardStyles = css`
      * threshold at all. 0.7 holds the reading at 5.9:1 and is still an obvious
      * step down from the rung above.
      *
-     * The greyscale does the rest, and does it where opacity cannot: on the
-     * coloured zones it is the whole signal, and it happens to RAISE contrast
-     * rather than lower it, since orange desaturates toward a darker luma
-     * (3.8:1 to 5.3:1). On a normal white card it changes nothing visible,
-     * which is why the opacity has to carry that case on its own.
+     * The greyscale does the rest: on the coloured zones it desaturates the
+     * hue while preserving Rec.709 luminance, so the base zone tokens below
+     * carry enough contrast headroom (light-dark(#7c2200, #ffa73b) and
+     * #941818) to stay above 4.5:1 even after the 0.7 opacity fade in both
+     * light and dark themes. On a normal neutral card greyscale changes
+     * nothing visible, which is why the opacity carries that case on its own.
      */
     :host(.stale) {
         opacity: 0.7;
@@ -344,14 +391,33 @@ export const cardStyles = css`
 
     :host(.zone-urgent-low),
     :host(.zone-urgent-high) {
-        background-color: var(--sugartv-urgent-bg, #c62828);
+        background-color: var(--sugartv-urgent-bg, #941818);
         color: var(--sugartv-urgent-text, #ffffff);
         border-radius: var(--ha-card-border-radius, 12px);
     }
 
     :host(.zone-low),
     :host(.zone-high) {
-        color: var(--sugartv-warning-text, #e65100);
+        color: var(--sugartv-warning-text, light-dark(#7c2200, #ffa73b));
+    }
+
+    @media (forced-colors: active) {
+        :host(.zone-urgent-low),
+        :host(.zone-urgent-high) {
+            outline: 3px solid CanvasText;
+            outline-offset: -3px;
+        }
+
+        :host(.zone-low),
+        :host(.zone-high) {
+            outline: 1px solid CanvasText;
+            outline-offset: -1px;
+        }
+
+        :host(.stale) {
+            outline: 2px dashed GrayText;
+            outline-offset: -2px;
+        }
     }
 
     /*
@@ -369,11 +435,19 @@ export const cardStyles = css`
              * before the first measurement lands.
              */
             --tall-w: 52;
-            --tall-h: 50;
+            --tall-h: 52;
             --u: min(
                 calc(100cqi / var(--tall-w)),
-                calc(100cqh / var(--tall-h))
+                calc(100cqh / (var(--tall-h) + var(--descent-extra)))
             );
+        }
+
+        .wrapper:has(.insulin) {
+            --tall-h: 58;
+        }
+
+        .wrapper:has(.insulin):has(.prediction) {
+            --tall-h: 63;
         }
 
         /*

@@ -22,19 +22,50 @@ vi.mock('lit', () => ({
 const { cardStyles } = await import('../src/sugartv-card-styles.js');
 
 /*
- * One naive brace-matcher for the whole file. It cannot survive a nested block
- * such as an @media, which is exactly why it lives in one place: the day the
- * stylesheet nests, this is the single line to fix rather than three.
+ * Depth-aware CSS rule walker. Returns [fullMatch, selector, body, atRule] so
+ * top-level rules stay distinguishable from @media / @container overrides.
  */
-const rulesMatching = (selectorPattern) =>
-    [...cardStyles.matchAll(/([^{}]*)\{([^}]*)\}/g)].filter(([, selector]) =>
-        selectorPattern.test(selector),
+const parseRules = (sheet, atRule = null) => {
+    const out = [];
+    let i = 0;
+    const clean =
+        atRule === null ? sheet.replace(/\/\*[\s\S]*?\*\//g, '') : sheet;
+    while (i < clean.length) {
+        const open = clean.indexOf('{', i);
+        if (open === -1) break;
+        const header = clean.slice(i, open).trim();
+        let depth = 1;
+        let close = open + 1;
+        while (close < clean.length && depth > 0) {
+            if (clean[close] === '{') depth++;
+            else if (clean[close] === '}') depth--;
+            close++;
+        }
+        const inner = clean.slice(open + 1, close - 1);
+        if (header.startsWith('@')) {
+            out.push(...parseRules(inner, header));
+        } else {
+            out.push([`${header}{${inner}}`, header, inner, atRule]);
+        }
+        i = close;
+    }
+    return out;
+};
+
+const parsedRules = parseRules(cardStyles);
+
+const rulesMatching = (selectorPattern, { topLevelOnly = false } = {}) =>
+    parsedRules.filter(
+        ([, selector, , atRule]) =>
+            (!topLevelOnly || atRule === null) &&
+            selectorPattern.test(selector),
     );
 
-// The body of `:host(.<selector>)`, or null when the sheet declares no such rung.
+// The body of top-level `:host(.<selector>)`, or null when the sheet declares no such rung.
 const hostRule = (selector) => {
     const found = rulesMatching(
-        new RegExp(`(^|,)\\s*:host\\(\\.${selector}\\)\\s*$`, 'm'),
+        new RegExp(`(^|,)\\s*:host\\(\\.${selector}\\)\\s*(,|$)`, 'm'),
+        { topLevelOnly: true },
     );
     return found.length ? found[0][2] : null;
 };
@@ -47,20 +78,41 @@ const hostOpacity = (selector) => {
     return found ? Number(found[1]) : null;
 };
 
+const parseHex = (hex) => [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+];
+
+const linear = (v) => {
+    const s = v / 255;
+    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+};
+
+const lum = ([r, g, b]) =>
+    0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+
+const ratio = (c1, c2) => {
+    const [l1, l2] = [lum(c1), lum(c2)];
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+};
+
+const blend = (fg, bg, alpha) =>
+    fg.map((c, idx) => Math.round(alpha * c + (1 - alpha) * bg[idx]));
+
+// CSS Filter Effects 1: grayscale(amount) interpolates toward Rec.709 luma.
+const grayscale = ([r, g, b], amt) => {
+    const y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return [r, g, b].map((c) => y * amt + c * (1 - amt));
+};
+
 /*
  * Composite text over the card and score it the way WCAG does. The card's
  * default text is HA's #212121 on a white card; the numbers below are the
  * reason the rungs sit where they do rather than on round-looking values.
  */
-const contrastOnWhite = (alpha) => {
-    const channel = Math.round(255 - alpha * (255 - 33));
-    const linear = (v) => {
-        const s = v / 255;
-        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-    };
-    const luminance = linear(channel); // grey, so one channel describes it
-    return (1.0 + 0.05) / (luminance + 0.05);
-};
+const contrastOnWhite = (alpha) =>
+    ratio(blend([33, 33, 33], [255, 255, 255], alpha), [255, 255, 255]);
 
 describe('the age fade in the stylesheet', () => {
     /*
@@ -186,5 +238,60 @@ describe('the age fade in the stylesheet', () => {
 
         expect(stale).not.toMatch(/color|background/);
         expect(stale).toMatch(/grayscale/);
+    });
+
+    it('keeps warning and urgent zones above 4.5:1 across light, dark and stale', () => {
+        const warnBody = hostRule('zone-low');
+        const warnMatch =
+            warnBody &&
+            warnBody.match(
+                /light-dark\(\s*(#[0-9a-fA-F]{6})\s*,\s*(#[0-9a-fA-F]{6})\s*\)/,
+            );
+        expect(warnMatch).not.toBeNull();
+        const [warnLight, warnDark] = [
+            parseHex(warnMatch[1]),
+            parseHex(warnMatch[2]),
+        ];
+
+        const urgentBody = hostRule('zone-urgent-low');
+        const urgBgMatch =
+            urgentBody &&
+            urgentBody.match(/--sugartv-urgent-bg,\s*(#[0-9a-fA-F]{6})\s*\)/);
+        expect(urgBgMatch).not.toBeNull();
+        const urgBg = parseHex(urgBgMatch[1]);
+
+        const staleGrayMatch =
+            hostRule('stale') &&
+            hostRule('stale').match(/grayscale\(\s*([\d.]+)\s*\)/);
+        expect(staleGrayMatch).not.toBeNull();
+        const staleGray = Number(staleGrayMatch[1]);
+
+        const white = [255, 255, 255];
+        const darkCard = [28, 28, 28];
+        const agingAlpha = hostOpacity('aging');
+        const staleAlpha = hostOpacity('stale');
+
+        // Warning text on light and dark across current, aging and stale.
+        for (const [fg, bg] of [
+            [warnLight, white],
+            [warnDark, darkCard],
+        ]) {
+            expect(ratio(fg, bg)).toBeGreaterThanOrEqual(4.5);
+            expect(ratio(blend(fg, bg, agingAlpha), bg)).toBeGreaterThanOrEqual(
+                4.5,
+            );
+            expect(
+                ratio(blend(grayscale(fg, staleGray), bg, staleAlpha), bg),
+            ).toBeGreaterThanOrEqual(4.5);
+        }
+
+        // Urgent zone (white text on red host) across current, aging and stale.
+        expect(ratio(white, urgBg)).toBeGreaterThanOrEqual(4.5);
+        expect(
+            ratio(white, blend(urgBg, white, agingAlpha)),
+        ).toBeGreaterThanOrEqual(4.5);
+        expect(
+            ratio(white, blend(grayscale(urgBg, staleGray), white, staleAlpha)),
+        ).toBeGreaterThanOrEqual(4.5);
     });
 });

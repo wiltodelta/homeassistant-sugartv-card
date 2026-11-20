@@ -23,7 +23,7 @@ description: Localization rules — hass.locale vs hass.language, Intl silent-fa
 
 ## Untranslated text hides outside the translation file
 
-- **Before calling a localisation pass complete, grep for user-visible strings OUTSIDE `src/localize.js`:** aria-labels, anything built from an internal key, and any unit read off the sensor rather than through `units.*`. Take trend labels from `hass.localize` at `component.dexcom.entity.sensor.glucose_trend.state.*`, with the humanised key as the fallback.
+- **Before calling a localisation pass complete, grep for user-visible strings OUTSIDE `src/localize.js`:** aria-labels, anything built from an internal key, and any unit read off the sensor rather than through `units.*`. Take trend labels from `hass.localize` at `component.dexcom.entity.sensor.glucose_trend.state.*` when no card-level `locale` overrides it, with the card's own `trends.*` table (and the humanised key for unknown ids) as the fallback.
 
 ## Editing every language block by script
 

@@ -36,9 +36,19 @@ export const languages = {
         insulin: {
             active: 'Active insulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'rising quickly',
+            rising: 'rising',
+            rising_slightly: 'rising slightly',
+            steady: 'steady',
+            falling_slightly: 'falling slightly',
+            falling: 'falling',
+            falling_quickly: 'falling quickly',
+        },
         common: {
             not_available: 'N/A',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Stale',
         },
     },
     ru: {
@@ -81,9 +91,19 @@ export const languages = {
         insulin: {
             active: 'Активный инсулин {0} {1}',
         },
+        trends: {
+            rising_quickly: 'быстро растет',
+            rising: 'растет',
+            rising_slightly: 'медленно растет',
+            steady: 'ровно',
+            falling_slightly: 'медленно падает',
+            falling: 'падает',
+            falling_quickly: 'быстро падает',
+        },
         common: {
             not_available: 'Н/Д',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Устарело',
         },
     },
     de: {
@@ -125,9 +145,19 @@ export const languages = {
         insulin: {
             active: 'Aktives Insulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'steigt schnell',
+            rising: 'steigt',
+            rising_slightly: 'steigt leicht',
+            steady: 'stabil',
+            falling_slightly: 'fällt leicht',
+            falling: 'fällt',
+            falling_quickly: 'fällt schnell',
+        },
         common: {
             not_available: 'K/A',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Veraltet',
         },
     },
     fr: {
@@ -168,9 +198,19 @@ export const languages = {
         insulin: {
             active: 'Insuline active {0} {1}',
         },
+        trends: {
+            rising_quickly: 'monte rapidement',
+            rising: 'monte',
+            rising_slightly: 'monte légèrement',
+            steady: 'stable',
+            falling_slightly: 'baisse légèrement',
+            falling: 'baisse',
+            falling_quickly: 'baisse rapidement',
+        },
         common: {
             not_available: 'N/D',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Périmé',
         },
     },
     es: {
@@ -211,9 +251,19 @@ export const languages = {
         insulin: {
             active: 'Insulina activa {0} {1}',
         },
+        trends: {
+            rising_quickly: 'subiendo rápidamente',
+            rising: 'subiendo',
+            rising_slightly: 'subiendo ligeramente',
+            steady: 'estable',
+            falling_slightly: 'bajando ligeramente',
+            falling: 'bajando',
+            falling_quickly: 'bajando rápidamente',
+        },
         common: {
             not_available: 'N/D',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Caducado',
         },
     },
     it: {
@@ -254,9 +304,19 @@ export const languages = {
         insulin: {
             active: 'Insulina attiva {0} {1}',
         },
+        trends: {
+            rising_quickly: 'in rapido aumento',
+            rising: 'in aumento',
+            rising_slightly: 'in lieve aumento',
+            steady: 'stabile',
+            falling_slightly: 'in lieve calo',
+            falling: 'in calo',
+            falling_quickly: 'in rapido calo',
+        },
         common: {
             not_available: 'N/D',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Obsoleto',
         },
     },
     nl: {
@@ -296,9 +356,19 @@ export const languages = {
         insulin: {
             active: 'Actieve insuline {0} {1}',
         },
+        trends: {
+            rising_quickly: 'stijgt snel',
+            rising: 'stijgt',
+            rising_slightly: 'stijgt licht',
+            steady: 'stabiel',
+            falling_slightly: 'daalt licht',
+            falling: 'daalt',
+            falling_quickly: 'daalt snel',
+        },
         common: {
             not_available: 'N.v.t.',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Verouderd',
         },
     },
     pl: {
@@ -338,9 +408,19 @@ export const languages = {
         insulin: {
             active: 'Aktywna insulina {0} {1}',
         },
+        trends: {
+            rising_quickly: 'szybko rośnie',
+            rising: 'rośnie',
+            rising_slightly: 'lekko rośnie',
+            steady: 'stabilnie',
+            falling_slightly: 'lekko spada',
+            falling: 'spada',
+            falling_quickly: 'szybko spada',
+        },
         common: {
             not_available: 'Brak',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Nieaktualne',
         },
     },
     uk: {
@@ -380,9 +460,19 @@ export const languages = {
         insulin: {
             active: 'Активний інсулін {0} {1}',
         },
+        trends: {
+            rising_quickly: 'швидко зростає',
+            rising: 'зростає',
+            rising_slightly: 'повільно зростає',
+            steady: 'рівно',
+            falling_slightly: 'повільно спадає',
+            falling: 'спадає',
+            falling_quickly: 'швидко спадає',
+        },
         common: {
             not_available: 'Н/Д',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Застаріло',
         },
     },
     pt: {
@@ -423,9 +513,19 @@ export const languages = {
         insulin: {
             active: 'Insulina ativa {0} {1}',
         },
+        trends: {
+            rising_quickly: 'a subir rapidamente',
+            rising: 'a subir',
+            rising_slightly: 'a subir ligeiramente',
+            steady: 'estável',
+            falling_slightly: 'a descer ligeiramente',
+            falling: 'a descer',
+            falling_quickly: 'a descer rapidamente',
+        },
         common: {
             not_available: 'N/D',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Desatualizado',
         },
     },
     sv: {
@@ -465,9 +565,19 @@ export const languages = {
         insulin: {
             active: 'Aktivt insulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'stiger snabbt',
+            rising: 'stiger',
+            rising_slightly: 'stiger något',
+            steady: 'stabilt',
+            falling_slightly: 'sjunker något',
+            falling: 'sjunker',
+            falling_quickly: 'sjunker snabbt',
+        },
         common: {
             not_available: 'Ej tillg.',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Inaktuell',
         },
     },
     cs: {
@@ -507,9 +617,19 @@ export const languages = {
         insulin: {
             active: 'Aktivní inzulín {0} {1}',
         },
+        trends: {
+            rising_quickly: 'rychle stoupá',
+            rising: 'stoupá',
+            rising_slightly: 'mírně stoupá',
+            steady: 'stabilní',
+            falling_slightly: 'mírně klesá',
+            falling: 'klesá',
+            falling_quickly: 'rychle klesá',
+        },
         common: {
             not_available: 'N/A',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Zastaralé',
         },
     },
     af: {
@@ -549,9 +669,19 @@ export const languages = {
         insulin: {
             active: 'Aktiewe insulien {0} {1}',
         },
+        trends: {
+            rising_quickly: 'styg vinnig',
+            rising: 'styg',
+            rising_slightly: 'styg effens',
+            steady: 'stabiel',
+            falling_slightly: 'daal effens',
+            falling: 'daal',
+            falling_quickly: 'daal vinnig',
+        },
         common: {
             not_available: 'N.v.t.',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Verouderd',
         },
     },
     ar: {
@@ -591,9 +721,19 @@ export const languages = {
         insulin: {
             active: 'الأنسولين النشط {0} {1}',
         },
+        trends: {
+            rising_quickly: 'يرتفع بسرعة',
+            rising: 'يرتفع',
+            rising_slightly: 'يرتفع قليلاً',
+            steady: 'مستقر',
+            falling_slightly: 'ينخفض قليلاً',
+            falling: 'ينخفض',
+            falling_quickly: 'ينخفض بسرعة',
+        },
         common: {
             not_available: 'غير متاح',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'قديمة',
         },
     },
     bg: {
@@ -634,9 +774,19 @@ export const languages = {
         insulin: {
             active: 'Активен инсулин {0} {1}',
         },
+        trends: {
+            rising_quickly: 'покачва се бързо',
+            rising: 'покачва се',
+            rising_slightly: 'покачва се леко',
+            steady: 'стабилно',
+            falling_slightly: 'спада леко',
+            falling: 'спада',
+            falling_quickly: 'спада бързо',
+        },
         common: {
             not_available: 'Н/Д',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Остаряло',
         },
     },
     bn: {
@@ -676,9 +826,19 @@ export const languages = {
         insulin: {
             active: 'সক্রিয় ইনসুলিন {0} {1}',
         },
+        trends: {
+            rising_quickly: 'দ্রুত বাড়ছে',
+            rising: 'বাড়ছে',
+            rising_slightly: 'সামান্য বাড়ছে',
+            steady: 'স্থিতিশীল',
+            falling_slightly: 'সামান্য কমছে',
+            falling: 'কমছে',
+            falling_quickly: 'দ্রুত কমছে',
+        },
         common: {
             not_available: 'নেই',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'পুরনো',
         },
     },
     bs: {
@@ -718,9 +878,19 @@ export const languages = {
         insulin: {
             active: 'Aktivni inzulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'brzo raste',
+            rising: 'raste',
+            rising_slightly: 'blago raste',
+            steady: 'stabilno',
+            falling_slightly: 'blago pada',
+            falling: 'pada',
+            falling_quickly: 'brzo pada',
+        },
         common: {
             not_available: 'N/D',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Zastarjelo',
         },
     },
     ca: {
@@ -761,9 +931,19 @@ export const languages = {
         insulin: {
             active: 'Insulina activa {0} {1}',
         },
+        trends: {
+            rising_quickly: 'pujant ràpidament',
+            rising: 'pujant',
+            rising_slightly: 'pujant lleugerament',
+            steady: 'estable',
+            falling_slightly: 'baixant lleugerament',
+            falling: 'baixant',
+            falling_quickly: 'baixant ràpidament',
+        },
         common: {
             not_available: 'N/D',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Caducat',
         },
     },
     cy: {
@@ -804,9 +984,19 @@ export const languages = {
         insulin: {
             active: 'Inswlin weithredol {0} {1}',
         },
+        trends: {
+            rising_quickly: 'yn codi’n gyflym',
+            rising: 'yn codi',
+            rising_slightly: 'yn codi ychydig',
+            steady: 'sefydlog',
+            falling_slightly: 'yn gostwng ychydig',
+            falling: 'yn gostwng',
+            falling_quickly: 'yn gostwng yn gyflym',
+        },
         common: {
             not_available: 'Dim',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Hen',
         },
     },
     da: {
@@ -846,9 +1036,19 @@ export const languages = {
         insulin: {
             active: 'Aktivt insulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'stiger hurtigt',
+            rising: 'stiger',
+            rising_slightly: 'stiger lidt',
+            steady: 'stabil',
+            falling_slightly: 'falder lidt',
+            falling: 'falder',
+            falling_quickly: 'falder hurtigt',
+        },
         common: {
             not_available: 'Ikke tilgæng.',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Forældet',
         },
     },
     el: {
@@ -888,9 +1088,19 @@ export const languages = {
         insulin: {
             active: 'Ενεργή ινσουλίνη {0} {1}',
         },
+        trends: {
+            rising_quickly: 'αυξάνεται γρήγορα',
+            rising: 'αυξάνεται',
+            rising_slightly: 'αυξάνεται ελαφρώς',
+            steady: 'σταθερή',
+            falling_slightly: 'μειώνεται ελαφρώς',
+            falling: 'μειώνεται',
+            falling_quickly: 'μειώνεται γρήγορα',
+        },
         common: {
             not_available: 'Μ/Δ',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Παρωχημένο',
         },
     },
     'en-GB': {
@@ -930,9 +1140,19 @@ export const languages = {
         insulin: {
             active: 'Active insulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'rising quickly',
+            rising: 'rising',
+            rising_slightly: 'rising slightly',
+            steady: 'steady',
+            falling_slightly: 'falling slightly',
+            falling: 'falling',
+            falling_quickly: 'falling quickly',
+        },
         common: {
             not_available: 'N/A',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Stale',
         },
     },
     eo: {
@@ -972,9 +1192,19 @@ export const languages = {
         insulin: {
             active: 'Aktiva insulino {0} {1}',
         },
+        trends: {
+            rising_quickly: 'rapide altiĝas',
+            rising: 'altiĝas',
+            rising_slightly: 'iom altiĝas',
+            steady: 'stabila',
+            falling_slightly: 'iom malaltiĝas',
+            falling: 'malaltiĝas',
+            falling_quickly: 'rapide malaltiĝas',
+        },
         common: {
             not_available: 'N/D',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Malaktuala',
         },
     },
     'es-419': {
@@ -1015,9 +1245,19 @@ export const languages = {
         insulin: {
             active: 'Insulina activa {0} {1}',
         },
+        trends: {
+            rising_quickly: 'subiendo rápidamente',
+            rising: 'subiendo',
+            rising_slightly: 'subiendo levemente',
+            steady: 'estable',
+            falling_slightly: 'bajando levemente',
+            falling: 'bajando',
+            falling_quickly: 'bajando rápidamente',
+        },
         common: {
             not_available: 'N/D',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Desactualizado',
         },
     },
     et: {
@@ -1057,9 +1297,19 @@ export const languages = {
         insulin: {
             active: 'Aktiivne insuliin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'tõuseb kiiresti',
+            rising: 'tõuseb',
+            rising_slightly: 'tõuseb veidi',
+            steady: 'stabiilne',
+            falling_slightly: 'langeb veidi',
+            falling: 'langeb',
+            falling_quickly: 'langeb kiiresti',
+        },
         common: {
             not_available: 'Puudub',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Aegunud',
         },
     },
     eu: {
@@ -1101,9 +1351,19 @@ export const languages = {
         insulin: {
             active: 'Insulina aktiboa {0} {1}',
         },
+        trends: {
+            rising_quickly: 'azkar igotzen',
+            rising: 'igotzen',
+            rising_slightly: 'apur bat igotzen',
+            steady: 'egonkor',
+            falling_slightly: 'apur bat jaisten',
+            falling: 'jaisten',
+            falling_quickly: 'azkar jaisten',
+        },
         common: {
             not_available: 'E/E',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Zaharkitua',
         },
     },
     fa: {
@@ -1143,9 +1403,19 @@ export const languages = {
         insulin: {
             active: 'انسولین فعال {0} {1}',
         },
+        trends: {
+            rising_quickly: 'افزایش سریع',
+            rising: 'در حال افزایش',
+            rising_slightly: 'افزایش جزئی',
+            steady: 'ثابت',
+            falling_slightly: 'کاهش جزئی',
+            falling: 'در حال کاهش',
+            falling_quickly: 'کاهش سریع',
+        },
         common: {
             not_available: 'موجود نیست',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'قدیمی',
         },
     },
     fi: {
@@ -1185,9 +1455,19 @@ export const languages = {
         insulin: {
             active: 'Aktiivinen insuliini {0} {1}',
         },
+        trends: {
+            rising_quickly: 'nousee nopeasti',
+            rising: 'nousee',
+            rising_slightly: 'nousee hieman',
+            steady: 'tasainen',
+            falling_slightly: 'laskee hieman',
+            falling: 'laskee',
+            falling_quickly: 'laskee nopeasti',
+        },
         common: {
             not_available: 'Ei saat.',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Vanhentunut',
         },
     },
     fy: {
@@ -1227,9 +1507,19 @@ export const languages = {
         insulin: {
             active: 'Aktive ynsuline {0} {1}',
         },
+        trends: {
+            rising_quickly: 'stiicht fluch',
+            rising: 'stiicht',
+            rising_slightly: 'stiicht licht',
+            steady: 'stabyl',
+            falling_slightly: 'sakket licht',
+            falling: 'sakket',
+            falling_quickly: 'sakket fluch',
+        },
         common: {
             not_available: 'N.v.t.',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Ferâldere',
         },
     },
     ga: {
@@ -1271,9 +1561,19 @@ export const languages = {
         insulin: {
             active: 'Inslin ghníomhach {0} {1}',
         },
+        trends: {
+            rising_quickly: 'ag ardú go tapa',
+            rising: 'ag ardú',
+            rising_slightly: 'ag ardú beagán',
+            steady: 'cobhsaí',
+            falling_slightly: 'ag titim beagán',
+            falling: 'ag titim',
+            falling_quickly: 'ag titim go tapa',
+        },
         common: {
             not_available: 'N/B',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'As dáta',
         },
     },
     gl: {
@@ -1314,9 +1614,19 @@ export const languages = {
         insulin: {
             active: 'Insulina activa {0} {1}',
         },
+        trends: {
+            rising_quickly: 'subindo rapidamente',
+            rising: 'subindo',
+            rising_slightly: 'subindo lixeiramente',
+            steady: 'estable',
+            falling_slightly: 'baixando lixeiramente',
+            falling: 'baixando',
+            falling_quickly: 'baixando rapidamente',
+        },
         common: {
             not_available: 'N/D',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Caducado',
         },
     },
     gsw: {
@@ -1356,9 +1666,19 @@ export const languages = {
         insulin: {
             active: 'Aktivi Insulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'stiigt schnäll',
+            rising: 'stiigt',
+            rising_slightly: 'stiigt liecht',
+            steady: 'stabil',
+            falling_slightly: 'fallt liecht',
+            falling: 'fallt',
+            falling_quickly: 'fallt schnäll',
+        },
         common: {
             not_available: 'K/A',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Veraltet',
         },
     },
     he: {
@@ -1398,9 +1718,19 @@ export const languages = {
         insulin: {
             active: 'אינסולין פעיל {0} {1}',
         },
+        trends: {
+            rising_quickly: 'עולה במהירות',
+            rising: 'עולה',
+            rising_slightly: 'עולה במתינות',
+            steady: 'יציב',
+            falling_slightly: 'יורד במתינות',
+            falling: 'יורד',
+            falling_quickly: 'יורד במהירות',
+        },
         common: {
             not_available: 'לא זמין',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'מיושן',
         },
     },
     hi: {
@@ -1440,9 +1770,19 @@ export const languages = {
         insulin: {
             active: 'सक्रिय इंसुलिन {0} {1}',
         },
+        trends: {
+            rising_quickly: 'तेज़ी से बढ़ रहा है',
+            rising: 'बढ़ रहा है',
+            rising_slightly: 'थोड़ा बढ़ रहा है',
+            steady: 'स्थिर',
+            falling_slightly: 'थोड़ा गिर रहा है',
+            falling: 'गिर रहा है',
+            falling_quickly: 'तेज़ी से गिर रहा है',
+        },
         common: {
             not_available: 'उपलब्ध नहीं',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'पुराना',
         },
     },
     hr: {
@@ -1482,9 +1822,19 @@ export const languages = {
         insulin: {
             active: 'Aktivni inzulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'brzo raste',
+            rising: 'raste',
+            rising_slightly: 'blago raste',
+            steady: 'stabilno',
+            falling_slightly: 'blago pada',
+            falling: 'pada',
+            falling_quickly: 'brzo pada',
+        },
         common: {
             not_available: 'N/D',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Zastarjelo',
         },
     },
     hu: {
@@ -1524,9 +1874,19 @@ export const languages = {
         insulin: {
             active: 'Aktív inzulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'gyorsan emelkedik',
+            rising: 'emelkedik',
+            rising_slightly: 'kissé emelkedik',
+            steady: 'stabil',
+            falling_slightly: 'kissé csökken',
+            falling: 'csökken',
+            falling_quickly: 'gyorsan csökken',
+        },
         common: {
             not_available: 'N/A',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Elavult',
         },
     },
     hy: {
@@ -1566,9 +1926,19 @@ export const languages = {
         insulin: {
             active: 'Ակտիվ ինսուլին {0} {1}',
         },
+        trends: {
+            rising_quickly: 'արագ աճում է',
+            rising: 'աճում է',
+            rising_slightly: 'թեթև աճում է',
+            steady: 'կայուն',
+            falling_slightly: 'թեթև նվազում է',
+            falling: 'նվազում է',
+            falling_quickly: 'արագ նվազում է',
+        },
         common: {
             not_available: 'Չկա',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Հնացած',
         },
     },
     id: {
@@ -1608,9 +1978,19 @@ export const languages = {
         insulin: {
             active: 'Insulin aktif {0} {1}',
         },
+        trends: {
+            rising_quickly: 'naik cepat',
+            rising: 'naik',
+            rising_slightly: 'naik sedikit',
+            steady: 'stabil',
+            falling_slightly: 'turun sedikit',
+            falling: 'turun',
+            falling_quickly: 'turun cepat',
+        },
         common: {
             not_available: 'T/A',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Kedaluwarsa',
         },
     },
     is: {
@@ -1650,9 +2030,19 @@ export const languages = {
         insulin: {
             active: 'Virkt insúlín {0} {1}',
         },
+        trends: {
+            rising_quickly: 'hækkar hratt',
+            rising: 'hækkar',
+            rising_slightly: 'hækkar lítillega',
+            steady: 'stöðugt',
+            falling_slightly: 'lækkar lítillega',
+            falling: 'lækkar',
+            falling_quickly: 'lækkar hratt',
+        },
         common: {
             not_available: 'Á ekki við',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Úrelt',
         },
     },
     ja: {
@@ -1692,9 +2082,19 @@ export const languages = {
         insulin: {
             active: 'アクティブインスリン {0} {1}',
         },
+        trends: {
+            rising_quickly: '急上昇',
+            rising: '上昇',
+            rising_slightly: 'やや上昇',
+            steady: '安定',
+            falling_slightly: 'やや下降',
+            falling: '下降',
+            falling_quickly: '急下降',
+        },
         common: {
             not_available: '該当なし',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: '古いデータ',
         },
     },
     ka: {
@@ -1734,9 +2134,19 @@ export const languages = {
         insulin: {
             active: 'აქტიური ინსულინი {0} {1}',
         },
+        trends: {
+            rising_quickly: 'სწრაფად იზრდება',
+            rising: 'იზრდება',
+            rising_slightly: 'ოდნავ იზრდება',
+            steady: 'სტაბილური',
+            falling_slightly: 'ოდნავ ეცემა',
+            falling: 'ეცემა',
+            falling_quickly: 'სწრაფად ეცემა',
+        },
         common: {
             not_available: 'მიუწვდ.',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'მოძველებული',
         },
     },
     ko: {
@@ -1776,9 +2186,19 @@ export const languages = {
         insulin: {
             active: '활성 인슐린 {0} {1}',
         },
+        trends: {
+            rising_quickly: '빠르게 상승',
+            rising: '상승',
+            rising_slightly: '완만하게 상승',
+            steady: '안정',
+            falling_slightly: '완만하게 하강',
+            falling: '하강',
+            falling_quickly: '빠르게 하강',
+        },
         common: {
             not_available: '없음',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: '오래됨',
         },
     },
     lb: {
@@ -1818,9 +2238,19 @@ export const languages = {
         insulin: {
             active: 'Aktiv Insulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'klëmmt séier',
+            rising: 'klëmmt',
+            rising_slightly: 'klëmmt liicht',
+            steady: 'stabil',
+            falling_slightly: 'fält liicht',
+            falling: 'fält',
+            falling_quickly: 'fält séier',
+        },
         common: {
             not_available: 'N/A',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Veralt',
         },
     },
     lt: {
@@ -1860,9 +2290,19 @@ export const languages = {
         insulin: {
             active: 'Aktyvus insulinas {0} {1}',
         },
+        trends: {
+            rising_quickly: 'greitai kyla',
+            rising: 'kyla',
+            rising_slightly: 'šiek tiek kyla',
+            steady: 'stabilu',
+            falling_slightly: 'šiek tiek krenta',
+            falling: 'krenta',
+            falling_quickly: 'greitai krenta',
+        },
         common: {
             not_available: 'Nėra',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Pasenę',
         },
     },
     lv: {
@@ -1902,9 +2342,19 @@ export const languages = {
         insulin: {
             active: 'Aktīvais insulīns {0} {1}',
         },
+        trends: {
+            rising_quickly: 'strauji kāpj',
+            rising: 'kāpj',
+            rising_slightly: 'nedaudz kāpj',
+            steady: 'stabils',
+            falling_slightly: 'nedaudz krīt',
+            falling: 'krīt',
+            falling_quickly: 'strauji krīt',
+        },
         common: {
             not_available: 'Nav pieejams',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Novecojis',
         },
     },
     mk: {
@@ -1944,9 +2394,19 @@ export const languages = {
         insulin: {
             active: 'Активен инсулин {0} {1}',
         },
+        trends: {
+            rising_quickly: 'брзо расте',
+            rising: 'расте',
+            rising_slightly: 'благо расте',
+            steady: 'стабилно',
+            falling_slightly: 'благо паѓа',
+            falling: 'паѓа',
+            falling_quickly: 'брзо паѓа',
+        },
         common: {
             not_available: 'Н/Д',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Застарено',
         },
     },
     ml: {
@@ -1986,9 +2446,19 @@ export const languages = {
         insulin: {
             active: 'ആക്ടീവ് ഇൻസുലിൻ {0} {1}',
         },
+        trends: {
+            rising_quickly: 'വേഗത്തിൽ ഉയരുന്നു',
+            rising: 'ഉയരുന്നു',
+            rising_slightly: 'ചെറുതായി ഉയരുന്നു',
+            steady: 'സ്ഥിരം',
+            falling_slightly: 'ചെറുതായി കുറയുന്നു',
+            falling: 'കുറയുന്നു',
+            falling_quickly: 'വേഗത്തിൽ കുറയുന്നു',
+        },
         common: {
             not_available: 'ലഭ്യമല്ല',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'പഴയത്',
         },
     },
     nb: {
@@ -2028,9 +2498,19 @@ export const languages = {
         insulin: {
             active: 'Aktivt insulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'stiger raskt',
+            rising: 'stiger',
+            rising_slightly: 'stiger litt',
+            steady: 'stabil',
+            falling_slightly: 'synker litt',
+            falling: 'synker',
+            falling_quickly: 'synker raskt',
+        },
         common: {
             not_available: 'Ikke tilgj.',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Utdatert',
         },
     },
     nn: {
@@ -2070,9 +2550,19 @@ export const languages = {
         insulin: {
             active: 'Aktivt insulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'stig raskt',
+            rising: 'stig',
+            rising_slightly: 'stig litt',
+            steady: 'stabil',
+            falling_slightly: 'fell litt',
+            falling: 'fell',
+            falling_quickly: 'fell raskt',
+        },
         common: {
             not_available: 'Ikkje tilgj.',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Utdatert',
         },
     },
     'pt-BR': {
@@ -2113,9 +2603,19 @@ export const languages = {
         insulin: {
             active: 'Insulina ativa {0} {1}',
         },
+        trends: {
+            rising_quickly: 'subindo rapidamente',
+            rising: 'subindo',
+            rising_slightly: 'subindo levemente',
+            steady: 'estável',
+            falling_slightly: 'caindo levemente',
+            falling: 'caindo',
+            falling_quickly: 'caindo rapidamente',
+        },
         common: {
             not_available: 'N/D',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Desatualizado',
         },
     },
     ro: {
@@ -2155,9 +2655,19 @@ export const languages = {
         insulin: {
             active: 'Insulină activă {0} {1}',
         },
+        trends: {
+            rising_quickly: 'crește rapid',
+            rising: 'crește',
+            rising_slightly: 'crește ușor',
+            steady: 'stabil',
+            falling_slightly: 'scade ușor',
+            falling: 'scade',
+            falling_quickly: 'scade rapid',
+        },
         common: {
             not_available: 'Indisp.',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Învechit',
         },
     },
     sk: {
@@ -2198,9 +2708,19 @@ export const languages = {
         insulin: {
             active: 'Aktívny inzulín {0} {1}',
         },
+        trends: {
+            rising_quickly: 'rýchlo stúpa',
+            rising: 'stúpa',
+            rising_slightly: 'mierne stúpa',
+            steady: 'stabilné',
+            falling_slightly: 'mierne klesá',
+            falling: 'klesá',
+            falling_quickly: 'rýchlo klesá',
+        },
         common: {
             not_available: 'nedostupné',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Zastarané',
         },
     },
     sl: {
@@ -2240,9 +2760,19 @@ export const languages = {
         insulin: {
             active: 'Aktivni insulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'hitro narašča',
+            rising: 'narašča',
+            rising_slightly: 'rahlo narašča',
+            steady: 'stabilno',
+            falling_slightly: 'rahlo pada',
+            falling: 'pada',
+            falling_quickly: 'hitro pada',
+        },
         common: {
             not_available: 'Ni na voljo',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Zastarelo',
         },
     },
     sq: {
@@ -2282,9 +2812,19 @@ export const languages = {
         insulin: {
             active: 'Insulinë aktive {0} {1}',
         },
+        trends: {
+            rising_quickly: 'po rritet shpejt',
+            rising: 'po rritet',
+            rising_slightly: 'po rritet pak',
+            steady: 'qëndrueshëm',
+            falling_slightly: 'po bie pak',
+            falling: 'po bie',
+            falling_quickly: 'po bie shpejt',
+        },
         common: {
             not_available: 'N/D',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'E vjetruar',
         },
     },
     sr: {
@@ -2324,9 +2864,19 @@ export const languages = {
         insulin: {
             active: 'Активни инсулин {0} {1}',
         },
+        trends: {
+            rising_quickly: 'брзо расте',
+            rising: 'расте',
+            rising_slightly: 'благо расте',
+            steady: 'стабилно',
+            falling_slightly: 'благо пада',
+            falling: 'пада',
+            falling_quickly: 'брзо пада',
+        },
         common: {
             not_available: 'Н/Д',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Застарело',
         },
     },
     'sr-Latn': {
@@ -2366,9 +2916,19 @@ export const languages = {
         insulin: {
             active: 'Aktivni inzulin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'brzo raste',
+            rising: 'raste',
+            rising_slightly: 'blago raste',
+            steady: 'stabilno',
+            falling_slightly: 'blago pada',
+            falling: 'pada',
+            falling_quickly: 'brzo pada',
+        },
         common: {
             not_available: 'N/D',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Zastarelo',
         },
     },
     ta: {
@@ -2408,9 +2968,19 @@ export const languages = {
         insulin: {
             active: 'செயல்பாட்டு இன்சுலின் {0} {1}',
         },
+        trends: {
+            rising_quickly: 'வேகமாக உயர்கிறது',
+            rising: 'உயர்கிறது',
+            rising_slightly: 'சற்று உயர்கிறது',
+            steady: 'நிலையானது',
+            falling_slightly: 'சற்று குறைகிறது',
+            falling: 'குறைகிறது',
+            falling_quickly: 'வேகமாக குறைகிறது',
+        },
         common: {
             not_available: 'இல்லை',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'பழையது',
         },
     },
     te: {
@@ -2450,9 +3020,19 @@ export const languages = {
         insulin: {
             active: 'యాక్టివ్ ఇన్సులిన్ {0} {1}',
         },
+        trends: {
+            rising_quickly: 'వేగంగా పెరుగుతోంది',
+            rising: 'పెరుగుతోంది',
+            rising_slightly: 'కొద్దిగా పెరుగుతోంది',
+            steady: 'స్థిరంగా ఉంది',
+            falling_slightly: 'కొద్దిగా తగ్గుతోంది',
+            falling: 'తగ్గుతోంది',
+            falling_quickly: 'వేగంగా తగ్గుతోంది',
+        },
         common: {
             not_available: 'అందుబాటులో లేదు',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'పాతది',
         },
     },
     th: {
@@ -2492,9 +3072,19 @@ export const languages = {
         insulin: {
             active: 'อินซูลินที่ใช้งานอยู่ {0} {1}',
         },
+        trends: {
+            rising_quickly: 'เพิ่มขึ้นอย่างรวดเร็ว',
+            rising: 'เพิ่มขึ้น',
+            rising_slightly: 'เพิ่มขึ้นเล็กน้อย',
+            steady: 'คงที่',
+            falling_slightly: 'ลดลงเล็กน้อย',
+            falling: 'ลดลง',
+            falling_quickly: 'ลดลงอย่างรวดเร็ว',
+        },
         common: {
             not_available: 'ไม่มีข้อมูล',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'ข้อมูลเก่า',
         },
     },
     tr: {
@@ -2535,9 +3125,19 @@ export const languages = {
         insulin: {
             active: 'Aktif insülin {0} {1}',
         },
+        trends: {
+            rising_quickly: 'hızla yükseliyor',
+            rising: 'yükseliyor',
+            rising_slightly: 'hafif yükseliyor',
+            steady: 'sabit',
+            falling_slightly: 'hafif düşüyor',
+            falling: 'düşüyor',
+            falling_quickly: 'hızla düşüyor',
+        },
         common: {
             not_available: 'Yok',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Eski',
         },
     },
     ur: {
@@ -2577,9 +3177,19 @@ export const languages = {
         insulin: {
             active: 'فعال انسولین {0} {1}',
         },
+        trends: {
+            rising_quickly: 'تیزی سے بڑھ رہا ہے',
+            rising: 'بڑھ رہا ہے',
+            rising_slightly: 'آہستہ بڑھ رہا ہے',
+            steady: 'مستحکم',
+            falling_slightly: 'آہستہ کم ہو رہا ہے',
+            falling: 'کم ہو رہا ہے',
+            falling_quickly: 'تیزی سے کم ہو رہا ہے',
+        },
         common: {
             not_available: 'دستیاب نہیں',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'پرانا',
         },
     },
     vi: {
@@ -2619,9 +3229,19 @@ export const languages = {
         insulin: {
             active: 'Insulin đang hoạt động {0} {1}',
         },
+        trends: {
+            rising_quickly: 'tăng nhanh',
+            rising: 'tăng',
+            rising_slightly: 'tăng nhẹ',
+            steady: 'ổn định',
+            falling_slightly: 'giảm nhẹ',
+            falling: 'giảm',
+            falling_quickly: 'giảm nhanh',
+        },
         common: {
             not_available: 'Không có',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: 'Đã cũ',
         },
     },
     'zh-Hans': {
@@ -2661,9 +3281,19 @@ export const languages = {
         insulin: {
             active: '活性胰岛素 {0} {1}',
         },
+        trends: {
+            rising_quickly: '快速上升',
+            rising: '上升',
+            rising_slightly: '缓慢上升',
+            steady: '平稳',
+            falling_slightly: '缓慢下降',
+            falling: '下降',
+            falling_quickly: '快速下降',
+        },
         common: {
             not_available: '无数据',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: '已过期',
         },
     },
     'zh-Hant': {
@@ -2703,9 +3333,19 @@ export const languages = {
         insulin: {
             active: '活性胰島素 {0} {1}',
         },
+        trends: {
+            rising_quickly: '快速上升',
+            rising: '上升',
+            rising_slightly: '緩慢上升',
+            steady: '平穩',
+            falling_slightly: '緩慢下降',
+            falling: '下降',
+            falling_quickly: '快速下降',
+        },
         common: {
             not_available: '無資料',
-            default_time: '00:00',
+            default_time: '--:--',
+            stale: '已過期',
         },
     },
 };
@@ -2742,14 +3382,20 @@ function resolveLanguage(tag) {
  * Undefined is the honest answer when there is no frontend around it, which is
  * every test and the demo page; getLocalizer falls back to English from there.
  */
+export function resolveLocale(config, hass) {
+    return (
+        config?.locale || hass?.locale?.language || hass?.language || undefined
+    );
+}
+
 export function frontendLanguage() {
     if (typeof document === 'undefined') return undefined;
     const hass = document.querySelector('home-assistant')?.hass;
-    return hass?.locale?.language || hass?.language;
+    return resolveLocale(undefined, hass);
 }
 
 export function getLocalizer(config, hass) {
-    const lang = (config && config.locale) || (hass && hass.language) || 'en';
+    const lang = resolveLocale(config, hass) || 'en';
     const table = resolveLanguage(lang);
 
     return function (string, ...args) {

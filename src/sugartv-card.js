@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 
 import { cardStyles } from './sugartv-card-styles.js';
-import { frontendLanguage, getLocalizer } from './localize.js';
+import { frontendLanguage, getLocalizer, resolveLocale } from './localize.js';
 import {
     TREND_MAP as TREND_MAP_DATA,
     VALUE_SUFFIXES,
@@ -421,12 +421,7 @@ class SugarTvCard extends LitElement {
      * two conventions.
      */
     _locale() {
-        return (
-            this.config?.locale ||
-            this.hass?.locale?.language ||
-            this.hass?.language ||
-            undefined // let Intl pick the runtime default
-        );
+        return resolveLocale(this.config, this.hass);
     }
 
     /**
@@ -1011,18 +1006,47 @@ class SugarTvCard extends LitElement {
      * doses move in halves and quarters and a whole unit would hide exactly
      * the detail the line exists to show.
      */
+    static RTL_LANGUAGES = ['ar', 'fa', 'he', 'ur'];
+
+    static baseLanguage(locale) {
+        return String(locale || 'en')
+            .split('-')[0]
+            .toLowerCase();
+    }
+
+    static isRtl(locale) {
+        if (locale && typeof Intl?.Locale === 'function') {
+            try {
+                const loc = new Intl.Locale(locale);
+                const info = loc.getTextInfo?.() || loc.textInfo;
+                if (info?.direction) return info.direction === 'rtl';
+            } catch (e) {
+                // fall back to static RTL list
+            }
+        }
+        return SugarTvCard.RTL_LANGUAGES.includes(
+            SugarTvCard.baseLanguage(locale),
+        );
+    }
+
     _insulinText() {
         const { insulin } = this._data;
         if (!insulin) return '';
 
-        const number = insulin.value.toLocaleString(this._numberLocale(), {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-            ...this._groupingOption(),
-        });
+        const sign = insulin.value < 0 ? '\u2212' : '';
+        const abs = Math.abs(insulin.value).toLocaleString(
+            this._numberLocale(),
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+                ...this._groupingOption(),
+            },
+        );
+        const number = `${sign}${abs}`;
+        const isRtl = SugarTvCard.isRtl(this._locale());
         return getLocalizer(this.config, this.hass)(
             'insulin.active',
-            number,
+            isRtl ? `\u200e${number}` : number,
             insulin.unit,
         );
     }
@@ -1341,8 +1365,9 @@ class SugarTvCard extends LitElement {
      */
     static hasRelativeTimeData(locale) {
         if (!locale) return true;
-        const base = (tag) => String(tag).split('-')[0].toLowerCase();
-        const speaks = (resolved) => base(resolved) === base(locale);
+        const speaks = (resolved) =>
+            SugarTvCard.baseLanguage(resolved) ===
+            SugarTvCard.baseLanguage(locale);
         try {
             return (
                 speaks(
@@ -1418,10 +1443,9 @@ class SugarTvCard extends LitElement {
     static SPELLED_OUT = ['he'];
 
     static stylesFor(locale) {
-        const base = String(locale || 'en')
-            .split('-')[0]
-            .toLowerCase();
-        return SugarTvCard.SPELLED_OUT.includes(base)
+        return SugarTvCard.SPELLED_OUT.includes(
+            SugarTvCard.baseLanguage(locale),
+        )
             ? ['long']
             : ['short', 'long'];
     }
@@ -1684,12 +1708,25 @@ class SugarTvCard extends LitElement {
     static TREND_STATE_KEY =
         'component.dexcom.entity.sensor.glucose_trend.state.';
 
-    _trendLabel(trend) {
-        if (!trend || trend === 'unknown') return '';
-        const translated = this.hass?.localize?.(
-            SugarTvCard.TREND_STATE_KEY + trend,
-        );
-        return translated || trend.replace(/_/g, ' ');
+    _trendLabel(trend, localize = getLocalizer(this.config, this.hass)) {
+        const key = trend && String(trend).toLowerCase();
+        if (!key || key === 'unknown') return '';
+        if (!this.config?.locale) {
+            const translated = this.hass?.localize?.(
+                SugarTvCard.TREND_STATE_KEY + key,
+            );
+            if (translated) return translated;
+        }
+        const fallbackKey = `trends.${key}`;
+        const own = localize(fallbackKey);
+        return own !== fallbackKey ? own : key.replace(/_/g, ' ');
+    }
+
+    _handleKeydown(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            this._handleTap();
+        }
     }
 
     _handleTap() {
@@ -1749,23 +1786,33 @@ class SugarTvCard extends LitElement {
             trendSymbols.unknown;
         const trendIcon = trendInfo.icon;
         const prediction = trendInfo.prediction || '';
+        const localize = getLocalizer(this.config, this.hass);
+        const insulin = this._insulinText();
+        const formattedValue = this._formatValue(value);
+        const formattedTime = this._formatTime(reading_time);
+        const delta = this._calculateDelta();
         // One element, placed by the view: inside the reading's line in the
         // classic view, on a line of its own above it in the compact one.
         const compact = this._view() === 'compact';
-        const time = html`<div class="time">
-            ${this._formatTime(reading_time)}
-        </div>`;
+        const time = html`<div class="time">${formattedTime}</div>`;
 
-        const localize = getLocalizer(this.config, this.hass);
-        const insulin = this._insulinText();
         const ariaLabel = [
-            this._formatValue(value),
-            unit === SugarTvCard.UNITS.MMOLL
-                ? localize('units.mmoll')
-                : localize('units.mgdl'),
-            this._trendLabel(trend),
-            this._calculateDelta(),
+            formattedValue,
+            this._isReadable(value)
+                ? localize(
+                      unit === SugarTvCard.UNITS.MMOLL
+                          ? 'units.mmoll'
+                          : 'units.mgdl',
+                  )
+                : '',
+            this._trendLabel(trend, localize),
+            delta,
+            formattedTime !== localize('common.default_time')
+                ? formattedTime
+                : '',
+            this._isStale(reading_time) ? localize('common.stale') : '',
             insulin,
+            showPrediction ? prediction : '',
         ]
             .filter(Boolean)
             .join(', ');
@@ -1773,11 +1820,15 @@ class SugarTvCard extends LitElement {
         return html`
             <div
                 class="wrapper"
+                role="button"
+                tabindex="0"
                 @click="${this._handleTap}"
-                role="status"
-                aria-live="polite"
+                @keydown="${this._handleKeydown}"
                 aria-label="${ariaLabel}"
             >
+                <span class="sr-only" role="status" aria-live="polite"
+                    >${ariaLabel}</span
+                >
                 <div class="container">
                     ${
                         insulin
@@ -1787,15 +1838,19 @@ class SugarTvCard extends LitElement {
                     ${compact ? time : ''}
                     <div class="line">
                         ${compact ? '' : time}
-                        <div class="value">${this._formatValue(value)}</div>
+                        <div class="value">${formattedValue}</div>
                         <div class="tail">
                             <div class="trend" data-icon="${trendIcon}">
-                                <ha-icon icon="${trendIcon}"></ha-icon>
+                                <ha-icon
+                                    aria-hidden="true"
+                                    icon="${trendIcon}"
+                                ></ha-icon>
                             </div>
                             <div class="delta">
                                 ${
-                                    this._calculateDelta() ||
+                                    delta ||
                                     html`<ha-icon
+                                        aria-hidden="true"
                                         icon="mdi:progress-clock"
                                     ></ha-icon>`
                                 }

@@ -1265,8 +1265,8 @@ describe('SugarTvCard', () => {
         it('still reports no data rather than an age', () => {
             const card = createCard({ relative_time: true, locale: 'en' });
 
-            expect(card._formatTime(null)).toBe('00:00');
-            expect(card._formatTime('unavailable')).toBe('00:00');
+            expect(card._formatTime(null)).toBe('--:--');
+            expect(card._formatTime('unavailable')).toBe('--:--');
         });
     });
 
@@ -2420,12 +2420,19 @@ describe('SugarTvCard', () => {
             expect(card._data.insulin).toBeNull();
         });
 
-        it('keeps a negative reading rather than clamping it', () => {
+        it('keeps a negative reading rather than clamping it, formatted with U+2212 minus', () => {
             // A temporary basal below zero produces negative IOB on some
-            // systems; inventing a zero would be worse than showing it.
+            // systems; inventing a zero would be worse than showing it, and
+            // U+2212 matches the minus glyph used in the delta below it.
             const card = insulinCard({}, '-0.35');
 
-            expect(card._insulinText()).toBe('Active insulin -0.35 U');
+            expect(card._insulinText()).toBe('Active insulin \u22120.35 U');
+        });
+
+        it('prefixes LRM before signed numbers inside RTL insulin strings so U+2212 stays on the left', () => {
+            const card = insulinCard({ locale: 'ar' }, '-0.75');
+
+            expect(card._insulinText()).toContain('\u200e\u22120.75');
         });
 
         it('draws the line above the reading, the forecast below it', () => {
@@ -2852,17 +2859,26 @@ describe('the screen-reader label', () => {
         );
     });
 
-    // An install without the Dexcom strings loaded gets nothing back.
-    it('falls back to the humanised key when that returns nothing', () => {
+    // An install without the Dexcom strings loaded still speaks the user's language.
+    it('falls back to the card own localized trend table when Dexcom strings are absent', () => {
         const card = cardWith({ localize: () => '' });
 
-        expect(card._trendLabel('rising_quickly')).toBe('rising quickly');
+        expect(card._trendLabel('rising_quickly')).toBe('быстро растет');
     });
 
     it('survives a Home Assistant that has no localize at all', () => {
         const card = cardWith({});
 
-        expect(card._trendLabel('falling')).toBe('falling');
+        expect(card._trendLabel('falling')).toBe('падает');
+    });
+
+    it('prefers an explicit card locale over hass.localize', () => {
+        const localize = vi.fn(() => 'Быстро растёт');
+        const card = cardWith({ localize });
+        card.config = { ...card.config, locale: 'de' };
+
+        expect(card._trendLabel('rising_quickly')).toBe('steigt schnell');
+        expect(localize).not.toHaveBeenCalled();
     });
 
     it('says nothing rather than "unknown" when the trend is unknown', () => {
@@ -2872,8 +2888,6 @@ describe('the screen-reader label', () => {
         expect(card._trendLabel(null)).toBe('');
     });
 
-    // The unit was read straight off the sensor, so a Russian card announced
-    // "mmol/L" while the rest of it spoke Russian.
     it('announces the unit in the local language', () => {
         const card = cardWith({});
 
@@ -2881,5 +2895,33 @@ describe('the screen-reader label', () => {
         expect(getLocalizer(card.config, card.hass)('units.mmoll')).toBe(
             'ммоль/л',
         );
+    });
+
+    it('exposes a focusable button wrapper, keyboard activation, and stale/time context in aria-label', () => {
+        const card = cardWith({});
+        card._data = {
+            ...card._data,
+            value: '8.1',
+            trend: 'rising',
+            reading_time: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+        };
+        const markup = card.render();
+
+        expect(markup).toContain('role="button"');
+        expect(markup).toContain('tabindex="0"');
+        expect(markup).toContain('Устарело');
+        expect(markup).toContain('aria-hidden="true"');
+
+        const dispatch = vi.fn();
+        card.dispatchEvent = dispatch;
+        const preventDefault = vi.fn();
+        card._handleKeydown({ key: 'Enter', preventDefault });
+        expect(dispatch).toHaveBeenCalledTimes(1);
+        expect(preventDefault).toHaveBeenCalledTimes(1);
+        card._handleKeydown({ key: ' ', preventDefault });
+        expect(dispatch).toHaveBeenCalledTimes(2);
+        expect(preventDefault).toHaveBeenCalledTimes(2);
+        card._handleKeydown({ key: 'Escape', preventDefault });
+        expect(dispatch).toHaveBeenCalledTimes(2);
     });
 });
