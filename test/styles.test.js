@@ -294,4 +294,17 @@ describe('the age fade in the stylesheet', () => {
             ratio(white, blend(grayscale(urgBg, staleGray), white, staleAlpha)),
         ).toBeGreaterThanOrEqual(4.5);
     });
+
+    it('never clips .trend or .delta and centers ha-icon as a flex box', () => {
+        const tailBlocks = rulesMatching(/(^|,)\s*\.(trend|delta)\b/m);
+        expect(tailBlocks.length).toBeGreaterThan(0);
+        for (const [, , body] of tailBlocks) {
+            expect(body).not.toMatch(/overflow\s*:\s*(clip|hidden)/);
+        }
+
+        const iconBody = rulesMatching(/(^|,)\s*ha-icon\s*(,|$)/m)
+            .map(([, , body]) => body)
+            .join('\n');
+        expect(iconBody).toMatch(/display\s*:\s*(inline-)?flex/);
+    });
 });

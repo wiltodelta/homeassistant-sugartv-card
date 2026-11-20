@@ -228,16 +228,20 @@ export const cardStyles = css`
         font-size: calc(20 * var(--u) * var(--value-scale, 1));
     }
 
+    /*
+     * Real Home Assistant ha-icon sets only fill: currentcolor on its host and
+     * puts display: inline-flex; vertical-align: middle on the inner
+     * ha-svg-icon. Centering ha-icon itself as a flex box keeps ha-svg-icon off
+     * an inline baseline strut (~0.75u low), and keeping overflow visible on
+     * .trend and .delta ensures negative-margin box trimming never clips icon
+     * tips or comma descenders.
+     */
     .trend,
-    .delta {
+    .delta,
+    ha-icon {
         display: flex;
         align-items: center;
         justify-content: center;
-    }
-
-    .trend,
-    .delta:has(ha-icon) {
-        overflow: clip;
     }
 
     .trend {

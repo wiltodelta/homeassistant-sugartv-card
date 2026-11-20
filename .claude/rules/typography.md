@@ -10,6 +10,7 @@ description: Type and layout metrics — measure ink not boxes, Range rect vs me
 ## Measure ink, not boxes
 
 - **Measure ink, not boxes:** `getBoundingClientRect()` on the SVG `path` for icons, `measureText().actualBoundingBox*` for text; equal box gaps prove nothing. Keep `text-box: trim-both cap alphabetic`, `tabular-nums` and the per-icon `--icon-trim`.
+- **Real `<ha-icon>` has `:host { fill: currentcolor }` with no `display: flex`, wrapping `<ha-svg-icon>` (`inline-flex; vertical-align: middle`).** Give `ha-icon` `display: flex` so `<ha-svg-icon>` never drops onto an inline baseline strut, and never set `overflow: clip`/`hidden` on `.trend` or `.delta`, which clips negative-margin icon tips and descenders.
 - **A `Range` rect is the line box, not ink.** Reserve the reading's descent from `measureText(text).actualBoundingBoxDescent` as `--value-descent` (scale-invariant) so the gap is identical whatever decimal separator the locale writes.
 
 ## The host belongs to more than this card
